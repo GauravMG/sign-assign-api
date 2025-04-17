@@ -630,6 +630,7 @@ class AuthController {
 						this.commonModelUser.updateById(
 							transaction,
 							{
+								isActive: true,
 								password: encryptedPassword
 							},
 							userId,
