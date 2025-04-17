@@ -433,6 +433,13 @@ class AuthController {
 			const verificationType: VerificationType = VerificationType.Registration
 
 			const otp: string = generateOTP(6)
+			console.log(`roleId`, roleId)
+			console.log(`firstName`, roleId)
+			console.log(`lastName`, lastName)
+			console.log(`email`, email)
+			console.log(`business`, JSON.stringify(business))
+			console.log(`verificationType`, verificationType)
+			console.log(`otp`, otp)
 
 			await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
