@@ -1,0 +1,17 @@
+version: "3.3"
+
+services:
+  node:
+    build: .
+    container_name: "sign-assign-api"
+    env_file:
+    - ./.env
+    environment:
+      PORT: ${PORT}
+    volumes:
+    - logs:/application/public/logs
+    ports: 
+    - "${PORT}:${PORT}"
+    # restart: on-failure
+volumes:
+  logs:
