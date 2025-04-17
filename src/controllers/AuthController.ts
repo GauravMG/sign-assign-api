@@ -428,18 +428,12 @@ class AuthController {
 		try {
 			const response = new ApiResponse(res)
 
-			const {roleId, firstName, lastName, email, business} = req.body
+			let {roleId, firstName, lastName, email, business} = req.body
+			roleId = parseInt(roleId)
 
 			const verificationType: VerificationType = VerificationType.Registration
 
 			const otp: string = generateOTP(6)
-			console.log(`roleId`, roleId)
-			console.log(`firstName`, roleId)
-			console.log(`lastName`, lastName)
-			console.log(`email`, email)
-			console.log(`business`, JSON.stringify(business))
-			console.log(`verificationType`, verificationType)
-			console.log(`otp`, otp)
 
 			await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
@@ -469,11 +463,6 @@ class AuthController {
 					])
 					const {userId} = user
 
-					console.log(`roleId`, roleId)
-					console.log(`typeof roleId`, typeof roleId)
-					console.log(`Role.BUSINESS_ADMIN`, Role.BUSINESS_ADMIN)
-					console.log(`business`, business)
-					console.log(`Object.keys(business)`, Object.keys(business))
 					if (
 						roleId === Role.BUSINESS_ADMIN &&
 						Object.keys(business ?? {}).length
