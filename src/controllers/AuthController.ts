@@ -462,6 +462,11 @@ class AuthController {
 					])
 					const {userId} = user
 
+					console.log(`roleId`, roleId)
+					console.log(`typeof roleId`, typeof roleId)
+					console.log(`Role.BUSINESS_ADMIN`, Role.BUSINESS_ADMIN)
+					console.log(`business`, business)
+					console.log(`Object.keys(business)`, Object.keys(business))
 					if (
 						roleId === Role.BUSINESS_ADMIN &&
 						Object.keys(business ?? {}).length
