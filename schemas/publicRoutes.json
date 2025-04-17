@@ -4,10 +4,6 @@
 		"method": "POST"
 	},
 	{
-		"apiPath": "/v1/auth/sign-in-with-otp",
-		"method": "POST"
-	},
-	{
 		"apiPath": "/v1/auth/refresh-token",
 		"method": "POST"
 	},
@@ -17,6 +13,10 @@
 	},
 	{
 		"apiPath": "/v1/auth/send-otp",
+		"method": "POST"
+	},
+	{
+		"apiPath": "/v1/auth/reset-password",
 		"method": "POST"
 	}
 ]
