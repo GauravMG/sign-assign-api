@@ -1,0 +1,178 @@
+// This is your Prisma schema file
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ApprovalStatus {
+  pending
+  approved
+  rejected
+}
+
+model Role {
+  roleId         Int       @id @default(autoincrement())
+  name           String    @db.VarChar(100)
+  permissionJSON String?
+  status         Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime?
+  deletedAt      DateTime?
+  createdBy      User?     @relation("RoleCreatedBy", fields: [createdById], references: [userId], onDelete: SetNull)
+  updatedBy      User?     @relation("RoleUpdatedBy", fields: [updatedById], references: [userId], onDelete: SetNull)
+  deletedBy      User?     @relation("RoleDeletedBy", fields: [deletedById], references: [userId], onDelete: SetNull)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+
+  users User[]
+}
+
+model User {
+  userId       Int       @id @default(autoincrement())
+  role         Role      @relation(fields: [roleId], references: [roleId], onDelete: Cascade)
+  roleId       Int
+  firstName    String?   @db.VarChar(100)
+  lastName     String?   @db.VarChar(100)
+  email        String?   @unique @db.VarChar(100)
+  mobile       String?   @db.VarChar(100)
+  password     String?   @db.VarChar(100)
+  gender       String?   @db.VarChar(100)
+  pinCode      String?   @db.VarChar(30)
+  address      String?
+  city         String?   @db.VarChar(100)
+  state        String?   @db.VarChar(100)
+  country      String?   @db.VarChar(100)
+  profilePhoto String?
+  isActive     Boolean   @default(true)
+  status       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime?
+  deletedAt    DateTime?
+  createdBy    User?     @relation("UserCreatedBy", fields: [createdById], references: [userId], onDelete: SetNull)
+  updatedBy    User?     @relation("UserUpdatedBy", fields: [updatedById], references: [userId], onDelete: SetNull)
+  deletedBy    User?     @relation("UserDeletedBy", fields: [deletedById], references: [userId], onDelete: SetNull)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+
+  verifications        Verification[]
+  loginHistories       LoginHistory[]
+  businessUserMappings BusinessUserMapping[]
+
+  // Inverse relations
+  usersCreatedBy               User[]                @relation("UserCreatedBy")
+  usersUpdatedBy               User[]                @relation("UserUpdatedBy")
+  usersDeletedBy               User[]                @relation("UserDeletedBy")
+  rolesCreatedBy               Role[]                @relation("RoleCreatedBy")
+  rolesUpdatedBy               Role[]                @relation("RoleUpdatedBy")
+  rolesDeletedBy               Role[]                @relation("RoleDeletedBy")
+  verificationCreatedBy        Verification[]        @relation("VerificationCreatedBy")
+  verificationUpdatedBy        Verification[]        @relation("VerificationUpdatedBy")
+  verificationDeletedBy        Verification[]        @relation("VerificationDeletedBy")
+  loginHistoryCreatedBy        LoginHistory[]        @relation("LoginHistoryCreatedBy")
+  loginHistoryUpdatedBy        LoginHistory[]        @relation("LoginHistoryUpdatedBy")
+  loginHistoryDeletedBy        LoginHistory[]        @relation("LoginHistoryDeletedBy")
+  businessCreatedBy            Business[]            @relation("BusinessCreatedBy")
+  businessUpdatedBy            Business[]            @relation("BusinessUpdatedBy")
+  businessDeletedBy            Business[]            @relation("BusinessDeletedBy")
+  businessUserMappingCreatedBy BusinessUserMapping[] @relation("BusinessUserMappingCreatedBy")
+  businessUserMappingUpdatedBy BusinessUserMapping[] @relation("BusinessUserMappingUpdatedBy")
+  businessUserMappingDeletedBy BusinessUserMapping[] @relation("BusinessUserMappingDeletedBy")
+}
+
+model Verification {
+  verificationId   Int       @id @default(autoincrement())
+  userId           Int
+  user             User      @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  verificationType String
+  hash             String?
+  status           Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime?
+  deletedAt        DateTime?
+  createdBy        User?     @relation("VerificationCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy        User?     @relation("VerificationUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy        User?     @relation("VerificationDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+}
+
+model LoginHistory {
+  loginHistoryId Int       @id @default(autoincrement())
+  userId         Int
+  user           User      @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  deviceType     String    @db.VarChar(50)
+  deviceId       String?
+  jwtToken       String
+  fcmToken       String?
+  status         Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime?
+  deletedAt      DateTime?
+  createdBy      User?     @relation("LoginHistoryCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy      User?     @relation("LoginHistoryUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy      User?     @relation("LoginHistoryDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+}
+
+model Business {
+  businessId          Int       @id @default(autoincrement())
+  name                String?
+  type                String?
+  yearOfIncorporation String?
+  pinCode             String?   @db.VarChar(30)
+  address             String?
+  city                String?   @db.VarChar(100)
+  state               String?   @db.VarChar(100)
+  country             String?   @db.VarChar(100)
+  webUrl              String?
+  status              Boolean   @default(true)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime?
+  deletedAt           DateTime?
+  createdBy           User?     @relation("BusinessCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy           User?     @relation("BusinessUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy           User?     @relation("BusinessDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  businessUserMappings BusinessUserMapping[]
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+}
+
+model BusinessUserMapping {
+  businessUserMappingId Int       @id @default(autoincrement())
+  businessId            Int?
+  userId                Int?
+  business              Business? @relation(fields: [businessId], references: [businessId], onDelete: Cascade)
+  user                  User?     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  status                Boolean   @default(true)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime?
+  deletedAt             DateTime?
+  createdBy             User?     @relation("BusinessUserMappingCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy             User?     @relation("BusinessUserMappingUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy             User?     @relation("BusinessUserMappingDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+
+  @@unique([businessId, userId]) // Enforcing unique mapping between business and user
+}
