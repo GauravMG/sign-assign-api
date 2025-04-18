@@ -8,6 +8,7 @@ export class UserRouter {
 	constructor() {
 		this.router = express.Router()
 		this.router
+			.post("/create", UserController.create)
 			.post("/list", UserController.list)
 			.post("/update", UserController.update)
 			.post("/delete", UserController.delete)

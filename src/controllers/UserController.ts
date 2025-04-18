@@ -1,7 +1,12 @@
 import bcrypt from "bcrypt"
 import {NextFunction, Request, Response} from "express"
 
-import {createFullName, listAPIPayload} from "../helpers"
+import {
+	createFullName,
+	listAPIPayload,
+	splitFullName,
+	validatePassword
+} from "../helpers"
 import {ApiResponse} from "../lib/APIResponse"
 import {PrismaClientTransaction, prisma} from "../lib/PrismaLib"
 import {BadRequestException} from "../lib/exceptions"
@@ -28,9 +33,116 @@ class UserController {
 			[]
 		)
 
+		this.create = this.create.bind(this)
 		this.list = this.list.bind(this)
 		this.update = this.update.bind(this)
 		this.delete = this.delete.bind(this)
+	}
+
+	public async create(req: Request, res: Response, next: NextFunction) {
+		try {
+			const response = new ApiResponse(res)
+
+			const {userId, roleId}: Headers = req.headers
+
+			let payload = Array.isArray(req.body) ? req.body : [req.body]
+
+			const emails: string[] = []
+			payload = payload.map(({fullName, ...restPayload}) => {
+				emails.push(restPayload.email)
+				if (
+					(fullName ?? "").trim() !== "" &&
+					(restPayload.firstName ?? "").trim() === ""
+				) {
+					const splittedFullName = splitFullName(fullName)
+					restPayload.firstName = splittedFullName.firstName
+					restPayload.lastName = splittedFullName.lastName
+				}
+
+				return {
+					...restPayload
+				}
+			})
+
+			const [users] = await prisma.$transaction(
+				async (transaction: PrismaClientTransaction) => {
+					// check if users exist
+					const existingUsers = await this.commonModelUser.list(transaction, {
+						filter: {
+							email: emails
+						},
+						range: {all: true}
+					})
+					if (existingUsers.length) {
+						const emailSet: Set<string> = new Set(
+							existingUsers.map((obj) => obj.email)
+						)
+						throw new BadRequestException(
+							`Email id(s) already exist in system: ${emails.filter((email) => emailSet.has(email))}`
+						)
+					}
+
+					for (let i = 0; i < payload?.length; i++) {
+						if ((payload[i].password ?? "").trim() !== "") {
+							const passwordValidation = validatePassword(payload[i].password)
+							if (!passwordValidation.valid) {
+								throw new BadRequestException(
+									"Invalid password format",
+									undefined,
+									passwordValidation.rules
+								)
+							}
+
+							// hash password
+							const encryptedPassword: string = await bcrypt.hash(
+								payload[i].password,
+								parseInt(process.env.SALT_ROUNDS as string)
+							)
+
+							payload[i].password = encryptedPassword
+						}
+					}
+
+					// create users
+					const users = await this.commonModelUser.bulkCreate(
+						transaction,
+						payload,
+						userId
+					)
+
+					if (roleId === Role.BUSINESS_ADMIN) {
+						// get user's business
+						const [business] = await this.commonModelBusinessUserMapping.list(
+							transaction,
+							{
+								filter: {userId}
+							}
+						)
+
+						if (business) {
+							// map user with business
+							await this.commonModelBusinessUserMapping.bulkCreate(
+								transaction,
+								users.map(({userId}) => ({
+									businessId: business.businessId,
+									userId
+								})),
+								userId
+							)
+						}
+					}
+
+					return [users]
+				}
+			)
+
+			return response.successResponse({
+				message: `User(s) created successfully`,
+				data: users
+			})
+		} catch (error) {
+			next(error)
+		}
 	}
 
 	public async list(req: Request, res: Response, next: NextFunction) {
@@ -110,9 +222,12 @@ class UserController {
 		try {
 			const response = new ApiResponse(res)
 
+			const {userId: loggedInUserId, roleId}: Headers = req.headers
+
 			const {userId, ...restPayload} = req.body
 
 			if (
+				userId === loggedInUserId &&
 				(restPayload?.password ?? "").trim() !== "" &&
 				(restPayload?.currentPassword ?? "").trim() === ""
 			) {
@@ -133,12 +248,14 @@ class UserController {
 
 					// hash password
 					if ((restPayload?.password ?? "").trim() !== "") {
-						const isValidCurrentPassword: boolean = await bcrypt.compare(
-							restPayload.currentPassword,
-							existingUser.password
-						)
-						if (!isValidCurrentPassword) {
-							throw new BadRequestException("Invalid current password")
+						if ((restPayload?.currentPassword ?? "").trim() !== "") {
+							const isValidCurrentPassword: boolean = await bcrypt.compare(
+								restPayload.currentPassword,
+								existingUser.password
+							)
+							if (!isValidCurrentPassword) {
+								throw new BadRequestException("Invalid current password")
+							}
 						}
 
 						const encryptedPassword: string = await bcrypt.hash(
