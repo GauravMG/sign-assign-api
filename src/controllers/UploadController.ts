@@ -21,7 +21,7 @@ class UploadController {
 
 			const filePath: string = path.join("uploads", req.file.filename)
 
-			const url: string = `${(process.env.BASE_URL_API as string).split(":")[0]}/${filePath}`
+			const url: string = `${process.env.BASE_URL_API}/${filePath}`
 
 			return response.successResponse({
 				message: `File uploaded successfully`,
