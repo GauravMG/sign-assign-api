@@ -170,11 +170,11 @@ class AuthController {
 					// }
 
 					// check if account active or not
-					// if (!user.status && user.isPersonalInfoCompleted) {
-					// 	throw new UnauthorizedException(
-					// 		"Your account is in-active. Please contact admin."
-					// 	)
-					// }
+					if (!user.status) {
+						throw new UnauthorizedException(
+							"Your account is in-active. Please contact admin."
+						)
+					}
 
 					// if ([Role.BROKER_ADMIN, Role.USER].indexOf(user.roleId) >= 0) {
 					// 	// get user business + business contact person and check business flag + business contact person flag
