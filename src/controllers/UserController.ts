@@ -6,12 +6,15 @@ import {ApiResponse} from "../lib/APIResponse"
 import {PrismaClientTransaction, prisma} from "../lib/PrismaLib"
 import {BadRequestException} from "../lib/exceptions"
 import CommonModel from "../models/CommonModel"
+import {Role} from "../types/auth"
 import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, Headers} from "../types/common"
 
 class UserController {
 	private commonModelUser
+	private commonModelBusinessUserMapping
 
 	private idColumnUser: string = "userId"
+	private idColumnBusinessUserMapping: string = "businessUserMappingId"
 
 	constructor() {
 		this.commonModelUser = new CommonModel("User", this.idColumnUser, [
@@ -19,6 +22,11 @@ class UserController {
 			"fullName",
 			"mobile"
 		])
+		this.commonModelBusinessUserMapping = new CommonModel(
+			"BusinessUserMapping",
+			this.idColumnBusinessUserMapping,
+			[]
+		)
 
 		this.list = this.list.bind(this)
 		this.update = this.update.bind(this)
@@ -29,12 +37,39 @@ class UserController {
 		try {
 			const response = new ApiResponse(res)
 
-			const {roleId}: Headers = req.headers
+			const {userId, roleId}: Headers = req.headers
 
 			const {filter, range, sort} = await listAPIPayload(req.body)
 
 			const [data, total] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
+					if (
+						!filter.userId &&
+						filter.roleId !== Role.BUSINESS_STAFF &&
+						[Role.SUPER_ADMIN].indexOf(roleId) < 0
+					) {
+						const [businessUserMapping] =
+							await this.commonModelBusinessUserMapping.list(transaction, {
+								filter: {
+									userId
+								}
+							})
+
+						const businessId: number = businessUserMapping.businessId
+						const businessUsers =
+							await this.commonModelBusinessUserMapping.list(transaction, {
+								filter: {
+									businessId
+								}
+							})
+
+						const userIds = businessUsers.map((businessUser) => {
+							return businessUser.userId
+						})
+
+						filter["userId"] = userIds
+					}
+
 					let [users, total] = await Promise.all([
 						this.commonModelUser.list(transaction, {
 							filter,
