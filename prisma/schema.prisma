@@ -184,6 +184,7 @@ model ProductCategory {
   productCategoryId Int       @id @default(autoincrement())
   name              String
   image             String
+  shortDescription  String
   description       String
   status            Boolean   @default(true)
   createdAt         DateTime  @default(now())
