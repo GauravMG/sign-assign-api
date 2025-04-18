@@ -10,4 +10,7 @@ export * from "./UploadRouter"
 // user routes
 export * from "./UserRouter"
 
+// product routes
+export * from "./ProductCategoryRouter"
+
 // other routes

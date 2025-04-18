@@ -88,6 +88,9 @@ model User {
   businessUserMappingCreatedBy BusinessUserMapping[] @relation("BusinessUserMappingCreatedBy")
   businessUserMappingUpdatedBy BusinessUserMapping[] @relation("BusinessUserMappingUpdatedBy")
   businessUserMappingDeletedBy BusinessUserMapping[] @relation("BusinessUserMappingDeletedBy")
+  productCategoryCreatedBy     ProductCategory[]     @relation("ProductCategoryCreatedBy")
+  productCategoryUpdatedBy     ProductCategory[]     @relation("ProductCategoryUpdatedBy")
+  productCategoryDeletedBy     ProductCategory[]     @relation("ProductCategoryDeletedBy")
 }
 
 model Verification {
@@ -175,4 +178,22 @@ model BusinessUserMapping {
   deletedById Int?
 
   @@unique([businessId, userId]) // Enforcing unique mapping between business and user
+}
+
+model ProductCategory {
+  productCategoryId Int       @id @default(autoincrement())
+  name              String
+  image             String
+  description       String
+  status            Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime?
+  deletedAt         DateTime?
+  createdBy         User?     @relation("ProductCategoryCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy         User?     @relation("ProductCategoryUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy         User?     @relation("ProductCategoryDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
 }

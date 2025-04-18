@@ -1,6 +1,12 @@
 import express from "express"
 
-import {AuthRouter, RoleRouter, UploadRouter, UserRouter} from "."
+import {
+	AuthRouter,
+	RoleRouter,
+	UploadRouter,
+	UserRouter,
+	ProductCategoryRouter
+} from "."
 
 const router = express.Router()
 
@@ -15,6 +21,9 @@ router.use("/v1/upload", new UploadRouter().router)
 
 // user routes
 router.use("/v1/user", new UserRouter().router)
+
+// product routes
+router.use("/v1/product-category", new ProductCategoryRouter().router)
 
 // other routes
 
