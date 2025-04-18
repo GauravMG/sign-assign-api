@@ -14,7 +14,7 @@ class ProductCategoryController {
 
 	constructor() {
 		this.commonModelProductCategory = new CommonModel(
-			"ProductCaegory",
+			"ProductCategory",
 			this.idColumnProductCategory,
 			["name"]
 		)
