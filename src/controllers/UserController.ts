@@ -60,7 +60,9 @@ class UserController {
 				}
 
 				return {
-					...restPayload
+					...restPayload,
+					roleId: Role.BUSINESS_STAFF,
+					isActive: true
 				}
 			})
 
