@@ -67,3 +67,5 @@ public/logs/
 
 # Explicitly allow yarn.lock
 !yarn.lock
+
+.history

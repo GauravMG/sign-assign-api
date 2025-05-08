@@ -5,7 +5,8 @@ import {
 	RoleRouter,
 	UploadRouter,
 	UserRouter,
-	ProductCategoryRouter
+	ProductCategoryRouter,
+	ProductSubCategoryRouter
 } from "."
 
 const router = express.Router()
@@ -24,6 +25,7 @@ router.use("/v1/user", new UserRouter().router)
 
 // product routes
 router.use("/v1/product-category", new ProductCategoryRouter().router)
+router.use("/v1/product-subcategory", new ProductSubCategoryRouter().router)
 
 // other routes
 

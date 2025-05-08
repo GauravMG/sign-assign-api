@@ -12,5 +12,6 @@ export * from "./UserRouter"
 
 // product routes
 export * from "./ProductCategoryRouter"
+export * from "./ProductSubCategoryRouter"
 
 // other routes
