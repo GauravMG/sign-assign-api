@@ -64,7 +64,7 @@ class ProductCategoryController {
 
 			const {filter, range, sort} = await listAPIPayload(req.body)
 
-			const [roles, total] = await prisma.$transaction(
+			const [productCategories, total] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					return await Promise.all([
 						this.commonModelProductCategory.list(transaction, {
@@ -88,7 +88,7 @@ class ProductCategoryController {
 					page: range?.page ?? DEFAULT_PAGE,
 					pageSize: range?.pageSize ?? DEFAULT_PAGE_SIZE
 				},
-				data: roles
+				data: productCategories
 			})
 		} catch (error) {
 			next(error)
@@ -103,7 +103,7 @@ class ProductCategoryController {
 
 			const {productCategoryId, ...restPayload} = req.body
 
-			const [role] = await prisma.$transaction(
+			const [productCategory] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					// check if exists
 					const [existingProductCategory] =
@@ -140,7 +140,7 @@ class ProductCategoryController {
 
 			return response.successResponse({
 				message: `Details updated successfully`,
-				data: role
+				data: productCategory
 			})
 		} catch (error) {
 			next(error)

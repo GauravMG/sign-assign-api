@@ -15,3 +15,4 @@ export * from "./ProductCategoryRouter"
 export * from "./ProductSubCategoryRouter"
 
 // other routes
+export * from "./SupportTicketRouter"
