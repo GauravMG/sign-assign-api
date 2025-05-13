@@ -141,6 +141,22 @@ model User {
   supportTicketMediaCreatedBy SupportTicketMedia[] @relation("SupportTicketMediaCreatedBy")
   supportTicketMediaUpdatedBy SupportTicketMedia[] @relation("SupportTicketMediaUpdatedBy")
   supportTicketMediaDeletedBy SupportTicketMedia[] @relation("SupportTicketMediaDeletedBy")
+
+  productAttributeCreatedBy  ProductAttribute[] @relation("ProductAttributeCreatedBy")
+  productAttributeUpdatedBy  ProductAttribute[] @relation("ProductAttributeUpdatedBy")
+  productAttributeDeletedBy  ProductAttribute[] @relation("ProductAttributeDeletedBy")
+
+  attributeCreatedBy  Attribute[] @relation("AttributeCreatedBy")
+  attributeUpdatedBy  Attribute[] @relation("AttributeUpdatedBy")
+  attributeDeletedBy  Attribute[] @relation("AttributeDeletedBy")
+
+  variantCreatedBy Variant[] @relation("VariantCreatedBy")
+  variantUpdatedBy Variant[] @relation("VariantUpdatedBy")
+  variantDeletedBy Variant[] @relation("VariantDeletedBy")
+
+  variantAttributeCreatedBy VariantAttribute[] @relation("VariantAttributeCreatedBy")
+  variantAttributeUpdatedBy VariantAttribute[] @relation("VariantAttributeUpdatedBy")
+  variantAttributeDeletedBy VariantAttribute[] @relation("VariantAttributeDeletedBy")
 }
 
 model Verification {
@@ -442,10 +458,84 @@ model ProductSizeMapping {
   deletedById Int?
 }
 
+model Attribute {
+  attributeId Int       @id @default(autoincrement())
+  name     String
+  dataType     String
+  status       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime?
+  deletedAt    DateTime?
+  createdBy    User?     @relation("AttributeCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy    User?     @relation("AttributeUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy    User?     @relation("AttributeDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+  productAttributes ProductAttribute[]
+}
+
+model ProductAttribute {
+  productAttributeId Int       @id @default(autoincrement())
+  attributeId     Int
+  value     String?
+  status       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime?
+  deletedAt    DateTime?
+  createdBy    User?     @relation("ProductAttributeCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy    User?     @relation("ProductAttributeUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy    User?     @relation("ProductAttributeDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+  attributes      Attribute? @relation(fields: [attributeId], references: [attributeId], onDelete: Cascade)
+}
+
+model Variant {
+  variantId Int       @id @default(autoincrement())
+  productId     Int
+  sku     String?
+  price     String?
+  stockQuantity     String?
+  status       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime?
+  deletedAt    DateTime?
+  createdBy    User?     @relation("VariantCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy    User?     @relation("VariantUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy    User?     @relation("VariantDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+  products      Product? @relation(fields: [productId], references: [productId], onDelete: Cascade)
+}
+
+model VariantAttribute {
+  variantAttributeId Int       @id @default(autoincrement())
+  attributeId     Int
+  value     String
+  status       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime?
+  deletedAt    DateTime?
+  createdBy    User?     @relation("VariantAttributeCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy    User?     @relation("VariantAttributeUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy    User?     @relation("VariantAttributeDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+  attributes      Attributes? @relation(fields: [attributeId], references: [attributeId], onDelete: Cascade)
+}
+
 model SupportTicketMedia {
   supportTicketMediaId Int            @id @default(autoincrement())
   supportTicketId      Int
-  supportTicket        SupportTicket? @relation(fields: [supportTicketId], references: [supportTicketId], onDelete: Cascade)
+  supportTickets        SupportTicket? @relation(fields: [supportTicketId], references: [supportTicketId], onDelete: Cascade)
   name                 String
   mediaType            String
   mediaUrl             String
