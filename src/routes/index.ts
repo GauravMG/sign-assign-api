@@ -16,3 +16,5 @@ export * from "./ProductSubCategoryRouter"
 
 // other routes
 export * from "./SupportTicketRouter"
+
+export * from "./SupportTicketMediaRouter"

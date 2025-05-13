@@ -7,7 +7,8 @@ import {
 	UserRouter,
 	ProductCategoryRouter,
 	ProductSubCategoryRouter,
-	SupportTicketRouter
+	SupportTicketRouter,
+	SupportTicketMediaRouter
 } from "."
 
 const router = express.Router()
@@ -30,5 +31,6 @@ router.use("/v1/product-subcategory", new ProductSubCategoryRouter().router)
 
 // other routes
 router.use("/v1/support-ticket", new SupportTicketRouter().router)
+router.use("/v1/support-ticket-media", new SupportTicketMediaRouter().router)
 
 export default router

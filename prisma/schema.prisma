@@ -137,9 +137,10 @@ model User {
   productSizeMappingCreatedBy    ProductSizeMapping[]    @relation("ProductSizeMappingCreatedBy")
   productSizeMappingUpdatedBy    ProductSizeMapping[]    @relation("ProductSizeMappingUpdatedBy")
   productSizeMappingDeletedBy    ProductSizeMapping[]    @relation("ProductSizeMappingDeletedBy")
-  productFAQCreatedBy            ProductFAQ[]            @relation("ProductFAQCreatedBy")
-  productFAQUpdatedBy            ProductFAQ[]            @relation("ProductFAQUpdatedBy")
-  productFAQDeletedBy            ProductFAQ[]            @relation("ProductFAQDeletedBy")
+
+  supportTicketMediaCreatedBy SupportTicketMedia[] @relation("SupportTicketMediaCreatedBy")
+  supportTicketMediaUpdatedBy SupportTicketMedia[] @relation("SupportTicketMediaUpdatedBy")
+  supportTicketMediaDeletedBy SupportTicketMedia[] @relation("SupportTicketMediaDeletedBy")
 }
 
 model Verification {
@@ -234,6 +235,8 @@ model SupportTicket {
   subject         String
   description     String
   ticketStatus    TicketStatus @default(open)
+  // type      String?
+  // media     Int?
   status          Boolean      @default(true)
   createdAt       DateTime     @default(now())
   updatedAt       DateTime?
@@ -245,6 +248,8 @@ model SupportTicket {
   createdById Int?
   updatedById Int?
   deletedById Int?
+
+  supportTicketMedia SupportTicketMedia[]
 }
 
 model ProductCategory {
@@ -380,7 +385,6 @@ model Product {
   productMedias          ProductMedia[]
   productFeatureMappings ProductFeatureMapping[]
   productSizeMappings    ProductSizeMapping[]
-  productFAQs            ProductFAQ[]
 }
 
 model ProductMedia {
@@ -440,19 +444,21 @@ model ProductSizeMapping {
   deletedById Int?
 }
 
-model ProductFAQ {
-  productFAQId Int       @id @default(autoincrement())
-  productId    Int
-  product      Product?  @relation(fields: [productId], references: [productId], onDelete: Cascade)
-  question     String
-  answer       String
-  status       Boolean   @default(true)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime?
-  deletedAt    DateTime?
-  createdBy    User?     @relation("ProductFAQCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
-  updatedBy    User?     @relation("ProductFAQUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
-  deletedBy    User?     @relation("ProductFAQDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+model SupportTicketMedia {
+  supportTicketMediaId Int            @id @default(autoincrement())
+  supportTicketId      Int
+  supportTicket        SupportTicket? @relation(fields: [supportTicketId], references: [supportTicketId], onDelete: Cascade)
+  name                 String
+  mediaType            String
+  mediaUrl             String
+  size                 String
+  status               Boolean        @default(true)
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime?
+  deletedAt            DateTime?
+  createdBy            User?          @relation("SupportTicketMediaCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy            User?          @relation("SupportTicketMediaUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy            User?          @relation("SupportTicketMediaDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
 
   createdById Int?
   updatedById Int?

@@ -20,3 +20,19 @@ export const snakeToPascal = (snake: string): string => {
 export function generateRandomNumber() {
 	return Math.floor(Math.random() * (999 - 100 + 1)) + 100
 }
+
+export function normalToKebabCase(input: string): string {
+	if (typeof input !== "string") {
+		throw new TypeError("Input must be a string")
+	}
+
+	// Remove file extension
+	const fileNameWithoutExtension = input.replace(/\.[^/.]+$/, "")
+
+	return fileNameWithoutExtension
+		.normalize("NFD") // Normalize to decompose accented characters
+		.replace(/[\u0300-\u036f]/g, "") // Remove diacritical marks (accents)
+		.replace(/[^a-zA-Z0-9]+/g, "-") // Replace non-alphanumeric characters with hyphen
+		.replace(/^-+|-+$/g, "") // Remove leading and trailing hyphens
+		.toLowerCase() // Convert to lowercase
+}

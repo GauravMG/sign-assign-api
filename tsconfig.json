@@ -3,15 +3,15 @@
 		"target": "ESNext", // Keep the target as ESNext for modern JS
 		"module": "CommonJS", // Change from ESNext to CommonJS
 		"moduleResolution": "node", // Keep module resolution as node
-		"rootDir": "src",
-		"outDir": "dist",
+		"rootDir": "./src",
+		"outDir": "./dist",
 		"strict": true,
 		"esModuleInterop": true, // Ensure compatibility for default imports
 		"resolveJsonModule": true,
 		"skipLibCheck": true,
 		"noImplicitAny": false,
 		"forceConsistentCasingInFileNames": true,
-		"baseUrl": "./",
+		"baseUrl": "./src",
 		"types": [
 			"node",
 			"express"

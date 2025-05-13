@@ -1,9 +1,9 @@
 import express, {Router} from "express"
 
-import controller from "../controllers/SupportTicketController"
+import controller from "../controllers/SupportTicketMediaController"
 
 // routes
-export class SupportTicketRouter {
+export class SupportTicketMediaRouter {
 	public readonly router: Router
 	constructor() {
 		this.router = express.Router()
