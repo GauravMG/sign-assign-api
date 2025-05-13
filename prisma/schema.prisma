@@ -235,8 +235,6 @@ model SupportTicket {
   subject         String
   description     String
   ticketStatus    TicketStatus @default(open)
-  // type      String?
-  // media     Int?
   status          Boolean      @default(true)
   createdAt       DateTime     @default(now())
   updatedAt       DateTime?
@@ -249,7 +247,7 @@ model SupportTicket {
   updatedById Int?
   deletedById Int?
 
-  supportTicketMedia SupportTicketMedia[]
+  supportTicketMedias SupportTicketMedia[]
 }
 
 model ProductCategory {

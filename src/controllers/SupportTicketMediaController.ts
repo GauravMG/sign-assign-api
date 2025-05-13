@@ -17,15 +17,16 @@ class SupportTicketMediaController {
 	private idColumnSupportTicketMedia: string = "supportTicketMediaId"
 
 	constructor() {
-		this.commonModelSupportTicketMedia = new CommonModel("SupportTicketMedia", this.idColumnSupportTicketMedia, [
-			"mediaType",
-			"name"
-		]),
-		this.commonModelSupportTicket = new CommonModel(
-			"SupportTicket",
-			this.idColumnSupportTicket,
-			[]
-		)
+		;(this.commonModelSupportTicketMedia = new CommonModel(
+			"SupportTicketMedia",
+			this.idColumnSupportTicketMedia,
+			["mediaType", "name"]
+		)),
+			(this.commonModelSupportTicket = new CommonModel(
+				"SupportTicket",
+				this.idColumnSupportTicket,
+				[]
+			))
 		this.commonModelUser = new CommonModel("User", this.idColumnUserId, [
 			"firstName",
 			"lastName"
@@ -76,28 +77,31 @@ class SupportTicketMediaController {
 
 			const {filter, range, sort} = await listAPIPayload(req.body)
 
-			const [supportTicketMedias, total, supportTickets] = await prisma.$transaction(
-				async (transaction: PrismaClientTransaction) => {
-					return await Promise.all([
-						this.commonModelSupportTicketMedia.list(transaction, {
-							filter,
-							range,
-							sort,
-						}),
-						this.commonModelSupportTicketMedia.list(transaction, {
-							filter,
-							isCountOnly: true
-						}),
-						this.commonModelSupportTicket.list(transaction, {})
-					])
-				}
-			)
+			const [supportTicketMedias, total, supportTickets] =
+				await prisma.$transaction(
+					async (transaction: PrismaClientTransaction) => {
+						return await Promise.all([
+							this.commonModelSupportTicketMedia.list(transaction, {
+								filter,
+								range,
+								sort
+							}),
+							this.commonModelSupportTicketMedia.list(transaction, {
+								filter,
+								isCountOnly: true
+							}),
+							this.commonModelSupportTicket.list(transaction, {})
+						])
+					}
+				)
 
 			const getSupportTicketById = (supportTicketId: number) => {
-				return supportTickets.find((elm) => supportTicketId === elm.supportTicketId )
+				return supportTickets.find(
+					(elm) => supportTicketId === elm.supportTicketId
+				)
 			}
-			
-			let data = supportTicketMedias.map((el)=> {
+
+			let data = supportTicketMedias.map((el) => {
 				return {
 					...el,
 					supportTicketDetails: getSupportTicketById(el.supportTicketId)
@@ -138,11 +142,14 @@ class SupportTicketMediaController {
 					if (!existingSupportTicketMedia) {
 						throw new BadRequestException("Support ticket media doesn't exist")
 					}
-					
-					// for size as we are taking size as in kb so taking it as string 
+
+					// for size as we are taking size as in kb so taking it as string
 					restPayload = {
 						...restPayload,
-						size: typeof restPayload.size === "number" ? String(restPayload.size): restPayload.size
+						size:
+							typeof restPayload.size === "number"
+								? String(restPayload.size)
+								: restPayload.size
 					}
 
 					// update
@@ -154,14 +161,12 @@ class SupportTicketMediaController {
 					)
 
 					// get updated details
-					const [supportTicketMedia] = await this.commonModelSupportTicketMedia.list(
-						transaction,
-						{
+					const [supportTicketMedia] =
+						await this.commonModelSupportTicketMedia.list(transaction, {
 							filter: {
 								supportTicketMediaId
 							}
-						}
-					)
+						})
 
 					return [supportTicketMedia]
 				}

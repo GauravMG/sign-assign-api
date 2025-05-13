@@ -1,6 +1,6 @@
 import {NextFunction, Request, Response} from "express"
 
-import {listAPIPayload} from "../helpers"
+import {createFullName, listAPIPayload} from "../helpers"
 import {ApiResponse} from "../lib/APIResponse"
 import {PrismaClientTransaction, prisma} from "../lib/PrismaLib"
 import {BadRequestException} from "../lib/exceptions"
@@ -9,14 +9,29 @@ import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, Headers} from "../types/common"
 
 class SupportTicketController {
 	private commonModelSupportTicket
+	private commonModelSupportTicketMedia
+	private commonModelUser
 
 	private idColumnSupportTicket: string = "supportTicketId"
+	private idColumnSupportTicketMedia: string = "supportTicketMediaId"
+	private idColumnUser: string = "userId"
 
 	constructor() {
 		this.commonModelSupportTicket = new CommonModel(
 			"SupportTicket",
 			this.idColumnSupportTicket,
-			["subject"]
+			["subject", "description"]
+		)
+		this.commonModelSupportTicketMedia = new CommonModel(
+			"SupportTicketMedia",
+			this.idColumnSupportTicketMedia,
+			[]
+		)
+
+		this.commonModelUser = new CommonModel(
+			"User",
+			this.idColumnSupportTicket,
+			[]
 		)
 
 		this.create = this.create.bind(this)
@@ -63,20 +78,108 @@ class SupportTicketController {
 
 			const {filter, range, sort} = await listAPIPayload(req.body)
 
-			const [supportTickets, total] = await prisma.$transaction(
+			const [supportTickets, total, stats] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
-					return await Promise.all([
-						this.commonModelSupportTicket.list(transaction, {
-							filter,
-							range,
-							sort
-						}),
+					let [supportTickets, total, allSupportTickets, supportTicketMedias] =
+						await Promise.all([
+							this.commonModelSupportTicket.list(transaction, {
+								filter,
+								range,
+								sort
+							}),
 
-						this.commonModelSupportTicket.list(transaction, {
-							filter,
-							isCountOnly: true
-						})
-					])
+							this.commonModelSupportTicket.list(transaction, {
+								filter,
+								isCountOnly: true
+							}),
+							this.commonModelSupportTicket.list(transaction, {
+								filter,
+								range,
+								sort
+							}),
+							this.commonModelSupportTicketMedia.list(transaction, {
+								filter,
+								range,
+								sort
+							})
+						])
+
+					const createdByIds: number[] = supportTickets.map(
+						({createdById}) => createdById
+					)
+					const users = await this.commonModelUser.list(transaction, {
+						filter: {
+							userId: createdByIds
+						},
+						range: {
+							all: true
+						}
+					})
+
+					const userToUserIdMap = new Map(
+						users.map((user) => [user.userId, user])
+					)
+
+					supportTickets = supportTickets.map((supportTicket) => {
+						let createdByUser: any = userToUserIdMap.get(
+							supportTicket.createdById
+						)
+
+						createdByUser = {
+							...createdByUser,
+							fullName: createFullName(createdByUser)
+						}
+
+						return {
+							...supportTicket,
+							createdByUser
+						}
+					})
+
+					const stats = {
+						totalTickets: 0,
+						openTickets: 0,
+						pendingTickets: 0,
+						closedTickets: 0
+					}
+
+					allSupportTickets.map(({ticketStatus}) => {
+						switch (ticketStatus) {
+							case "open":
+								stats.totalTickets++
+								stats.openTickets++
+
+								break
+
+							case "pending":
+								stats.totalTickets++
+								stats.pendingTickets++
+
+								break
+
+							case "closed":
+								stats.totalTickets++
+								stats.closedTickets++
+
+								break
+						}
+					})
+
+					// getMedia by support id
+					const getSupportTicketById = (supportTicketId: number) => {
+						return supportTicketMedias.filter(
+							(elm) => supportTicketId === elm.supportTicketId
+						)
+					}
+		
+					supportTickets = supportTickets.map((st) => {
+						return {
+							...st,
+							supportTicketMedias: getSupportTicketById(st.supportTicketId)
+						}
+					})
+
+					return [supportTickets, total, stats]
 				}
 			)
 
