@@ -33,4 +33,9 @@ router.use("/v1/product-subcategory", new ProductSubCategoryRouter().router)
 router.use("/v1/support-ticket", new SupportTicketRouter().router)
 router.use("/v1/support-ticket-media", new SupportTicketMediaRouter().router)
 
+router.use("/v1/product-attribute", new SupportTicketMediaRouter().router)
+router.use("/v1/attribute", new SupportTicketMediaRouter().router)
+router.use("/v1/variant", new SupportTicketMediaRouter().router)
+router.use("/v1/variant-attribute", new SupportTicketMediaRouter().router)
+
 export default router
