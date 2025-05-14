@@ -80,26 +80,25 @@ class SupportTicketController {
 
 			const [supportTickets, total, stats] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
-					let [supportTickets, total, allSupportTickets] =
-						await Promise.all([
-							this.commonModelSupportTicket.list(transaction, {
-								filter,
-								range,
-								sort
-							}),
+					let [supportTickets, total, allSupportTickets] = await Promise.all([
+						this.commonModelSupportTicket.list(transaction, {
+							filter,
+							range,
+							sort
+						}),
 
-							this.commonModelSupportTicket.list(transaction, {
-								filter,
-								isCountOnly: true
-							}),
-							this.commonModelSupportTicket.list(transaction, {
-								filter,
-								range: {
-									all: true
-								},
-								sort
-							})
-						])
+						this.commonModelSupportTicket.list(transaction, {
+							filter,
+							isCountOnly: true
+						}),
+						this.commonModelSupportTicket.list(transaction, {
+							filter,
+							range: {
+								all: true
+							},
+							sort
+						})
+					])
 
 					const createdByIds: number[] = supportTickets.map(
 						({createdById}) => createdById
@@ -117,26 +116,29 @@ class SupportTicketController {
 						}
 					})
 
-					const supportTicketMediaData = await this.commonModelSupportTicketMedia.list(transaction, {
-						filter: {
-							supportTicketId: supportTicketIds
-						},
-						range: {
-							all: true
-						}
-					})
+					const supportTicketMediaData =
+						await this.commonModelSupportTicketMedia.list(transaction, {
+							filter: {
+								supportTicketId: supportTicketIds
+							},
+							range: {
+								all: true
+							}
+						})
 
 					const userToUserIdMap = new Map(
 						users.map((user) => [user.userId, user])
 					)
 
-					const supportTicketMediaBySupportTicket = (supportTicketId: number) => {
+					const supportTicketMediaBySupportTicket = (
+						supportTicketId: number
+					) => {
 						return supportTicketMediaData.filter(
-						  (supportTicketMedia) => supportTicketId === supportTicketMedia.supportTicketId
-						);
-					  };
-					  
-		
+							(supportTicketMedia) =>
+								supportTicketId === supportTicketMedia.supportTicketId
+						)
+					}
+
 					supportTickets = supportTickets.map((supportTicket) => {
 						let createdByUser: any = userToUserIdMap.get(
 							supportTicket.createdById
@@ -146,11 +148,13 @@ class SupportTicketController {
 							...createdByUser,
 							fullName: createFullName(createdByUser)
 						}
-					
+
 						return {
 							...supportTicket,
 							createdByUser,
-							supportTicketMedias: supportTicketMediaBySupportTicket(supportTicket.supportTicketId)
+							supportTicketMedias: supportTicketMediaBySupportTicket(
+								supportTicket.supportTicketId
+							)
 						}
 					})
 
@@ -194,6 +198,7 @@ class SupportTicketController {
 					page: range?.page ?? DEFAULT_PAGE,
 					pageSize: range?.pageSize ?? DEFAULT_PAGE_SIZE
 				},
+				stats,
 				data: supportTickets
 			})
 		} catch (error) {
