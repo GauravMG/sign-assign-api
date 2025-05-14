@@ -13,6 +13,7 @@ export * from "./UserRouter"
 // product routes
 export * from "./ProductCategoryRouter"
 export * from "./ProductSubCategoryRouter"
+export * from "./ProductAttributeRouter"
 
 // other routes
 export * from "./SupportTicketRouter"

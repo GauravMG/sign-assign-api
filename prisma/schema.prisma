@@ -326,8 +326,9 @@ model Product {
   updatedById Int?
   deletedById Int?
 
-  productMedias ProductMedia[]
-  variants      Variant[]
+  productMedias     ProductMedia[]
+  variants          Variant[]
+  productAttributes ProductAttribute[]
 }
 
 model ProductMedia {
@@ -372,6 +373,7 @@ model Attribute {
 model ProductAttribute {
   productAttributeId Int       @id @default(autoincrement())
   attributeId        Int
+  productId          Int
   value              String?
   status             Boolean   @default(true)
   createdAt          DateTime  @default(now())
@@ -384,7 +386,10 @@ model ProductAttribute {
   createdById Int?
   updatedById Int?
   deletedById Int?
-  attributes  Attribute? @relation(fields: [attributeId], references: [attributeId], onDelete: Cascade)
+
+  products Product? @relation(fields: [productId], references: [productId], onDelete: Cascade)
+
+  attributes Attribute? @relation(fields: [attributeId], references: [attributeId], onDelete: Cascade)
 }
 
 model Variant {
