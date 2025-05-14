@@ -107,40 +107,21 @@ model User {
   supportTicketCreatedBy         SupportTicket[]         @relation("SupportTicketCreatedBy")
   supportTicketUpdatedBy         SupportTicket[]         @relation("SupportTicketUpdatedBy")
   supportTicketDeletedBy         SupportTicket[]         @relation("SupportTicketDeletedBy")
+  supportTicketMediaCreatedBy SupportTicketMedia[] @relation("SupportTicketMediaCreatedBy")
+  supportTicketMediaUpdatedBy SupportTicketMedia[] @relation("SupportTicketMediaUpdatedBy")
+  supportTicketMediaDeletedBy SupportTicketMedia[] @relation("SupportTicketMediaDeletedBy")
   productCategoryCreatedBy       ProductCategory[]       @relation("ProductCategoryCreatedBy")
   productCategoryUpdatedBy       ProductCategory[]       @relation("ProductCategoryUpdatedBy")
   productCategoryDeletedBy       ProductCategory[]       @relation("ProductCategoryDeletedBy")
   productSubCategoryCreatedBy    ProductSubCategory[]    @relation("ProductSubCategoryCreatedBy")
   productSubCategoryUpdatedBy    ProductSubCategory[]    @relation("ProductSubCategoryUpdatedBy")
   productSubCategoryDeletedBy    ProductSubCategory[]    @relation("ProductSubCategoryDeletedBy")
-  sizeCreatedBy                  Size[]                  @relation("SizeCreatedBy")
-  sizeUpdatedBy                  Size[]                  @relation("SizeUpdatedBy")
-  sizeDeletedBy                  Size[]                  @relation("SizeDeletedBy")
-  materialCreatedBy              Material[]              @relation("MaterialCreatedBy")
-  materialUpdatedBy              Material[]              @relation("MaterialUpdatedBy")
-  materialDeletedBy              Material[]              @relation("MaterialDeletedBy")
-  optionCreatedBy                Option[]                @relation("OptionCreatedBy")
-  optionUpdatedBy                Option[]                @relation("OptionUpdatedBy")
-  optionDeletedBy                Option[]                @relation("OptionDeletedBy")
-  featureCreatedBy               Feature[]               @relation("FeatureCreatedBy")
-  featureUpdatedBy               Feature[]               @relation("FeatureUpdatedBy")
-  featureDeletedBy               Feature[]               @relation("FeatureDeletedBy")
   productCreatedBy               Product[]               @relation("ProductCreatedBy")
   productUpdatedBy               Product[]               @relation("ProductUpdatedBy")
   productDeletedBy               Product[]               @relation("ProductDeletedBy")
   productMediaCreatedBy          ProductMedia[]          @relation("ProductMediaCreatedBy")
   productMediaUpdatedBy          ProductMedia[]          @relation("ProductMediaUpdatedBy")
   productMediaDeletedBy          ProductMedia[]          @relation("ProductMediaDeletedBy")
-  productFeatureMappingCreatedBy ProductFeatureMapping[] @relation("ProductFeatureMappingCreatedBy")
-  productFeatureMappingUpdatedBy ProductFeatureMapping[] @relation("ProductFeatureMappingUpdatedBy")
-  productFeatureMappingDeletedBy ProductFeatureMapping[] @relation("ProductFeatureMappingDeletedBy")
-  productSizeMappingCreatedBy    ProductSizeMapping[]    @relation("ProductSizeMappingCreatedBy")
-  productSizeMappingUpdatedBy    ProductSizeMapping[]    @relation("ProductSizeMappingUpdatedBy")
-  productSizeMappingDeletedBy    ProductSizeMapping[]    @relation("ProductSizeMappingDeletedBy")
-
-  supportTicketMediaCreatedBy SupportTicketMedia[] @relation("SupportTicketMediaCreatedBy")
-  supportTicketMediaUpdatedBy SupportTicketMedia[] @relation("SupportTicketMediaUpdatedBy")
-  supportTicketMediaDeletedBy SupportTicketMedia[] @relation("SupportTicketMediaDeletedBy")
 }
 
 model Verification {
@@ -250,6 +231,27 @@ model SupportTicket {
   supportTicketMedias SupportTicketMedia[]
 }
 
+model SupportTicketMedia {
+  supportTicketMediaId Int            @id @default(autoincrement())
+  supportTicketId      Int
+  supportTicket        SupportTicket? @relation(fields: [supportTicketId], references: [supportTicketId], onDelete: Cascade)
+  name                 String
+  mediaType            String
+  mediaUrl             String
+  size                 String
+  status               Boolean        @default(true)
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime?
+  deletedAt            DateTime?
+  createdBy            User?          @relation("SupportTicketMediaCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy            User?          @relation("SupportTicketMediaUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy            User?          @relation("SupportTicketMediaDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+}
+
 model ProductCategory {
   productCategoryId Int       @id @default(autoincrement())
   name              String
@@ -292,78 +294,6 @@ model ProductSubCategory {
   deletedById Int?
 }
 
-model Feature {
-  featureId Int       @id @default(autoincrement())
-  name      String
-  image     String
-  status    Boolean   @default(true)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime?
-  deletedAt DateTime?
-  createdBy User?     @relation("FeatureCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
-  updatedBy User?     @relation("FeatureUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
-  deletedBy User?     @relation("FeatureDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
-
-  createdById Int?
-  updatedById Int?
-  deletedById Int?
-
-  productFeatureMappings ProductFeatureMapping[]
-}
-
-model Size {
-  sizeId     Int           @id @default(autoincrement())
-  width      Int
-  widthUnit  MeasuringUnit
-  height     Int
-  heightUnit MeasuringUnit
-  status     Boolean       @default(true)
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime?
-  deletedAt  DateTime?
-  createdBy  User?         @relation("SizeCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
-  updatedBy  User?         @relation("SizeUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
-  deletedBy  User?         @relation("SizeDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
-
-  createdById Int?
-  updatedById Int?
-  deletedById Int?
-
-  productSizeMappings ProductSizeMapping[]
-}
-
-model Material {
-  materialId Int       @id @default(autoincrement())
-  name       String
-  status     Boolean   @default(true)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime?
-  deletedAt  DateTime?
-  createdBy  User?     @relation("MaterialCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
-  updatedBy  User?     @relation("MaterialUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
-  deletedBy  User?     @relation("MaterialDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
-
-  createdById Int?
-  updatedById Int?
-  deletedById Int?
-}
-
-model Option {
-  optionId  Int       @id @default(autoincrement())
-  name      String
-  status    Boolean   @default(true)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime?
-  deletedAt DateTime?
-  createdBy User?     @relation("OptionCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
-  updatedBy User?     @relation("OptionUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
-  deletedBy User?     @relation("OptionDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
-
-  createdById Int?
-  updatedById Int?
-  deletedById Int?
-}
-
 model Product {
   productId   Int       @id @default(autoincrement())
   name        String
@@ -380,9 +310,7 @@ model Product {
   updatedById Int?
   deletedById Int?
 
-  productMedias          ProductMedia[]
-  productFeatureMappings ProductFeatureMapping[]
-  productSizeMappings    ProductSizeMapping[]
+  productMedias ProductMedia[]
 }
 
 model ProductMedia {
@@ -398,65 +326,6 @@ model ProductMedia {
   createdBy      User?     @relation("ProductMediaCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
   updatedBy      User?     @relation("ProductMediaUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
   deletedBy      User?     @relation("ProductMediaDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
-
-  createdById Int?
-  updatedById Int?
-  deletedById Int?
-}
-
-model ProductFeatureMapping {
-  productFeatureMappingId Int       @id @default(autoincrement())
-  productId               Int
-  product                 Product?  @relation(fields: [productId], references: [productId], onDelete: Cascade)
-  featureId               Int
-  feature                 Feature?  @relation(fields: [featureId], references: [featureId], onDelete: Cascade)
-  status                  Boolean   @default(true)
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime?
-  deletedAt               DateTime?
-  createdBy               User?     @relation("ProductFeatureMappingCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
-  updatedBy               User?     @relation("ProductFeatureMappingUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
-  deletedBy               User?     @relation("ProductFeatureMappingDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
-
-  createdById Int?
-  updatedById Int?
-  deletedById Int?
-}
-
-model ProductSizeMapping {
-  productSizeMappingId Int       @id @default(autoincrement())
-  productId            Int
-  product              Product?  @relation(fields: [productId], references: [productId], onDelete: Cascade)
-  sizeId               Int
-  size                 Size?     @relation(fields: [sizeId], references: [sizeId], onDelete: Cascade)
-  status               Boolean   @default(true)
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime?
-  deletedAt            DateTime?
-  createdBy            User?     @relation("ProductSizeMappingCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
-  updatedBy            User?     @relation("ProductSizeMappingUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
-  deletedBy            User?     @relation("ProductSizeMappingDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
-
-  createdById Int?
-  updatedById Int?
-  deletedById Int?
-}
-
-model SupportTicketMedia {
-  supportTicketMediaId Int            @id @default(autoincrement())
-  supportTicketId      Int
-  supportTicket        SupportTicket? @relation(fields: [supportTicketId], references: [supportTicketId], onDelete: Cascade)
-  name                 String
-  mediaType            String
-  mediaUrl             String
-  size                 String
-  status               Boolean        @default(true)
-  createdAt            DateTime       @default(now())
-  updatedAt            DateTime?
-  deletedAt            DateTime?
-  createdBy            User?          @relation("SupportTicketMediaCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
-  updatedBy            User?          @relation("SupportTicketMediaUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
-  deletedBy            User?          @relation("SupportTicketMediaDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
 
   createdById Int?
   updatedById Int?

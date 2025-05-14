@@ -1,6 +1,6 @@
 import express, {Router} from "express"
 
-import controller from "../controllers/SupportTicketMediaController"
+import SupportTicketMediaController from "../controllers/SupportTicketMediaController"
 
 // routes
 export class SupportTicketMediaRouter {
@@ -8,9 +8,9 @@ export class SupportTicketMediaRouter {
 	constructor() {
 		this.router = express.Router()
 		this.router
-			.post("/create", controller.create)
-			.post("/list", controller.list)
-			.post("/update", controller.update)
-			.post("/delete", controller.delete)
+			.post("/create", SupportTicketMediaController.create)
+			.post("/list", SupportTicketMediaController.list)
+			.post("/update", SupportTicketMediaController.update)
+			.post("/delete", SupportTicketMediaController.delete)
 	}
 }

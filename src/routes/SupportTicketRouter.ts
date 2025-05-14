@@ -1,6 +1,6 @@
 import express, {Router} from "express"
 
-import controller from "../controllers/SupportTicketController"
+import SupportTicketController from "../controllers/SupportTicketController"
 
 // routes
 export class SupportTicketRouter {
@@ -8,9 +8,9 @@ export class SupportTicketRouter {
 	constructor() {
 		this.router = express.Router()
 		this.router
-			.post("/create", controller.create)
-			.post("/list", controller.list)
-			.post("/update", controller.update)
-			.post("/delete", controller.delete)
+			.post("/create", SupportTicketController.create)
+			.post("/list", SupportTicketController.list)
+			.post("/update", SupportTicketController.update)
+			.post("/delete", SupportTicketController.delete)
 	}
 }
