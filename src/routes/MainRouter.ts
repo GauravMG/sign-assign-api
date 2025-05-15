@@ -9,8 +9,12 @@ import {
 	ProductSubCategoryRouter,
 	SupportTicketRouter,
 	SupportTicketMediaRouter,
-	ProductAttributeRouter
+	ProductAttributeRouter,
+	UserAddressManagementRouter,
+	AttributeRouter,
+	VariantRouter
 } from "."
+import {VariantAttributeRouter} from "./VariantAttributeRouter"
 
 const router = express.Router()
 
@@ -25,6 +29,7 @@ router.use("/v1/upload", new UploadRouter().router)
 
 // user routes
 router.use("/v1/user", new UserRouter().router)
+router.use("/v1/user-address", new UserAddressManagementRouter().router)
 
 // product routes
 router.use("/v1/product-category", new ProductCategoryRouter().router)
@@ -36,8 +41,8 @@ router.use("/v1/support-ticket", new SupportTicketRouter().router)
 router.use("/v1/support-ticket-media", new SupportTicketMediaRouter().router)
 
 // attribute and variants
-router.use("/v1/attribute", new SupportTicketMediaRouter().router)
-router.use("/v1/variant", new SupportTicketMediaRouter().router)
-router.use("/v1/variant-attribute", new SupportTicketMediaRouter().router)
+router.use("/v1/attribute", new AttributeRouter().router)
+router.use("/v1/variant", new VariantRouter().router)
+router.use("/v1/variant-attribute", new VariantAttributeRouter().router)
 
 export default router

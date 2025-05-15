@@ -9,6 +9,7 @@ export * from "./UploadRouter"
 
 // user routes
 export * from "./UserRouter"
+export * from "./UserAddressManagementRouter"
 
 // product routes
 export * from "./ProductCategoryRouter"
@@ -17,5 +18,9 @@ export * from "./ProductAttributeRouter"
 
 // other routes
 export * from "./SupportTicketRouter"
-
 export * from "./SupportTicketMediaRouter"
+
+// variant and attribute
+export * from "./AttributeRouter"
+export * from "./VariantRouter"
+export * from "./VariantAttributeRouter"
