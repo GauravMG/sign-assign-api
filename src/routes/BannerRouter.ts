@@ -11,6 +11,7 @@ export class BannerRouter {
 			.post("/create", BannerController.create)
 			.post("/list", BannerController.list)
 			.post("/update", BannerController.update)
+			.post("/update-sequence", BannerController.updateSequence)
 			.post("/delete", BannerController.delete)
 	}
 }

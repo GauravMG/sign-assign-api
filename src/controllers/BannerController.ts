@@ -22,6 +22,7 @@ class BannerController {
 		this.create = this.create.bind(this)
 		this.list = this.list.bind(this)
 		this.update = this.update.bind(this)
+		this.updateSequence = this.updateSequence.bind(this)
 		this.delete = this.delete.bind(this)
 	}
 
@@ -35,11 +36,27 @@ class BannerController {
 
 			const [banners] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
+					const [highestSequenceNumberBanner] = await this.commonModelBanner.list(transaction, {
+						range: {
+							page: 1,
+							pageSize: 1
+						},
+						sort: [{
+							orderBy: "sequenceNumber",
+							orderDir: "desc"
+						}]
+					})
+
+					const lastSequenceNumber: number = highestSequenceNumberBanner?.sequenceNumber ?? 0
+
 					// create
 					const banners =
 						await this.commonModelBanner.bulkCreate(
 							transaction,
-							payload,
+							payload.map((el, index) => ({
+								...el,
+								sequenceNumber: lastSequenceNumber + 1 + index
+							})),
 							userId
 						)
 
@@ -141,6 +158,51 @@ class BannerController {
 			return response.successResponse({
 				message: `Details updated successfully`,
 				data: banner
+			})
+		} catch (error) {
+			next(error)
+		}
+	}
+
+	public async updateSequence(req: Request, res: Response, next: NextFunction) {
+		try {
+			const response = new ApiResponse(res)
+
+			const {userId, roleId}: Headers = req.headers
+
+			const payload: {bannerId: number, sequenceNumber: number}[] = req.body
+
+			await prisma.$transaction(
+				async (transaction: PrismaClientTransaction) => {
+					// check if exists
+					const [existingBanner] =
+						await this.commonModelBanner.list(transaction, {
+							filter: {
+								bannerId: payload.map((el) => el.bannerId)
+							}
+						})
+					if (!existingBanner) {
+						throw new BadRequestException("Banners doesn't exist")
+					}
+
+					// update
+					for (let i = 0; i < payload?.length; i++) {
+						await this.commonModelBanner.updateById(
+							transaction,
+							{
+								sequenceNumber: payload[i].sequenceNumber
+							},
+							payload[i].bannerId,
+							userId
+						)
+					}
+
+					return []
+				}
+			)
+
+			return response.successResponse({
+				message: `Order updated successfully`,
 			})
 		} catch (error) {
 			next(error)
