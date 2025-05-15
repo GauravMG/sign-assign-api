@@ -7,12 +7,14 @@ import {BadRequestException} from "../lib/exceptions"
 import CommonModel from "../models/CommonModel"
 import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, Headers} from "../types/common"
 
-class SuuportTicketController {
+class SupportTicketController {
 	private commonModelSupportTicket
+	private commonModelSupportTicketMedia
 	private commonModelUser
 
 	private idColumnSupportTicket: string = "supportTicketId"
-	private idColumnUserId: string = "userId"
+	private idColumnSupportTicketMedia: string = "supportTicketMediaId"
+	private idColumnUser: string = "userId"
 
 	constructor() {
 		this.commonModelSupportTicket = new CommonModel(
@@ -20,10 +22,17 @@ class SuuportTicketController {
 			this.idColumnSupportTicket,
 			["subject", "description"]
 		)
-		this.commonModelUser = new CommonModel("User", this.idColumnUserId, [
-			"firstName",
-			"lastName"
-		])
+		this.commonModelSupportTicketMedia = new CommonModel(
+			"SupportTicketMedia",
+			this.idColumnSupportTicketMedia,
+			[]
+		)
+
+		this.commonModelUser = new CommonModel(
+			"User",
+			this.idColumnSupportTicket,
+			[]
+		)
 
 		this.create = this.create.bind(this)
 		this.list = this.list.bind(this)
@@ -35,27 +44,26 @@ class SuuportTicketController {
 		try {
 			const response = new ApiResponse(res)
 
-			const {userId, roleId}: Headers = req.headers
+			const {userId}: Headers = req.headers
 
 			let payload = Array.isArray(req.body) ? req.body : [req.body]
 
-			const [productCategories] = await prisma.$transaction(
+			const [supportTickets] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					// create
-					const productCategories =
-						await this.commonModelSupportTicket.bulkCreate(
-							transaction,
-							payload,
-							userId
-						)
+					const supportTickets = await this.commonModelSupportTicket.bulkCreate(
+						transaction,
+						payload,
+						userId
+					)
 
-					return [productCategories]
+					return [supportTickets]
 				}
 			)
 
 			return response.successResponse({
-				message: `Support tickets created successfully`,
-				data: productCategories
+				message: `Support ticket(s) created successfully`,
+				data: supportTickets
 			})
 		} catch (error) {
 			next(error)
@@ -83,16 +91,20 @@ class SuuportTicketController {
 							filter,
 							isCountOnly: true
 						}),
-
 						this.commonModelSupportTicket.list(transaction, {
 							filter,
-							range,
+							range: {
+								all: true
+							},
 							sort
 						})
 					])
 
 					const createdByIds: number[] = supportTickets.map(
 						({createdById}) => createdById
+					)
+					const supportTicketIds: number[] = supportTickets.map(
+						(supportTicket) => supportTicket.supportTicketId
 					)
 
 					const users = await this.commonModelUser.list(transaction, {
@@ -104,9 +116,28 @@ class SuuportTicketController {
 						}
 					})
 
+					const supportTicketMediaData =
+						await this.commonModelSupportTicketMedia.list(transaction, {
+							filter: {
+								supportTicketId: supportTicketIds
+							},
+							range: {
+								all: true
+							}
+						})
+
 					const userToUserIdMap = new Map(
 						users.map((user) => [user.userId, user])
 					)
+
+					const supportTicketMediaBySupportTicket = (
+						supportTicketId: number
+					) => {
+						return supportTicketMediaData.filter(
+							(supportTicketMedia) =>
+								supportTicketId === supportTicketMedia.supportTicketId
+						)
+					}
 
 					supportTickets = supportTickets.map((supportTicket) => {
 						let createdByUser: any = userToUserIdMap.get(
@@ -120,7 +151,10 @@ class SuuportTicketController {
 
 						return {
 							...supportTicket,
-							createdByUser
+							createdByUser,
+							supportTicketMedias: supportTicketMediaBySupportTicket(
+								supportTicket.supportTicketId
+							)
 						}
 					})
 
@@ -158,7 +192,7 @@ class SuuportTicketController {
 			)
 
 			return response.successResponse({
-				message: `Support tickets data`,
+				message: `support ticket(s) data`,
 				metadata: {
 					total,
 					page: range?.page ?? DEFAULT_PAGE,
@@ -234,7 +268,7 @@ class SuuportTicketController {
 
 			if (!supportTicketIds?.length) {
 				throw new BadRequestException(
-					`Please select support tickets to be deleted`
+					`Please select support ticket(s) to be deleted`
 				)
 			}
 
@@ -251,7 +285,7 @@ class SuuportTicketController {
 							existingProductCategories.map((obj) => obj.userId)
 						)
 						throw new BadRequestException(
-							`Selected support tickets not found: ${supportTicketIds.filter((supportTicketId) => !supportTicketIdsSet.has(supportTicketId))}`
+							`Selected support ticket(s) not found: ${supportTicketIds.filter((supportTicketId) => !supportTicketIdsSet.has(supportTicketId))}`
 						)
 					}
 
@@ -264,7 +298,7 @@ class SuuportTicketController {
 			)
 
 			return response.successResponse({
-				message: `Support tickets deleted successfully`
+				message: `support ticket(s) deleted successfully`
 			})
 		} catch (error) {
 			next(error)
@@ -272,4 +306,4 @@ class SuuportTicketController {
 	}
 }
 
-export default new SuuportTicketController()
+export default new SupportTicketController()

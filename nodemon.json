@@ -1,0 +1,13 @@
+{
+	"watch": ["src"],
+	"ext": "ts",
+	"ignore": ["src/**/*.test.ts", "node_modules"],
+	"execMap": {
+	  "ts": "ts-node -r dotenv/config"
+	},
+	"env": {
+	  "NODE_ENV": "development"
+	},
+	"delay": "1000"
+  }
+  

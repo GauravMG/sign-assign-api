@@ -4,6 +4,7 @@ import path from "path"
 import {ApiResponse} from "../lib/APIResponse"
 // import {uploadMultipleFiles, uploadSingleFile} from "../lib/Digitalocean"
 import {BadRequestException} from "../lib/exceptions"
+import {normalToKebabCase} from "../helpers/string"
 
 class UploadController {
 	constructor() {
@@ -12,9 +13,8 @@ class UploadController {
 	}
 
 	public async uploadSingle(req: Request, res: Response, next: NextFunction) {
+		const response = new ApiResponse(res)
 		try {
-			const response = new ApiResponse(res)
-
 			if (!req.file) {
 				throw new BadRequestException("No file provided")
 			}
@@ -25,7 +25,12 @@ class UploadController {
 
 			return response.successResponse({
 				message: `File uploaded successfully`,
-				data: {url}
+				data: {
+					url,
+					name: normalToKebabCase(req?.file?.originalname),
+					size: req?.file?.size,
+					mediaType: req?.file?.mimetype
+				}
 			})
 		} catch (error) {
 			next(error)
