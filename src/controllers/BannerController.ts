@@ -13,11 +13,9 @@ class BannerController {
 	private idColumnBanner: string = "bannerId"
 
 	constructor() {
-		this.commonModelBanner = new CommonModel(
-			"Banner",
-			this.idColumnBanner,
-			["name"]
-		)
+		this.commonModelBanner = new CommonModel("Banner", this.idColumnBanner, [
+			"name"
+		])
 
 		this.create = this.create.bind(this)
 		this.list = this.list.bind(this)
@@ -36,29 +34,32 @@ class BannerController {
 
 			const [banners] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
-					const [highestSequenceNumberBanner] = await this.commonModelBanner.list(transaction, {
-						range: {
-							page: 1,
-							pageSize: 1
-						},
-						sort: [{
-							orderBy: "sequenceNumber",
-							orderDir: "desc"
-						}]
-					})
+					const [highestSequenceNumberBanner] =
+						await this.commonModelBanner.list(transaction, {
+							range: {
+								page: 1,
+								pageSize: 1
+							},
+							sort: [
+								{
+									orderBy: "sequenceNumber",
+									orderDir: "desc"
+								}
+							]
+						})
 
-					const lastSequenceNumber: number = highestSequenceNumberBanner?.sequenceNumber ?? 0
+					const lastSequenceNumber: number =
+						highestSequenceNumberBanner?.sequenceNumber ?? 0
 
 					// create
-					const banners =
-						await this.commonModelBanner.bulkCreate(
-							transaction,
-							payload.map((el, index) => ({
-								...el,
-								sequenceNumber: lastSequenceNumber + 1 + index
-							})),
-							userId
-						)
+					const banners = await this.commonModelBanner.bulkCreate(
+						transaction,
+						payload.map((el, index) => ({
+							...el,
+							sequenceNumber: lastSequenceNumber + 1 + index
+						})),
+						userId
+					)
 
 					return [banners]
 				}
@@ -123,12 +124,14 @@ class BannerController {
 			const [banner] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					// check if exists
-					const [existingBanner] =
-						await this.commonModelBanner.list(transaction, {
+					const [existingBanner] = await this.commonModelBanner.list(
+						transaction,
+						{
 							filter: {
 								bannerId
 							}
-						})
+						}
+					)
 					if (!existingBanner) {
 						throw new BadRequestException("Banner doesn't exist")
 					}
@@ -142,14 +145,11 @@ class BannerController {
 					)
 
 					// get updated details
-					const [banner] = await this.commonModelBanner.list(
-						transaction,
-						{
-							filter: {
-								bannerId
-							}
+					const [banner] = await this.commonModelBanner.list(transaction, {
+						filter: {
+							bannerId
 						}
-					)
+					})
 
 					return [banner]
 				}
@@ -170,17 +170,19 @@ class BannerController {
 
 			const {userId, roleId}: Headers = req.headers
 
-			const payload: {bannerId: number, sequenceNumber: number}[] = req.body
+			const payload: {bannerId: number; sequenceNumber: number}[] = req.body
 
 			await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					// check if exists
-					const [existingBanner] =
-						await this.commonModelBanner.list(transaction, {
+					const [existingBanner] = await this.commonModelBanner.list(
+						transaction,
+						{
 							filter: {
 								bannerId: payload.map((el) => el.bannerId)
 							}
-						})
+						}
+					)
 					if (!existingBanner) {
 						throw new BadRequestException("Banners doesn't exist")
 					}
@@ -202,7 +204,7 @@ class BannerController {
 			)
 
 			return response.successResponse({
-				message: `Order updated successfully`,
+				message: `Order updated successfully`
 			})
 		} catch (error) {
 			next(error)
@@ -218,19 +220,19 @@ class BannerController {
 			const {bannerIds} = req.body
 
 			if (!bannerIds?.length) {
-				throw new BadRequestException(
-					`Please select banners to be deleted`
-				)
+				throw new BadRequestException(`Please select banners to be deleted`)
 			}
 
 			await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
-					const existingbanners =
-						await this.commonModelBanner.list(transaction, {
+					const existingbanners = await this.commonModelBanner.list(
+						transaction,
+						{
 							filter: {
 								bannerId: bannerIds
 							}
-						})
+						}
+					)
 					if (!existingbanners.length) {
 						const bannerIdsSet: Set<number> = new Set(
 							existingbanners.map((obj) => obj.userId)

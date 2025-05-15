@@ -9,13 +9,20 @@ import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, Headers} from "../types/common"
 
 class ProductCategoryController {
 	private commonModelProductCategory
+	private commonModelProductSubCategory
 
 	private idColumnProductCategory: string = "productCategoryId"
+	private idColumnProductSubCategory: string = "productSubCategoryId"
 
 	constructor() {
 		this.commonModelProductCategory = new CommonModel(
 			"ProductCategory",
 			this.idColumnProductCategory,
+			["name"]
+		)
+		this.commonModelProductSubCategory = new CommonModel(
+			"ProductSubCategory",
+			this.idColumnProductSubCategory,
 			["name"]
 		)
 
@@ -62,11 +69,13 @@ class ProductCategoryController {
 
 			const {roleId}: Headers = req.headers
 
-			const {filter, range, sort} = await listAPIPayload(req.body)
+			const {filter, range, sort, linkedEntities} = await listAPIPayload(
+				req.body
+			)
 
 			const [productCategories, total] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
-					return await Promise.all([
+					let [productCategories, total] = await Promise.all([
 						this.commonModelProductCategory.list(transaction, {
 							filter,
 							range,
@@ -78,6 +87,33 @@ class ProductCategoryController {
 							isCountOnly: true
 						})
 					])
+
+					if (linkedEntities) {
+						const productCategoryIds: number[] = productCategories.map(
+							({productCategoryId}) => productCategoryId
+						)
+
+						const productSubCategories =
+							await this.commonModelProductSubCategory.list(transaction, {
+								filter: {
+									productCategoryId: productCategoryIds
+								},
+								range: {
+									all: true
+								}
+							})
+
+						productCategories = productCategories.map((productCategory) => ({
+							...productCategory,
+							productSubCategory: productSubCategories.filter(
+								(productSubCategory) =>
+									productSubCategory.productCategoryId ===
+									productCategory.productCategoryId
+							)
+						}))
+					}
+
+					return [productCategories, total]
 				}
 			)
 
