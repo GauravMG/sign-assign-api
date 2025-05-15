@@ -105,7 +105,7 @@ class ProductCategoryController {
 
 						productCategories = productCategories.map((productCategory) => ({
 							...productCategory,
-							productSubCategory: productSubCategories.filter(
+							productSubCategories: productSubCategories.filter(
 								(productSubCategory) =>
 									productSubCategory.productCategoryId ===
 									productCategory.productCategoryId
