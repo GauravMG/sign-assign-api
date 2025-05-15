@@ -5,10 +5,11 @@ import {
 	RoleRouter,
 	UploadRouter,
 	UserRouter,
-	ProductCategoryRouter,
-	ProductSubCategoryRouter,
 	SupportTicketRouter,
 	SupportTicketMediaRouter,
+	BannerRouter,
+	ProductCategoryRouter,
+	ProductSubCategoryRouter,
 	ProductAttributeRouter
 } from "."
 
@@ -34,6 +35,7 @@ router.use("/v1/product-attribute", new ProductAttributeRouter().router)
 // other routes
 router.use("/v1/support-ticket", new SupportTicketRouter().router)
 router.use("/v1/support-ticket-media", new SupportTicketMediaRouter().router)
+router.use("/v1/banner", new BannerRouter().router)
 
 // attribute and variants
 router.use("/v1/attribute", new SupportTicketMediaRouter().router)

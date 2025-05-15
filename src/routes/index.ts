@@ -17,5 +17,6 @@ export * from "./ProductAttributeRouter"
 
 // other routes
 export * from "./SupportTicketRouter"
+export * from "./BannerRouter"
 
 export * from "./SupportTicketMediaRouter"

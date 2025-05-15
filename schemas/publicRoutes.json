@@ -18,5 +18,17 @@
 	{
 		"apiPath": "/v1/auth/reset-password",
 		"method": "POST"
+	},
+	{
+		"apiPath": "/v1/banner/list",
+		"method": "POST"
+	},
+	{
+		"apiPath": "/v1/product-category/list",
+		"method": "POST"
+	},
+	{
+		"apiPath": "/v1/product-subcategory/list",
+		"method": "POST"
 	}
 ]

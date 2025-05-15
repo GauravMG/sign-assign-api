@@ -428,7 +428,7 @@ class AuthController {
 		try {
 			const response = new ApiResponse(res)
 
-			let {roleId, firstName, lastName, email, business} = req.body
+			let {roleId, firstName, lastName, email, mobile, business} = req.body
 			roleId = parseInt(roleId)
 
 			const verificationType: VerificationType = VerificationType.Registration
@@ -457,6 +457,7 @@ class AuthController {
 							firstName,
 							lastName,
 							email,
+							mobile,
 							roleId,
 							isActive: false
 						}
