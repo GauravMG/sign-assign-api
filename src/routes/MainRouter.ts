@@ -8,9 +8,10 @@ import {
 	ProductCategoryRouter,
 	ProductSubCategoryRouter,
 	ProductRouter,
+	AttributeRouter,
 	VariantRouter,
 	VariantMediaRouter,
-	ProductAttributeRouter,
+	VariantAttributeRouter,
 	SupportTicketRouter,
 	SupportTicketMediaRouter,
 	BannerRouter
@@ -34,9 +35,10 @@ router.use("/v1/user", new UserRouter().router)
 router.use("/v1/product-category", new ProductCategoryRouter().router)
 router.use("/v1/product-subcategory", new ProductSubCategoryRouter().router)
 router.use("/v1/product", new ProductRouter().router)
+router.use("/v1/attribute", new AttributeRouter().router)
 router.use("/v1/variant", new VariantRouter().router)
 router.use("/v1/variant-media", new VariantMediaRouter().router)
-router.use("/v1/product-attribute", new ProductAttributeRouter().router)
+router.use("/v1/variant-attribute", new VariantAttributeRouter().router)
 
 // other routes
 router.use("/v1/support-ticket", new SupportTicketRouter().router)

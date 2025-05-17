@@ -495,18 +495,19 @@ model ProductReviewUserAction {
 }
 
 model Attribute {
-  attributeId Int           @id @default(autoincrement())
-  name        String
-  type        AttributeType
-  options     String? // JSON for SELECT/MULTI_SELECT
-  unit        String? // e.g. cm, inch
-  status      Boolean       @default(true)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime?
-  deletedAt   DateTime?
-  createdById Int?
-  updatedById Int?
-  deletedById Int?
+  attributeId  Int           @id @default(autoincrement())
+  name         String
+  type         AttributeType
+  options      String? // JSON for SELECT/MULTI_SELECT
+  unit         String? // e.g. cm, inch
+  isFilterable Boolean       @default(false)
+  status       Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime?
+  deletedAt    DateTime?
+  createdById  Int?
+  updatedById  Int?
+  deletedById  Int?
 
   createdBy User? @relation("AttributeCreatedBy", fields: [createdById], references: [userId])
   updatedBy User? @relation("AttributeUpdatedBy", fields: [updatedById], references: [userId])
@@ -563,7 +564,9 @@ model VariantAttribute {
   variantAttributeId Int       @id @default(autoincrement())
   attributeId        Int
   variantId          Int
-  value              String
+  value              String?
+  mediaUrl           String?
+  additionalPrice    String?
   status             Boolean   @default(true)
   createdAt          DateTime  @default(now())
   updatedAt          DateTime?

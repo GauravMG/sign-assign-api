@@ -14,9 +14,10 @@ export * from "./UserRouter"
 export * from "./ProductCategoryRouter"
 export * from "./ProductSubCategoryRouter"
 export * from "./ProductRouter"
+export * from "./AttributeRouter"
 export * from "./VariantRouter"
 export * from "./VariantMediaRouter"
-export * from "./ProductAttributeRouter"
+export * from "./VariantAttributeRouter"
 
 // other routes
 export * from "./SupportTicketRouter"
