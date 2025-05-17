@@ -5,12 +5,14 @@ import {
 	RoleRouter,
 	UploadRouter,
 	UserRouter,
-	SupportTicketRouter,
-	SupportTicketMediaRouter,
-	BannerRouter,
 	ProductCategoryRouter,
 	ProductSubCategoryRouter,
-	ProductAttributeRouter
+	ProductRouter,
+	ProductMediaRouter,
+	ProductAttributeRouter,
+	SupportTicketRouter,
+	SupportTicketMediaRouter,
+	BannerRouter
 } from "."
 
 const router = express.Router()
@@ -30,6 +32,8 @@ router.use("/v1/user", new UserRouter().router)
 // product routes
 router.use("/v1/product-category", new ProductCategoryRouter().router)
 router.use("/v1/product-subcategory", new ProductSubCategoryRouter().router)
+router.use("/v1/product", new ProductRouter().router)
+router.use("/v1/product-media", new ProductMediaRouter().router)
 router.use("/v1/product-attribute", new ProductAttributeRouter().router)
 
 // other routes
