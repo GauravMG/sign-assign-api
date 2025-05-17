@@ -16,13 +16,13 @@ jobs:
     - name: Setup SSH
       run: |
         mkdir -p ~/.ssh
-        echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
+        echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa_sign_assign_api
+        chmod 600 ~/.ssh/id_rsa_sign_assign_api
         ssh-keyscan -H 3.109.198.252 >> ~/.ssh/known_hosts
 
     - name: Deploy to EC2
       run: |
-        ssh -i ~/.ssh/id_rsa ubuntu@3.109.198.252 << EOF
+        ssh -i ~/.ssh/id_rsa_sign_assign_api ubuntu@3.109.198.252 << EOF
           cd /var/www/html/sign-assign/sign-assign-api/
           git pull origin master
           yarn
