@@ -235,7 +235,7 @@ class BannerController {
 					)
 					if (!existingbanners.length) {
 						const bannerIdsSet: Set<number> = new Set(
-							existingbanners.map((obj) => obj.userId)
+							existingbanners.map((obj) => obj.bannerId)
 						)
 						throw new BadRequestException(
 							`Selected banners not found: ${bannerIds.filter((bannerId) => !bannerIdsSet.has(bannerId))}`

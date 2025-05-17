@@ -33,6 +33,12 @@ enum TicketStatus {
   closed
 }
 
+enum UserActionType {
+  like
+  comment
+  share
+}
+
 model Role {
   roleId         Int       @id @default(autoincrement())
   name           String    @db.VarChar(100)
@@ -104,27 +110,48 @@ model User {
   businessUserMappingCreatedBy BusinessUserMapping[] @relation("BusinessUserMappingCreatedBy")
   businessUserMappingUpdatedBy BusinessUserMapping[] @relation("BusinessUserMappingUpdatedBy")
   businessUserMappingDeletedBy BusinessUserMapping[] @relation("BusinessUserMappingDeletedBy")
-  supportTicketCreatedBy       SupportTicket[]       @relation("SupportTicketCreatedBy")
-  supportTicketUpdatedBy       SupportTicket[]       @relation("SupportTicketUpdatedBy")
-  supportTicketDeletedBy       SupportTicket[]       @relation("SupportTicketDeletedBy")
-  supportTicketMediaCreatedBy  SupportTicketMedia[]  @relation("SupportTicketMediaCreatedBy")
-  supportTicketMediaUpdatedBy  SupportTicketMedia[]  @relation("SupportTicketMediaUpdatedBy")
-  supportTicketMediaDeletedBy  SupportTicketMedia[]  @relation("SupportTicketMediaDeletedBy")
-  bannerCreatedBy              Banner[]              @relation("BannerCreatedBy")
-  bannerUpdatedBy              Banner[]              @relation("BannerUpdatedBy")
-  bannerDeletedBy              Banner[]              @relation("BannerDeletedBy")
-  productCategoryCreatedBy     ProductCategory[]     @relation("ProductCategoryCreatedBy")
-  productCategoryUpdatedBy     ProductCategory[]     @relation("ProductCategoryUpdatedBy")
-  productCategoryDeletedBy     ProductCategory[]     @relation("ProductCategoryDeletedBy")
-  productSubCategoryCreatedBy  ProductSubCategory[]  @relation("ProductSubCategoryCreatedBy")
-  productSubCategoryUpdatedBy  ProductSubCategory[]  @relation("ProductSubCategoryUpdatedBy")
-  productSubCategoryDeletedBy  ProductSubCategory[]  @relation("ProductSubCategoryDeletedBy")
-  productCreatedBy             Product[]             @relation("ProductCreatedBy")
-  productUpdatedBy             Product[]             @relation("ProductUpdatedBy")
-  productDeletedBy             Product[]             @relation("ProductDeletedBy")
-  productMediaCreatedBy        ProductMedia[]        @relation("ProductMediaCreatedBy")
-  productMediaUpdatedBy        ProductMedia[]        @relation("ProductMediaUpdatedBy")
-  productMediaDeletedBy        ProductMedia[]        @relation("ProductMediaDeletedBy")
+
+  supportTicketCreatedBy      SupportTicket[]      @relation("SupportTicketCreatedBy")
+  supportTicketUpdatedBy      SupportTicket[]      @relation("SupportTicketUpdatedBy")
+  supportTicketDeletedBy      SupportTicket[]      @relation("SupportTicketDeletedBy")
+  supportTicketMediaCreatedBy SupportTicketMedia[] @relation("SupportTicketMediaCreatedBy")
+  supportTicketMediaUpdatedBy SupportTicketMedia[] @relation("SupportTicketMediaUpdatedBy")
+  supportTicketMediaDeletedBy SupportTicketMedia[] @relation("SupportTicketMediaDeletedBy")
+
+  bannerCreatedBy Banner[] @relation("BannerCreatedBy")
+  bannerUpdatedBy Banner[] @relation("BannerUpdatedBy")
+  bannerDeletedBy Banner[] @relation("BannerDeletedBy")
+
+  productCategoryCreatedBy    ProductCategory[]    @relation("ProductCategoryCreatedBy")
+  productCategoryUpdatedBy    ProductCategory[]    @relation("ProductCategoryUpdatedBy")
+  productCategoryDeletedBy    ProductCategory[]    @relation("ProductCategoryDeletedBy")
+  productSubCategoryCreatedBy ProductSubCategory[] @relation("ProductSubCategoryCreatedBy")
+  productSubCategoryUpdatedBy ProductSubCategory[] @relation("ProductSubCategoryUpdatedBy")
+  productSubCategoryDeletedBy ProductSubCategory[] @relation("ProductSubCategoryDeletedBy")
+
+  productCreatedBy      Product[]      @relation("ProductCreatedBy")
+  productUpdatedBy      Product[]      @relation("ProductUpdatedBy")
+  productDeletedBy      Product[]      @relation("ProductDeletedBy")
+  productMediaCreatedBy ProductMedia[] @relation("ProductMediaCreatedBy")
+  productMediaUpdatedBy ProductMedia[] @relation("ProductMediaUpdatedBy")
+  productMediaDeletedBy ProductMedia[] @relation("ProductMediaDeletedBy")
+
+  productFAQCreatedBy           ProductFAQ[]           @relation("ProductFAQCreatedBy")
+  productFAQUpdatedBy           ProductFAQ[]           @relation("ProductFAQUpdatedBy")
+  productFAQDeletedBy           ProductFAQ[]           @relation("ProductFAQDeletedBy")
+  productFAQUserActionCreatedBy ProductFAQUserAction[] @relation("ProductFAQUserActionCreatedBy")
+  productFAQUserActionUpdatedBy ProductFAQUserAction[] @relation("ProductFAQUserActionUpdatedBy")
+  productFAQUserActionDeletedBy ProductFAQUserAction[] @relation("ProductFAQUserActionDeletedBy")
+
+  productReviewCreatedBy           ProductReview[]           @relation("ProductReviewCreatedBy")
+  productReviewUpdatedBy           ProductReview[]           @relation("ProductReviewUpdatedBy")
+  productReviewDeletedBy           ProductReview[]           @relation("ProductReviewDeletedBy")
+  productReviewMediaCreatedBy      ProductReviewMedia[]      @relation("ProductReviewMediaCreatedBy")
+  productReviewMediaUpdatedBy      ProductReviewMedia[]      @relation("ProductReviewMediaUpdatedBy")
+  productReviewMediaDeletedBy      ProductReviewMedia[]      @relation("ProductReviewMediaDeletedBy")
+  productReviewUserActionCreatedBy ProductReviewUserAction[] @relation("ProductReviewUserActionCreatedBy")
+  productReviewUserActionUpdatedBy ProductReviewUserAction[] @relation("ProductReviewUserActionUpdatedBy")
+  productReviewUserActionDeletedBy ProductReviewUserAction[] @relation("ProductReviewUserActionDeletedBy")
 
   productAttributeCreatedBy ProductAttribute[] @relation("ProductAttributeCreatedBy")
   productAttributeUpdatedBy ProductAttribute[] @relation("ProductAttributeUpdatedBy")
@@ -310,6 +337,7 @@ model ProductCategory {
   deletedById Int?
 
   productSubCategories ProductSubCategory[]
+  products             Product[]
 }
 
 model ProductSubCategory {
@@ -331,25 +359,34 @@ model ProductSubCategory {
   createdById Int?
   updatedById Int?
   deletedById Int?
+
+  products Product[]
 }
 
 model Product {
-  productId   Int       @id @default(autoincrement())
-  name        String
-  description String?
-  status      Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime?
-  deletedAt   DateTime?
-  createdBy   User?     @relation("ProductCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
-  updatedBy   User?     @relation("ProductUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
-  deletedBy   User?     @relation("ProductDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+  productId            Int                @id @default(autoincrement())
+  productCategoryId    Int
+  productCategory      ProductCategory    @relation(fields: [productCategoryId], references: [productCategoryId], onDelete: Cascade)
+  productSubCategoryId Int
+  productSubCategory   ProductSubCategory @relation(fields: [productSubCategoryId], references: [productSubCategoryId], onDelete: Cascade)
+  name                 String
+  description          String?
+  specification        String?
+  status               Boolean            @default(true)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime?
+  deletedAt            DateTime?
+  createdBy            User?              @relation("ProductCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy            User?              @relation("ProductUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy            User?              @relation("ProductDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
 
   createdById Int?
   updatedById Int?
   deletedById Int?
 
   productMedias     ProductMedia[]
+  productFAQs       ProductFAQ[]
+  productReviews    ProductReview[]
   variants          Variant[]
   productAttributes ProductAttribute[]
 }
@@ -358,8 +395,10 @@ model ProductMedia {
   productMediaId Int       @id @default(autoincrement())
   productId      Int
   product        Product?  @relation(fields: [productId], references: [productId], onDelete: Cascade)
-  mediaType      MediaType
-  link           String
+  name           String
+  mediaType      String
+  mediaUrl       String
+  size           String
   status         Boolean   @default(true)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime?
@@ -367,6 +406,107 @@ model ProductMedia {
   createdBy      User?     @relation("ProductMediaCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
   updatedBy      User?     @relation("ProductMediaUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
   deletedBy      User?     @relation("ProductMediaDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+}
+
+model ProductFAQ {
+  productFAQId Int       @id @default(autoincrement())
+  productId    Int
+  product      Product   @relation(fields: [productId], references: [productId], onDelete: Cascade)
+  question     String
+  answer       String
+  status       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime?
+  deletedAt    DateTime?
+  createdBy    User?     @relation("ProductFAQCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy    User?     @relation("ProductFAQUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy    User?     @relation("ProductFAQDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+
+  productFAQUserActions ProductFAQUserAction[]
+}
+
+model ProductFAQUserAction {
+  productFAQUserActionId Int            @id @default(autoincrement())
+  productFAQId           Int
+  productFAQ             ProductFAQ     @relation(fields: [productFAQId], references: [productFAQId], onDelete: Cascade)
+  userActionType         UserActionType
+  status                 Boolean        @default(true)
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime?
+  deletedAt              DateTime?
+  createdBy              User?          @relation("ProductFAQUserActionCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy              User?          @relation("ProductFAQUserActionUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy              User?          @relation("ProductFAQUserActionDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+}
+
+model ProductReview {
+  productReviewId Int       @id @default(autoincrement())
+  productId       Int
+  product         Product   @relation(fields: [productId], references: [productId], onDelete: Cascade)
+  rating          String
+  title           String?
+  description     String?
+  status          Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime?
+  deletedAt       DateTime?
+  createdBy       User?     @relation("ProductReviewCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy       User?     @relation("ProductReviewUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy       User?     @relation("ProductReviewDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+
+  productReviewMedias      ProductReviewMedia[]
+  productReviewUserActions ProductReviewUserAction[]
+}
+
+model ProductReviewMedia {
+  productReviewMediaId Int            @id @default(autoincrement())
+  productReviewId      Int
+  productReview        ProductReview? @relation(fields: [productReviewId], references: [productReviewId], onDelete: Cascade)
+  name                 String
+  mediaType            String
+  mediaUrl             String
+  size                 String
+  status               Boolean        @default(true)
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime?
+  deletedAt            DateTime?
+  createdBy            User?          @relation("ProductReviewMediaCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy            User?          @relation("ProductReviewMediaUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy            User?          @relation("ProductReviewMediaDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+}
+
+model ProductReviewUserAction {
+  productReviewUserActionId Int            @id @default(autoincrement())
+  productReviewId           Int
+  productReview             ProductReview  @relation(fields: [productReviewId], references: [productReviewId], onDelete: Cascade)
+  userActionType            UserActionType
+  status                    Boolean        @default(true)
+  createdAt                 DateTime       @default(now())
+  updatedAt                 DateTime?
+  deletedAt                 DateTime?
+  createdBy                 User?          @relation("ProductReviewUserActionCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy                 User?          @relation("ProductReviewUserActionUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy                 User?          @relation("ProductReviewUserActionDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
 
   createdById Int?
   updatedById Int?

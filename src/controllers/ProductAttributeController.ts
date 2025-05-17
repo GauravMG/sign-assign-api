@@ -202,7 +202,7 @@ class ProductAttributeController {
 						})
 					if (!existingProductAttributes.length) {
 						const productAttributeIdsSet: Set<number> = new Set(
-							existingProductAttributes.map((obj) => obj.userId)
+							existingProductAttributes.map((obj) => obj.productAttributeId)
 						)
 						throw new BadRequestException(
 							`Selected Product attribute(s) not found: ${productAttributeIds.filter((productAttributeId) => !productAttributeIdsSet.has(productAttributeId))}`

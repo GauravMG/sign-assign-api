@@ -7,16 +7,16 @@ import {BadRequestException} from "../lib/exceptions"
 import CommonModel from "../models/CommonModel"
 import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, Headers} from "../types/common"
 
-class ProductSubCategoryController {
-	private commonModelProductSubCategory
+class ProductMediaController {
+	private commonModelProductMedia
 
-	private idColumnProductSubCategory: string = "productSubCategoryId"
+	private idColumnProductMedia: string = "productMediaId"
 
 	constructor() {
-		this.commonModelProductSubCategory = new CommonModel(
-			"ProductSubCategory",
-			this.idColumnProductSubCategory,
-			["name", "description"]
+		this.commonModelProductMedia = new CommonModel(
+			"ProductMedia",
+			this.idColumnProductMedia,
+			[]
 		)
 
 		this.create = this.create.bind(this)
@@ -33,23 +33,22 @@ class ProductSubCategoryController {
 
 			let payload = Array.isArray(req.body) ? req.body : [req.body]
 
-			const [productSubCategories] = await prisma.$transaction(
+			const [productMedias] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					// create
-					const productSubCategories =
-						await this.commonModelProductSubCategory.bulkCreate(
-							transaction,
-							payload,
-							userId
-						)
+					const productMedias = await this.commonModelProductMedia.bulkCreate(
+						transaction,
+						payload,
+						userId
+					)
 
-					return [productSubCategories]
+					return [productMedias]
 				}
 			)
 
 			return response.successResponse({
-				message: `Product sub-categories created successfully`,
-				data: productSubCategories
+				message: `Product media created successfully`,
+				data: productMedias
 			})
 		} catch (error) {
 			next(error)
@@ -64,16 +63,15 @@ class ProductSubCategoryController {
 
 			const {filter, range, sort} = await listAPIPayload(req.body)
 
-			const [productSubCategories, total] = await prisma.$transaction(
+			const [productMedias, total] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					return await Promise.all([
-						this.commonModelProductSubCategory.list(transaction, {
+						this.commonModelProductMedia.list(transaction, {
 							filter,
 							range,
 							sort
 						}),
-
-						this.commonModelProductSubCategory.list(transaction, {
+						this.commonModelProductMedia.list(transaction, {
 							filter,
 							isCountOnly: true
 						})
@@ -82,13 +80,13 @@ class ProductSubCategoryController {
 			)
 
 			return response.successResponse({
-				message: `Product sub-categories data`,
+				message: `Product media data`,
 				metadata: {
 					total,
 					page: range?.page ?? DEFAULT_PAGE,
 					pageSize: range?.pageSize ?? DEFAULT_PAGE_SIZE
 				},
-				data: productSubCategories
+				data: productMedias
 			})
 		} catch (error) {
 			next(error)
@@ -101,44 +99,55 @@ class ProductSubCategoryController {
 
 			const {userId, roleId}: Headers = req.headers
 
-			const {productSubCategoryId, ...restPayload} = req.body
+			let {productMediaId, ...restPayload} = req.body
 
-			const [productSubCategory] = await prisma.$transaction(
+			const [productMedia] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					// check if exists
-					const [existingProductSubCategory] =
-						await this.commonModelProductSubCategory.list(transaction, {
+					const [existingProductMedia] =
+						await this.commonModelProductMedia.list(transaction, {
 							filter: {
-								productSubCategoryId
+								productMediaId
 							}
 						})
-					if (!existingProductSubCategory) {
-						throw new BadRequestException("Product sub-category doesn't exist")
+					if (!existingProductMedia) {
+						throw new BadRequestException("Product media doesn't exist")
+					}
+
+					// for size as we are taking size as in kb so taking it as string
+					restPayload = {
+						...restPayload,
+						size:
+							typeof restPayload.size === "number"
+								? String(restPayload.size)
+								: restPayload.size
 					}
 
 					// update
-					await this.commonModelProductSubCategory.updateById(
+					await this.commonModelProductMedia.updateById(
 						transaction,
 						restPayload,
-						productSubCategoryId,
+						productMediaId,
 						userId
 					)
 
 					// get updated details
-					const [productSubCategory] =
-						await this.commonModelProductSubCategory.list(transaction, {
+					const [productMedia] = await this.commonModelProductMedia.list(
+						transaction,
+						{
 							filter: {
-								productSubCategoryId
+								productMediaId
 							}
-						})
+						}
+					)
 
-					return [productSubCategory]
+					return [productMedia]
 				}
 			)
 
 			return response.successResponse({
 				message: `Details updated successfully`,
-				data: productSubCategory
+				data: productMedia
 			})
 		} catch (error) {
 			next(error)
@@ -151,43 +160,43 @@ class ProductSubCategoryController {
 
 			const {userId, roleId}: Headers = req.headers
 
-			const {productSubCategoryIds} = req.body
+			const {productMediaIds} = req.body
 
-			if (!productSubCategoryIds?.length) {
+			if (!productMediaIds?.length) {
 				throw new BadRequestException(
-					`Please select product sub-categories to be deleted`
+					`Please select product media to be deleted`
 				)
 			}
 
 			await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
-					const existingProductSubCategories =
-						await this.commonModelProductSubCategory.list(transaction, {
+					const existingProductMedia = await this.commonModelProductMedia.list(
+						transaction,
+						{
 							filter: {
-								productSubCategoryId: productSubCategoryIds
+								productMediaId: productMediaIds
 							}
-						})
-					if (!existingProductSubCategories.length) {
-						const productSubCategoryIdsSet: Set<number> = new Set(
-							existingProductSubCategories.map(
-								(obj) => obj.productSubCategoryId
-							)
+						}
+					)
+					if (!existingProductMedia.length) {
+						const productMediaIdsSet: Set<number> = new Set(
+							existingProductMedia.map((obj) => obj.productMediaId)
 						)
 						throw new BadRequestException(
-							`Selected product sub-categories not found: ${productSubCategoryIds.filter((productSubCategoryId) => !productSubCategoryIdsSet.has(productSubCategoryId))}`
+							`Selected product medias not found: ${productMediaIds.filter((productMediaId) => !productMediaIdsSet.has(productMediaId))}`
 						)
 					}
 
-					await this.commonModelProductSubCategory.softDeleteByIds(
+					await this.commonModelProductMedia.softDeleteByIds(
 						transaction,
-						productSubCategoryIds,
+						productMediaIds,
 						userId
 					)
 				}
 			)
 
 			return response.successResponse({
-				message: `Product sub-categories deleted successfully`
+				message: `Product medias deleted successfully`
 			})
 		} catch (error) {
 			next(error)
@@ -195,4 +204,4 @@ class ProductSubCategoryController {
 	}
 }
 
-export default new ProductSubCategoryController()
+export default new ProductMediaController()

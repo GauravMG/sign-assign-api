@@ -1,6 +1,6 @@
 import {NextFunction, Request, Response} from "express"
 
-import {createFullName, listAPIPayload} from "../helpers"
+import {listAPIPayload} from "../helpers"
 import {ApiResponse} from "../lib/APIResponse"
 import {PrismaClientTransaction, prisma} from "../lib/PrismaLib"
 import {BadRequestException} from "../lib/exceptions"
@@ -9,28 +9,22 @@ import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, Headers} from "../types/common"
 
 class SupportTicketMediaController {
 	private commonModelSupportTicket
-	private commonModelUser
 	private commonModelSupportTicketMedia
 
 	private idColumnSupportTicket: string = "supportTicketId"
-	private idColumnUserId: string = "userId"
 	private idColumnSupportTicketMedia: string = "supportTicketMediaId"
 
 	constructor() {
-		;(this.commonModelSupportTicketMedia = new CommonModel(
+		this.commonModelSupportTicketMedia = new CommonModel(
 			"SupportTicketMedia",
 			this.idColumnSupportTicketMedia,
 			["mediaType", "name"]
-		)),
-			(this.commonModelSupportTicket = new CommonModel(
-				"SupportTicket",
-				this.idColumnSupportTicket,
-				[]
-			))
-		this.commonModelUser = new CommonModel("User", this.idColumnUserId, [
-			"firstName",
-			"lastName"
-		])
+		)
+		this.commonModelSupportTicket = new CommonModel(
+			"SupportTicket",
+			this.idColumnSupportTicket,
+			[]
+		)
 
 		this.create = this.create.bind(this)
 		this.list = this.list.bind(this)
@@ -191,7 +185,7 @@ class SupportTicketMediaController {
 
 			if (!supportTicketMediaIds?.length) {
 				throw new BadRequestException(
-					`Please select support tickets to be deleted`
+					`Please select support ticket medias to be deleted`
 				)
 			}
 
@@ -208,7 +202,7 @@ class SupportTicketMediaController {
 							existingSupportTicketMedia.map((obj) => obj.supportTicketMediaId)
 						)
 						throw new BadRequestException(
-							`Selected support tickets not found: ${supportTicketMediaIds.filter((supportTicketMediaId) => !supportTicketMediaIdsSet.has(supportTicketMediaId))}`
+							`Selected support ticket medias not found: ${supportTicketMediaIds.filter((supportTicketMediaId) => !supportTicketMediaIdsSet.has(supportTicketMediaId))}`
 						)
 					}
 
@@ -221,7 +215,7 @@ class SupportTicketMediaController {
 			)
 
 			return response.successResponse({
-				message: `Support tickets media deleted successfully`
+				message: `Support ticket medias deleted successfully`
 			})
 		} catch (error) {
 			next(error)

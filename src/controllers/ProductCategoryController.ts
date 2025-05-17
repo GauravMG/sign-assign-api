@@ -18,12 +18,12 @@ class ProductCategoryController {
 		this.commonModelProductCategory = new CommonModel(
 			"ProductCategory",
 			this.idColumnProductCategory,
-			["name"]
+			["name", "description"]
 		)
 		this.commonModelProductSubCategory = new CommonModel(
 			"ProductSubCategory",
 			this.idColumnProductSubCategory,
-			["name"]
+			["name", "description"]
 		)
 
 		this.create = this.create.bind(this)
@@ -207,7 +207,7 @@ class ProductCategoryController {
 						})
 					if (!existingProductCategories.length) {
 						const productCategoryIdsSet: Set<number> = new Set(
-							existingProductCategories.map((obj) => obj.userId)
+							existingProductCategories.map((obj) => obj.productCategoryId)
 						)
 						throw new BadRequestException(
 							`Selected product categories not found: ${productCategoryIds.filter((productCategoryId) => !productCategoryIdsSet.has(productCategoryId))}`
