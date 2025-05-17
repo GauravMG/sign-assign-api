@@ -39,6 +39,15 @@ enum UserActionType {
   share
 }
 
+enum AttributeType {
+  text
+  number
+  boolean
+  select
+  multi_select
+  dimension
+}
+
 model Role {
   roleId         Int       @id @default(autoincrement())
   name           String    @db.VarChar(100)
@@ -129,12 +138,9 @@ model User {
   productSubCategoryUpdatedBy ProductSubCategory[] @relation("ProductSubCategoryUpdatedBy")
   productSubCategoryDeletedBy ProductSubCategory[] @relation("ProductSubCategoryDeletedBy")
 
-  productCreatedBy      Product[]      @relation("ProductCreatedBy")
-  productUpdatedBy      Product[]      @relation("ProductUpdatedBy")
-  productDeletedBy      Product[]      @relation("ProductDeletedBy")
-  productMediaCreatedBy ProductMedia[] @relation("ProductMediaCreatedBy")
-  productMediaUpdatedBy ProductMedia[] @relation("ProductMediaUpdatedBy")
-  productMediaDeletedBy ProductMedia[] @relation("ProductMediaDeletedBy")
+  productCreatedBy Product[] @relation("ProductCreatedBy")
+  productUpdatedBy Product[] @relation("ProductUpdatedBy")
+  productDeletedBy Product[] @relation("ProductDeletedBy")
 
   productFAQCreatedBy           ProductFAQ[]           @relation("ProductFAQCreatedBy")
   productFAQUpdatedBy           ProductFAQ[]           @relation("ProductFAQUpdatedBy")
@@ -153,18 +159,16 @@ model User {
   productReviewUserActionUpdatedBy ProductReviewUserAction[] @relation("ProductReviewUserActionUpdatedBy")
   productReviewUserActionDeletedBy ProductReviewUserAction[] @relation("ProductReviewUserActionDeletedBy")
 
-  productAttributeCreatedBy ProductAttribute[] @relation("ProductAttributeCreatedBy")
-  productAttributeUpdatedBy ProductAttribute[] @relation("ProductAttributeUpdatedBy")
-  productAttributeDeletedBy ProductAttribute[] @relation("ProductAttributeDeletedBy")
-
   attributeCreatedBy Attribute[] @relation("AttributeCreatedBy")
   attributeUpdatedBy Attribute[] @relation("AttributeUpdatedBy")
   attributeDeletedBy Attribute[] @relation("AttributeDeletedBy")
 
-  variantCreatedBy Variant[] @relation("VariantCreatedBy")
-  variantUpdatedBy Variant[] @relation("VariantUpdatedBy")
-  variantDeletedBy Variant[] @relation("VariantDeletedBy")
-
+  variantCreatedBy          Variant[]          @relation("VariantCreatedBy")
+  variantUpdatedBy          Variant[]          @relation("VariantUpdatedBy")
+  variantDeletedBy          Variant[]          @relation("VariantDeletedBy")
+  variantMediaCreatedBy     VariantMedia[]     @relation("VariantMediaCreatedBy")
+  variantMediaUpdatedBy     VariantMedia[]     @relation("VariantMediaUpdatedBy")
+  variantMediaDeletedBy     VariantMedia[]     @relation("VariantMediaDeletedBy")
   variantAttributeCreatedBy VariantAttribute[] @relation("VariantAttributeCreatedBy")
   variantAttributeUpdatedBy VariantAttribute[] @relation("VariantAttributeUpdatedBy")
   variantAttributeDeletedBy VariantAttribute[] @relation("VariantAttributeDeletedBy")
@@ -384,32 +388,9 @@ model Product {
   updatedById Int?
   deletedById Int?
 
-  productMedias     ProductMedia[]
-  productFAQs       ProductFAQ[]
-  productReviews    ProductReview[]
-  variants          Variant[]
-  productAttributes ProductAttribute[]
-}
-
-model ProductMedia {
-  productMediaId Int       @id @default(autoincrement())
-  productId      Int
-  product        Product?  @relation(fields: [productId], references: [productId], onDelete: Cascade)
-  name           String
-  mediaType      String
-  mediaUrl       String
-  size           String
-  status         Boolean   @default(true)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime?
-  deletedAt      DateTime?
-  createdBy      User?     @relation("ProductMediaCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
-  updatedBy      User?     @relation("ProductMediaUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
-  deletedBy      User?     @relation("ProductMediaDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
-
-  createdById Int?
-  updatedById Int?
-  deletedById Int?
+  productFAQs    ProductFAQ[]
+  productReviews ProductReview[]
+  variants       Variant[]
 }
 
 model ProductFAQ {
@@ -514,67 +495,67 @@ model ProductReviewUserAction {
 }
 
 model Attribute {
-  attributeId Int       @id @default(autoincrement())
+  attributeId Int           @id @default(autoincrement())
   name        String
-  dataType    String
-  status      Boolean   @default(true)
-  createdAt   DateTime  @default(now())
+  type        AttributeType
+  options     String? // JSON for SELECT/MULTI_SELECT
+  unit        String? // e.g. cm, inch
+  status      Boolean       @default(true)
+  createdAt   DateTime      @default(now())
   updatedAt   DateTime?
   deletedAt   DateTime?
-  createdBy   User?     @relation("AttributeCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
-  updatedBy   User?     @relation("AttributeUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
-  deletedBy   User?     @relation("AttributeDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
-
   createdById Int?
   updatedById Int?
   deletedById Int?
 
-  productAttributes ProductAttribute[]
+  createdBy User? @relation("AttributeCreatedBy", fields: [createdById], references: [userId])
+  updatedBy User? @relation("AttributeUpdatedBy", fields: [updatedById], references: [userId])
+  deletedBy User? @relation("AttributeDeletedBy", fields: [deletedById], references: [userId])
+
   variantAttributes VariantAttribute[]
-}
-
-model ProductAttribute {
-  productAttributeId Int       @id @default(autoincrement())
-  attributeId        Int
-  productId          Int
-  value              String?
-  status             Boolean   @default(true)
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime?
-  deletedAt          DateTime?
-  createdBy          User?     @relation("ProductAttributeCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
-  updatedBy          User?     @relation("ProductAttributeUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
-  deletedBy          User?     @relation("ProductAttributeDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
-
-  createdById Int?
-  updatedById Int?
-  deletedById Int?
-
-  products Product? @relation(fields: [productId], references: [productId], onDelete: Cascade)
-
-  attributes Attribute? @relation(fields: [attributeId], references: [attributeId], onDelete: Cascade)
 }
 
 model Variant {
   variantId     Int       @id @default(autoincrement())
   productId     Int
-  sku           String?
+  product       Product?  @relation(fields: [productId], references: [productId], onDelete: Cascade)
+  name          String?
   price         String?
   stockQuantity String?
   status        Boolean   @default(true)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime?
   deletedAt     DateTime?
+  createdById   Int?
+  updatedById   Int?
+  deletedById   Int?
   createdBy     User?     @relation("VariantCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
   updatedBy     User?     @relation("VariantUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
   deletedBy     User?     @relation("VariantDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
 
+  variantMedias     VariantMedia[]
+  variantAttributes VariantAttribute[]
+}
+
+model VariantMedia {
+  variantMediaId Int       @id @default(autoincrement())
+  variantId      Int
+  variant        Variant?  @relation(fields: [variantId], references: [variantId], onDelete: Cascade)
+  name           String
+  mediaType      String
+  mediaUrl       String
+  size           String
+  status         Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime?
+  deletedAt      DateTime?
+  createdBy      User?     @relation("VariantMediaCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy      User?     @relation("VariantMediaUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy      User?     @relation("VariantMediaDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
   createdById Int?
   updatedById Int?
   deletedById Int?
-  products    Product? @relation(fields: [productId], references: [productId], onDelete: Cascade)
-
-  variantAttributes VariantAttribute[]
 }
 
 model VariantAttribute {

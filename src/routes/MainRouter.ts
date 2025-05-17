@@ -8,7 +8,8 @@ import {
 	ProductCategoryRouter,
 	ProductSubCategoryRouter,
 	ProductRouter,
-	ProductMediaRouter,
+	VariantRouter,
+	VariantMediaRouter,
 	ProductAttributeRouter,
 	SupportTicketRouter,
 	SupportTicketMediaRouter,
@@ -33,7 +34,8 @@ router.use("/v1/user", new UserRouter().router)
 router.use("/v1/product-category", new ProductCategoryRouter().router)
 router.use("/v1/product-subcategory", new ProductSubCategoryRouter().router)
 router.use("/v1/product", new ProductRouter().router)
-router.use("/v1/product-media", new ProductMediaRouter().router)
+router.use("/v1/variant", new VariantRouter().router)
+router.use("/v1/variant-media", new VariantMediaRouter().router)
 router.use("/v1/product-attribute", new ProductAttributeRouter().router)
 
 // other routes
@@ -42,8 +44,8 @@ router.use("/v1/support-ticket-media", new SupportTicketMediaRouter().router)
 router.use("/v1/banner", new BannerRouter().router)
 
 // attribute and variants
-router.use("/v1/attribute", new SupportTicketMediaRouter().router)
-router.use("/v1/variant", new SupportTicketMediaRouter().router)
-router.use("/v1/variant-attribute", new SupportTicketMediaRouter().router)
+// router.use("/v1/attribute", new SupportTicketMediaRouter().router)
+// router.use("/v1/variant", new SupportTicketMediaRouter().router)
+// router.use("/v1/variant-attribute", new SupportTicketMediaRouter().router)
 
 export default router

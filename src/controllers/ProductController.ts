@@ -9,12 +9,10 @@ import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, Headers} from "../types/common"
 
 class ProductController {
 	private commonModelProduct
-	private commonModelProductMedia
 	private commonModelProductCategory
 	private commonModelProductSubCategory
 
 	private idColumnProduct: string = "productId"
-	private idColumnProductMedia: string = "productMediaId"
 	private idColumnProductCategory: string = "productCategoryId"
 	private idColumnProductSubCategory: string = "productSubCategoryId"
 
@@ -24,11 +22,6 @@ class ProductController {
 			"description",
 			"specification"
 		])
-		this.commonModelProductMedia = new CommonModel(
-			"ProductMedia",
-			this.idColumnProductMedia,
-			[]
-		)
 		this.commonModelProductCategory = new CommonModel(
 			"ProductCategory",
 			this.idColumnProductCategory,
@@ -112,8 +105,8 @@ class ProductController {
 							productSubCategoryIds.push(products[i].productSubCategoryId)
 						}
 
-						const [productCategories, productSubCategories, productMedias] =
-							await Promise.all([
+						const [productCategories, productSubCategories] = await Promise.all(
+							[
 								this.commonModelProductCategory.list(transaction, {
 									filter: {
 										productCategoryId: productCategoryIds
@@ -130,17 +123,9 @@ class ProductController {
 									range: {
 										all: true
 									}
-								}),
-
-								this.commonModelProductMedia.list(transaction, {
-									filter: {
-										productId: productIds
-									},
-									range: {
-										all: true
-									}
 								})
-							])
+							]
+						)
 
 						const productCategoryMap = new Map(
 							productCategories.map((productCategory) => [
@@ -156,21 +141,12 @@ class ProductController {
 							])
 						)
 
-						const productMediaMap = new Map<number, any[]>()
-						for (const productMedia of productMedias) {
-							const productMediaGroup =
-								productMediaMap.get(productMedia.productId) || []
-							productMediaGroup.push(productMedia)
-							productMediaMap.set(productMedia.productId, productMediaGroup)
-						}
-
 						products = products.map((product) => ({
 							...product,
 							productCategory:
 								productCategoryMap.get(product.productCategoryId) || null,
 							productSubCategory:
-								productSubCategoryMap.get(product.productSubCategoryId) || null,
-							productMedias: productMediaMap.get(product.productId) || []
+								productSubCategoryMap.get(product.productSubCategoryId) || null
 						}))
 					}
 

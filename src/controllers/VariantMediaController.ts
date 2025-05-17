@@ -7,15 +7,15 @@ import {BadRequestException} from "../lib/exceptions"
 import CommonModel from "../models/CommonModel"
 import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, Headers} from "../types/common"
 
-class ProductMediaController {
-	private commonModelProductMedia
+class VariantMediaController {
+	private commonModelVariantMedia
 
-	private idColumnProductMedia: string = "productMediaId"
+	private idColumnVariantMedia: string = "variantMediaId"
 
 	constructor() {
-		this.commonModelProductMedia = new CommonModel(
-			"ProductMedia",
-			this.idColumnProductMedia,
+		this.commonModelVariantMedia = new CommonModel(
+			"VariantMedia",
+			this.idColumnVariantMedia,
 			[]
 		)
 
@@ -33,22 +33,22 @@ class ProductMediaController {
 
 			let payload = Array.isArray(req.body) ? req.body : [req.body]
 
-			const [productMedias] = await prisma.$transaction(
+			const [variantMedias] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					// create
-					const productMedias = await this.commonModelProductMedia.bulkCreate(
+					const variantMedias = await this.commonModelVariantMedia.bulkCreate(
 						transaction,
 						payload,
 						userId
 					)
 
-					return [productMedias]
+					return [variantMedias]
 				}
 			)
 
 			return response.successResponse({
-				message: `Product media created successfully`,
-				data: productMedias
+				message: `Variant media created successfully`,
+				data: variantMedias
 			})
 		} catch (error) {
 			next(error)
@@ -63,15 +63,15 @@ class ProductMediaController {
 
 			const {filter, range, sort} = await listAPIPayload(req.body)
 
-			const [productMedias, total] = await prisma.$transaction(
+			const [variantMedias, total] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					return await Promise.all([
-						this.commonModelProductMedia.list(transaction, {
+						this.commonModelVariantMedia.list(transaction, {
 							filter,
 							range,
 							sort
 						}),
-						this.commonModelProductMedia.list(transaction, {
+						this.commonModelVariantMedia.list(transaction, {
 							filter,
 							isCountOnly: true
 						})
@@ -80,13 +80,13 @@ class ProductMediaController {
 			)
 
 			return response.successResponse({
-				message: `Product media data`,
+				message: `Variant media data`,
 				metadata: {
 					total,
 					page: range?.page ?? DEFAULT_PAGE,
 					pageSize: range?.pageSize ?? DEFAULT_PAGE_SIZE
 				},
-				data: productMedias
+				data: variantMedias
 			})
 		} catch (error) {
 			next(error)
@@ -99,19 +99,19 @@ class ProductMediaController {
 
 			const {userId, roleId}: Headers = req.headers
 
-			let {productMediaId, ...restPayload} = req.body
+			let {variantMediaId, ...restPayload} = req.body
 
-			const [productMedia] = await prisma.$transaction(
+			const [variantMedia] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					// check if exists
-					const [existingProductMedia] =
-						await this.commonModelProductMedia.list(transaction, {
+					const [existingVariantMedia] =
+						await this.commonModelVariantMedia.list(transaction, {
 							filter: {
-								productMediaId
+								variantMediaId
 							}
 						})
-					if (!existingProductMedia) {
-						throw new BadRequestException("Product media doesn't exist")
+					if (!existingVariantMedia) {
+						throw new BadRequestException("Variant media doesn't exist")
 					}
 
 					// for size as we are taking size as in kb so taking it as string
@@ -124,30 +124,30 @@ class ProductMediaController {
 					}
 
 					// update
-					await this.commonModelProductMedia.updateById(
+					await this.commonModelVariantMedia.updateById(
 						transaction,
 						restPayload,
-						productMediaId,
+						variantMediaId,
 						userId
 					)
 
 					// get updated details
-					const [productMedia] = await this.commonModelProductMedia.list(
+					const [variantMedia] = await this.commonModelVariantMedia.list(
 						transaction,
 						{
 							filter: {
-								productMediaId
+								variantMediaId
 							}
 						}
 					)
 
-					return [productMedia]
+					return [variantMedia]
 				}
 			)
 
 			return response.successResponse({
 				message: `Details updated successfully`,
-				data: productMedia
+				data: variantMedia
 			})
 		} catch (error) {
 			next(error)
@@ -160,43 +160,43 @@ class ProductMediaController {
 
 			const {userId, roleId}: Headers = req.headers
 
-			const {productMediaIds} = req.body
+			const {variantMediaIds} = req.body
 
-			if (!productMediaIds?.length) {
+			if (!variantMediaIds?.length) {
 				throw new BadRequestException(
-					`Please select product media to be deleted`
+					`Please select variant media to be deleted`
 				)
 			}
 
 			await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
-					const existingProductMedia = await this.commonModelProductMedia.list(
+					const existingVariantMedia = await this.commonModelVariantMedia.list(
 						transaction,
 						{
 							filter: {
-								productMediaId: productMediaIds
+								variantMediaId: variantMediaIds
 							}
 						}
 					)
-					if (!existingProductMedia.length) {
-						const productMediaIdsSet: Set<number> = new Set(
-							existingProductMedia.map((obj) => obj.productMediaId)
+					if (!existingVariantMedia.length) {
+						const variantMediaIdsSet: Set<number> = new Set(
+							existingVariantMedia.map((obj) => obj.variantMediaId)
 						)
 						throw new BadRequestException(
-							`Selected product medias not found: ${productMediaIds.filter((productMediaId) => !productMediaIdsSet.has(productMediaId))}`
+							`Selected variant medias not found: ${variantMediaIds.filter((variantMediaId) => !variantMediaIdsSet.has(variantMediaId))}`
 						)
 					}
 
-					await this.commonModelProductMedia.softDeleteByIds(
+					await this.commonModelVariantMedia.softDeleteByIds(
 						transaction,
-						productMediaIds,
+						variantMediaIds,
 						userId
 					)
 				}
 			)
 
 			return response.successResponse({
-				message: `Product medias deleted successfully`
+				message: `Variant medias deleted successfully`
 			})
 		} catch (error) {
 			next(error)
@@ -204,4 +204,4 @@ class ProductMediaController {
 	}
 }
 
-export default new ProductMediaController()
+export default new VariantMediaController()
