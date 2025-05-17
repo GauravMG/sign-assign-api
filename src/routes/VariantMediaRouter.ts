@@ -11,6 +11,7 @@ export class VariantMediaRouter {
 			.post("/create", VariantMediaController.create)
 			.post("/list", VariantMediaController.list)
 			.post("/update", VariantMediaController.update)
+			.post("/update-sequence", VariantMediaController.updateSequence)
 			.post("/delete", VariantMediaController.delete)
 	}
 }

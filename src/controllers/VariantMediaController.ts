@@ -22,6 +22,7 @@ class VariantMediaController {
 		this.create = this.create.bind(this)
 		this.list = this.list.bind(this)
 		this.update = this.update.bind(this)
+		this.updateSequence = this.updateSequence.bind(this)
 		this.delete = this.delete.bind(this)
 	}
 
@@ -148,6 +149,54 @@ class VariantMediaController {
 			return response.successResponse({
 				message: `Details updated successfully`,
 				data: variantMedia
+			})
+		} catch (error) {
+			next(error)
+		}
+	}
+
+	public async updateSequence(req: Request, res: Response, next: NextFunction) {
+		try {
+			const response = new ApiResponse(res)
+
+			const {userId, roleId}: Headers = req.headers
+
+			const payload: {variantMediaId: number; sequenceNumber: number}[] =
+				req.body
+
+			await prisma.$transaction(
+				async (transaction: PrismaClientTransaction) => {
+					// check if exists
+					const [existingBanner] = await this.commonModelVariantMedia.list(
+						transaction,
+						{
+							filter: {
+								variantMediaId: payload.map((el) => el.variantMediaId)
+							}
+						}
+					)
+					if (!existingBanner) {
+						throw new BadRequestException("Banners doesn't exist")
+					}
+
+					// update
+					for (let i = 0; i < payload?.length; i++) {
+						await this.commonModelVariantMedia.updateById(
+							transaction,
+							{
+								sequenceNumber: payload[i].sequenceNumber
+							},
+							payload[i].variantMediaId,
+							userId
+						)
+					}
+
+					return []
+				}
+			)
+
+			return response.successResponse({
+				message: `Order updated successfully`
 			})
 		} catch (error) {
 			next(error)
