@@ -93,11 +93,19 @@ class ProductCategoryController {
 							({productCategoryId}) => productCategoryId
 						)
 
+						let filterProductSubCategory: any = {
+							productCategoryId: productCategoryIds
+						}
+						if ([true, false].indexOf(filter?.status) >= 0) {
+							filterProductSubCategory = {
+								...filterProductSubCategory,
+								status: filter.status
+							}
+						}
+
 						const productSubCategories =
 							await this.commonModelProductSubCategory.list(transaction, {
-								filter: {
-									productCategoryId: productCategoryIds
-								},
+								filter: filterProductSubCategory,
 								range: {
 									all: true
 								}
