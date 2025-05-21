@@ -10,7 +10,7 @@ import {
 	SupportTicketRouter,
 	SupportTicketMediaRouter,
 	ProductAttributeRouter,
-	UserAddressManagementRouter,
+	UserAddressRouter,
 	AttributeRouter,
 	VariantRouter
 } from "."
@@ -29,7 +29,7 @@ router.use("/v1/upload", new UploadRouter().router)
 
 // user routes
 router.use("/v1/user", new UserRouter().router)
-router.use("/v1/user-address", new UserAddressManagementRouter().router)
+router.use("/v1/user-address", new UserAddressRouter().router)
 
 // product routes
 router.use("/v1/product-category", new ProductCategoryRouter().router)
