@@ -14,13 +14,13 @@ export * from "./UserAddressManagementRouter"
 // product routes
 export * from "./ProductCategoryRouter"
 export * from "./ProductSubCategoryRouter"
-export * from "./ProductAttributeRouter"
+export * from "./ProductRouter"
+export * from "./AttributeRouter"
+export * from "./VariantRouter"
+export * from "./VariantMediaRouter"
+export * from "./VariantAttributeRouter"
 
 // other routes
 export * from "./SupportTicketRouter"
 export * from "./SupportTicketMediaRouter"
-
-// variant and attribute
-export * from "./AttributeRouter"
-export * from "./VariantRouter"
-export * from "./VariantAttributeRouter"
+export * from "./BannerRouter"

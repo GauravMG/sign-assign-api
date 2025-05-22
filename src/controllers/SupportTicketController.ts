@@ -282,7 +282,7 @@ class SupportTicketController {
 						})
 					if (!existingProductCategories.length) {
 						const supportTicketIdsSet: Set<number> = new Set(
-							existingProductCategories.map((obj) => obj.userId)
+							existingProductCategories.map((obj) => obj.supportTicketId)
 						)
 						throw new BadRequestException(
 							`Selected support ticket(s) not found: ${supportTicketIds.filter((supportTicketId) => !supportTicketIdsSet.has(supportTicketId))}`

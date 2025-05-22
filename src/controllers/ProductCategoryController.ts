@@ -9,14 +9,21 @@ import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, Headers} from "../types/common"
 
 class ProductCategoryController {
 	private commonModelProductCategory
+	private commonModelProductSubCategory
 
 	private idColumnProductCategory: string = "productCategoryId"
+	private idColumnProductSubCategory: string = "productSubCategoryId"
 
 	constructor() {
 		this.commonModelProductCategory = new CommonModel(
 			"ProductCategory",
 			this.idColumnProductCategory,
-			["name"]
+			["name", "description"]
+		)
+		this.commonModelProductSubCategory = new CommonModel(
+			"ProductSubCategory",
+			this.idColumnProductSubCategory,
+			["name", "description"]
 		)
 
 		this.create = this.create.bind(this)
@@ -62,11 +69,13 @@ class ProductCategoryController {
 
 			const {roleId}: Headers = req.headers
 
-			const {filter, range, sort} = await listAPIPayload(req.body)
+			const {filter, range, sort, linkedEntities} = await listAPIPayload(
+				req.body
+			)
 
 			const [productCategories, total] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
-					return await Promise.all([
+					let [productCategories, total] = await Promise.all([
 						this.commonModelProductCategory.list(transaction, {
 							filter,
 							range,
@@ -78,6 +87,41 @@ class ProductCategoryController {
 							isCountOnly: true
 						})
 					])
+
+					if (linkedEntities) {
+						const productCategoryIds: number[] = productCategories.map(
+							({productCategoryId}) => productCategoryId
+						)
+
+						let filterProductSubCategory: any = {
+							productCategoryId: productCategoryIds
+						}
+						if ([true, false].indexOf(filter?.status) >= 0) {
+							filterProductSubCategory = {
+								...filterProductSubCategory,
+								status: filter.status
+							}
+						}
+
+						const productSubCategories =
+							await this.commonModelProductSubCategory.list(transaction, {
+								filter: filterProductSubCategory,
+								range: {
+									all: true
+								}
+							})
+
+						productCategories = productCategories.map((productCategory) => ({
+							...productCategory,
+							productSubCategories: productSubCategories.filter(
+								(productSubCategory) =>
+									productSubCategory.productCategoryId ===
+									productCategory.productCategoryId
+							)
+						}))
+					}
+
+					return [productCategories, total]
 				}
 			)
 
@@ -171,7 +215,7 @@ class ProductCategoryController {
 						})
 					if (!existingProductCategories.length) {
 						const productCategoryIdsSet: Set<number> = new Set(
-							existingProductCategories.map((obj) => obj.userId)
+							existingProductCategories.map((obj) => obj.productCategoryId)
 						)
 						throw new BadRequestException(
 							`Selected product categories not found: ${productCategoryIds.filter((productCategoryId) => !productCategoryIdsSet.has(productCategoryId))}`

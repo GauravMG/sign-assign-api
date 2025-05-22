@@ -9,28 +9,21 @@ import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, Headers} from "../types/common"
 
 class VariantAttributeController {
 	private commonModelVariantAttribute
-	private commonModelVariant
 	private commonModelAttribute
 
-	private idColumnVariantAttribute: string = "variantAttributeId"
-	private idColumnVariant: string = "variantId"
+	private idColumnProductAttribute: string = "variantAttributeId"
 	private idColumnAttribute: string = "attributeId"
 
 	constructor() {
 		this.commonModelVariantAttribute = new CommonModel(
 			"VariantAttribute",
-			this.idColumnVariantAttribute,
-			["value"]
+			this.idColumnProductAttribute,
+			[]
 		)
-		this.commonModelVariant = new CommonModel("Variant", this.idColumnVariant, [
-			"sku",
-			"price",
-			"stockQuantity"
-		])
 		this.commonModelAttribute = new CommonModel(
 			"Attribute",
 			this.idColumnAttribute,
-			["name", "dataType"]
+			[]
 		)
 
 		this.create = this.create.bind(this)
@@ -78,40 +71,36 @@ class VariantAttributeController {
 
 			const {filter, range, sort} = await listAPIPayload(req.body)
 
-			let [variantAttributes, total, variants, attributes] =
-				await prisma.$transaction(
-					async (transaction: PrismaClientTransaction) => {
-						return await Promise.all([
-							this.commonModelVariantAttribute.list(transaction, {
-								filter,
-								range,
-								sort
-							}),
+			let [variantAttributes, total, attributes] = await prisma.$transaction(
+				async (transaction: PrismaClientTransaction) => {
+					return await Promise.all([
+						this.commonModelVariantAttribute.list(transaction, {
+							filter,
+							range,
+							sort
+						}),
 
-							this.commonModelVariantAttribute.list(transaction, {
-								filter,
-								isCountOnly: true
-							}),
-							this.commonModelVariant.list(transaction, {
-								filter: {}
-							}),
-							this.commonModelAttribute.list(transaction, {
-								filter: {}
-							})
-						])
-					}
-				)
-			const getVariantById = (id: number) => {
-				return variants.find((variant) => id === variant.variantId)
-			}
-			const getAttributeById = (id: number) => {
-				return attributes.find((attribute) => id === attribute.attributeId)
-			}
-			variantAttributes = variantAttributes.map((el) => ({
-				...el,
-				variantDetails: getVariantById(el.variantId),
-				attributeDetails: getAttributeById(el.attributeId)
-			}))
+						this.commonModelVariantAttribute.list(transaction, {
+							filter,
+							isCountOnly: true
+						}),
+
+						this.commonModelAttribute.list(transaction, {
+							filter: {}
+						})
+					])
+				}
+			)
+
+			const getAttributeById = (id: number) =>
+				attributes.find((attribute) => id === attribute.attributeId)
+
+			variantAttributes = variantAttributes.map((el) => {
+				return {
+					...el,
+					attribute: getAttributeById(el.attributeId)
+				}
+			})
 
 			return response.successResponse({
 				message: `Variant attribute(s) data`,
@@ -200,11 +189,11 @@ class VariantAttributeController {
 							}
 						})
 					if (!existingVariantAttributes.length) {
-						const variantAttributeIdsSet: Set<number> = new Set(
-							existingVariantAttributes.map((obj) => obj.userId)
+						const productAttributeIdsSet: Set<number> = new Set(
+							existingVariantAttributes.map((obj) => obj.variantAttributeId)
 						)
 						throw new BadRequestException(
-							`Selected Variant attribute(s) not found: ${variantAttributeIds.filter((variantAttributeId) => !variantAttributeIdsSet.has(variantAttributeId))}`
+							`Selected Variant attribute(s) not found: ${variantAttributeIds.filter((variantAttributeId) => !productAttributeIdsSet.has(variantAttributeId))}`
 						)
 					}
 

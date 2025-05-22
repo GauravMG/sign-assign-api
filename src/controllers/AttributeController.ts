@@ -174,7 +174,7 @@ class AttributeController {
 					)
 					if (!existingAttributes.length) {
 						const attributeIdsSet: Set<number> = new Set(
-							existingAttributes.map((obj) => obj.userId)
+							existingAttributes.map((obj) => obj.attributeId)
 						)
 						throw new BadRequestException(
 							`Selected Attribute(s) not found: ${attributeIds.filter((attributeId) => !attributeIdsSet.has(attributeId))}`

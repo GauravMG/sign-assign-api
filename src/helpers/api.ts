@@ -17,10 +17,12 @@ export async function listAPIPayload(inputData: any) {
 				? JSON.parse(inputData.sort)
 				: inputData.sort
 			: null
+	inputData.linkedEntities = inputData?.linkedEntities ?? false
 
 	return {
 		filter: inputData.filter ?? null,
 		range: inputData.range ?? null,
-		sort: inputData.sort ?? null
+		sort: inputData.sort ?? null,
+		linkedEntities: inputData.linkedEntities ?? false
 	}
 }

@@ -9,15 +9,20 @@ import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, Headers} from "../types/common"
 
 class VariantController {
 	private commonModelVariant
+	private commonModelVariantMedia
 
 	private idColumnVariant: string = "variantId"
+	private idColumnVariantMedia: string = "variantMediaId"
 
 	constructor() {
 		this.commonModelVariant = new CommonModel("Variant", this.idColumnVariant, [
-			"sku", // stock units
-			"price",
-			"stockQuantity"
+			"name"
 		])
+		this.commonModelVariantMedia = new CommonModel(
+			"VariantMedia",
+			this.idColumnVariantMedia,
+			[]
+		)
 
 		this.create = this.create.bind(this)
 		this.list = this.list.bind(this)
@@ -33,22 +38,22 @@ class VariantController {
 
 			let payload = Array.isArray(req.body) ? req.body : [req.body]
 
-			const [variants] = await prisma.$transaction(
+			const [variant] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					// create
-					const variants = await this.commonModelVariant.bulkCreate(
+					const variant = await this.commonModelVariant.bulkCreate(
 						transaction,
 						payload,
 						userId
 					)
 
-					return [variants]
+					return [variant]
 				}
 			)
 
 			return response.successResponse({
-				message: `Variant(s) created successfully`,
-				data: variants
+				message: `Variant created successfully`,
+				data: variant
 			})
 		} catch (error) {
 			next(error)
@@ -61,11 +66,13 @@ class VariantController {
 
 			const {roleId}: Headers = req.headers
 
-			const {filter, range, sort} = await listAPIPayload(req.body)
+			const {filter, range, sort, linkedEntities} = await listAPIPayload(
+				req.body
+			)
 
 			const [variants, total] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
-					return await Promise.all([
+					let [variants, total] = await Promise.all([
 						this.commonModelVariant.list(transaction, {
 							filter,
 							range,
@@ -77,11 +84,45 @@ class VariantController {
 							isCountOnly: true
 						})
 					])
+
+					if (linkedEntities) {
+						const variantIds: number[] = []
+
+						for (let i = 0; i < variants?.length; i++) {
+							variantIds.push(variants[i].variantId)
+						}
+
+						const [variantMedias] = await Promise.all([
+							this.commonModelVariantMedia.list(transaction, {
+								filter: {
+									variantId: variantIds
+								},
+								range: {
+									all: true
+								}
+							})
+						])
+
+						const variantMediaMap = new Map<number, any[]>()
+						for (const variantMedia of variantMedias) {
+							const variantMediaGroup =
+								variantMediaMap.get(variantMedia.variantId) || []
+							variantMediaGroup.push(variantMedia)
+							variantMediaMap.set(variantMedia.variantId, variantMediaGroup)
+						}
+
+						variants = variants.map((variant) => ({
+							...variant,
+							variantMedias: variantMediaMap.get(variant.variantId) || []
+						}))
+					}
+
+					return [variants, total]
 				}
 			)
 
 			return response.successResponse({
-				message: `Variant(s) data`,
+				message: `Variant data`,
 				metadata: {
 					total,
 					page: range?.page ?? DEFAULT_PAGE,
@@ -154,7 +195,7 @@ class VariantController {
 			const {variantIds} = req.body
 
 			if (!variantIds?.length) {
-				throw new BadRequestException(`Please select variant(s) to be deleted`)
+				throw new BadRequestException(`Please select variant to be deleted`)
 			}
 
 			await prisma.$transaction(
@@ -168,11 +209,11 @@ class VariantController {
 						}
 					)
 					if (!existingVariants.length) {
-						const variantIdsSet: Set<number> = new Set(
-							existingVariants.map((obj) => obj.userId)
+						const productIdsSet: Set<number> = new Set(
+							existingVariants.map((obj) => obj.variantId)
 						)
 						throw new BadRequestException(
-							`Selected Variant(s) not found: ${variantIds.filter((variantId) => !variantIdsSet.has(variantId))}`
+							`Selected variant not found: ${variantIds.filter((variantId) => !productIdsSet.has(variantId))}`
 						)
 					}
 
@@ -185,7 +226,7 @@ class VariantController {
 			)
 
 			return response.successResponse({
-				message: `Variant(s) deleted successfully`
+				message: `Variant deleted successfully`
 			})
 		} catch (error) {
 			next(error)
