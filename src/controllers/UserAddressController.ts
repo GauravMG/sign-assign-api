@@ -7,15 +7,15 @@ import {BadRequestException} from "../lib/exceptions"
 import CommonModel from "../models/CommonModel"
 import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, Headers} from "../types/common"
 
-class UserAddressManagementController {
-	private commonModelUserAddressManagement
+class UserAddressController {
+	private commonModelUserAddress
 
-	private idColumnUserAddressManagement: string = "userAddressManagementId"
+	private idColumnUserAddress: string = "userAddressId"
 
 	constructor() {
-		this.commonModelUserAddressManagement = new CommonModel(
-			"UserAddressManagement",
-			this.idColumnUserAddressManagement,
+		this.commonModelUserAddress = new CommonModel(
+			"UserAddress",
+			this.idColumnUserAddress,
 			[
 				"firstName",
 				"lastName",
@@ -43,23 +43,23 @@ class UserAddressManagementController {
 
 			let payload = Array.isArray(req.body) ? req.body : [req.body]
 
-			const [userAddressManagements] = await prisma.$transaction(
+			const [userAddresss] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					// create
-					const userAddressManagements =
-						await this.commonModelUserAddressManagement.bulkCreate(
+					const userAddresss =
+						await this.commonModelUserAddress.bulkCreate(
 							transaction,
 							payload,
 							userId
 						)
 
-					return [userAddressManagements]
+					return [userAddresss]
 				}
 			)
 
 			return response.successResponse({
-				message: `User address management(s) created successfully`,
-				data: userAddressManagements
+				message: `User address(es) created successfully`,
+				data: userAddresss
 			})
 		} catch (error) {
 			next(error)
@@ -74,16 +74,16 @@ class UserAddressManagementController {
 
 			const {filter, range, sort} = await listAPIPayload(req.body)
 
-			const [userAddressManagements, total] = await prisma.$transaction(
+			const [userAddresss, total] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					return await Promise.all([
-						this.commonModelUserAddressManagement.list(transaction, {
+						this.commonModelUserAddress.list(transaction, {
 							filter,
 							range,
 							sort
 						}),
 
-						this.commonModelUserAddressManagement.list(transaction, {
+						this.commonModelUserAddress.list(transaction, {
 							filter,
 							isCountOnly: true
 						})
@@ -92,13 +92,13 @@ class UserAddressManagementController {
 			)
 
 			return response.successResponse({
-				message: `User address management(s) data`,
+				message: `User address(es) data`,
 				metadata: {
 					total,
 					page: range?.page ?? DEFAULT_PAGE,
 					pageSize: range?.pageSize ?? DEFAULT_PAGE_SIZE
 				},
-				data: userAddressManagements
+				data: userAddresss
 			})
 		} catch (error) {
 			next(error)
@@ -111,46 +111,46 @@ class UserAddressManagementController {
 
 			const {userId, roleId}: Headers = req.headers
 
-			const {userAddressManagementId, ...restPayload} = req.body
+			const {userAddressId, ...restPayload} = req.body
 
-			const [userAddressManagement] = await prisma.$transaction(
+			const [userAddress] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					// check if exists
-					const [existingUserAddressManagement] =
-						await this.commonModelUserAddressManagement.list(transaction, {
+					const [existingUserAddress] =
+						await this.commonModelUserAddress.list(transaction, {
 							filter: {
-								userAddressManagementId
+								userAddressId
 							}
 						})
-					if (!existingUserAddressManagement) {
+					if (!existingUserAddress) {
 						throw new BadRequestException(
-							"User address management doesn't exist"
+							"User address  doesn't exist"
 						)
 					}
 
 					// update
-					await this.commonModelUserAddressManagement.updateById(
+					await this.commonModelUserAddress.updateById(
 						transaction,
 						restPayload,
-						userAddressManagementId,
+						userAddressId,
 						userId
 					)
 
 					// get updated details
-					const [userAddressManagement] =
-						await this.commonModelUserAddressManagement.list(transaction, {
+					const [userAddress] =
+						await this.commonModelUserAddress.list(transaction, {
 							filter: {
-								userAddressManagementId
+								userAddressId
 							}
 						})
 
-					return [userAddressManagement]
+					return [userAddress]
 				}
 			)
 
 			return response.successResponse({
 				message: `Details updated successfully`,
-				data: userAddressManagement
+				data: userAddress
 			})
 		} catch (error) {
 			next(error)
@@ -163,41 +163,41 @@ class UserAddressManagementController {
 
 			const {userId, roleId}: Headers = req.headers
 
-			const {userAddressManagementIds} = req.body
+			const {userAddressIds} = req.body
 
-			if (!userAddressManagementIds?.length) {
+			if (!userAddressIds?.length) {
 				throw new BadRequestException(
-					`Please select user address management(s) to be deleted`
+					`Please select user address (s) to be deleted`
 				)
 			}
 
 			await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
-					const existingUserAddressManagements =
-						await this.commonModelUserAddressManagement.list(transaction, {
+					const existingUserAddresss =
+						await this.commonModelUserAddress.list(transaction, {
 							filter: {
-								userAddressManagementId: userAddressManagementIds
+								userAddressId: userAddressIds
 							}
 						})
-					if (!existingUserAddressManagements.length) {
-						const userAddressManagementIdsSet: Set<number> = new Set(
-							existingUserAddressManagements.map((obj) => obj.userId)
+					if (!existingUserAddresss.length) {
+						const userAddressIdsSet: Set<number> = new Set(
+							existingUserAddresss.map((obj) => obj.userId)
 						)
 						throw new BadRequestException(
-							`Selected user address management(s) not found: ${userAddressManagementIds.filter((userAddressManagementId) => !userAddressManagementIdsSet.has(userAddressManagementId))}`
+							`Selected user address(es) not found: ${userAddressIds.filter((userAddressId) => !userAddressIdsSet.has(userAddressId))}`
 						)
 					}
 
-					await this.commonModelUserAddressManagement.softDeleteByIds(
+					await this.commonModelUserAddress.softDeleteByIds(
 						transaction,
-						userAddressManagementIds,
+						userAddressIds,
 						userId
 					)
 				}
 			)
 
 			return response.successResponse({
-				message: `User address management(s) deleted successfully`
+				message: `User address(es) deleted successfully`
 			})
 		} catch (error) {
 			next(error)
@@ -205,4 +205,4 @@ class UserAddressManagementController {
 	}
 }
 
-export default new UserAddressManagementController()
+export default new UserAddressController()
