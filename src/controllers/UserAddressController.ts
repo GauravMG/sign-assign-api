@@ -46,11 +46,12 @@ class UserAddressController {
 			const [userAddresss] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					// create
-					const userAddresss = await this.commonModelUserAddress.bulkCreate(
-						transaction,
-						payload,
-						userId
-					)
+					const userAddresss =
+						await this.commonModelUserAddress.bulkCreate(
+							transaction,
+							payload,
+							userId
+						)
 
 					return [userAddresss]
 				}
@@ -115,16 +116,16 @@ class UserAddressController {
 			const [userAddress] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					// check if exists
-					const [existingUserAddress] = await this.commonModelUserAddress.list(
-						transaction,
-						{
+					const [existingUserAddress] =
+						await this.commonModelUserAddress.list(transaction, {
 							filter: {
 								userAddressId
 							}
-						}
-					)
+						})
 					if (!existingUserAddress) {
-						throw new BadRequestException("User address  doesn't exist")
+						throw new BadRequestException(
+							"User address  doesn't exist"
+						)
 					}
 
 					// update
@@ -136,14 +137,12 @@ class UserAddressController {
 					)
 
 					// get updated details
-					const [userAddress] = await this.commonModelUserAddress.list(
-						transaction,
-						{
+					const [userAddress] =
+						await this.commonModelUserAddress.list(transaction, {
 							filter: {
 								userAddressId
 							}
-						}
-					)
+						})
 
 					return [userAddress]
 				}
@@ -174,14 +173,12 @@ class UserAddressController {
 
 			await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
-					const existingUserAddresss = await this.commonModelUserAddress.list(
-						transaction,
-						{
+					const existingUserAddresss =
+						await this.commonModelUserAddress.list(transaction, {
 							filter: {
 								userAddressId: userAddressIds
 							}
-						}
-					)
+						})
 					if (!existingUserAddresss.length) {
 						const userAddressIdsSet: Set<number> = new Set(
 							existingUserAddresss.map((obj) => obj.userId)
