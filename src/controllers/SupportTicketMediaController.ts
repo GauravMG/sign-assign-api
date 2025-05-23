@@ -71,37 +71,22 @@ class SupportTicketMediaController {
 
 			const {filter, range, sort} = await listAPIPayload(req.body)
 
-			const [supportTicketMedias, total, supportTickets] =
-				await prisma.$transaction(
-					async (transaction: PrismaClientTransaction) => {
-						return await Promise.all([
-							this.commonModelSupportTicketMedia.list(transaction, {
-								filter,
-								range,
-								sort
-							}),
-							this.commonModelSupportTicketMedia.list(transaction, {
-								filter,
-								isCountOnly: true
-							}),
-							this.commonModelSupportTicket.list(transaction, {})
-						])
-					}
-				)
-
-			const getSupportTicketById = (supportTicketId: number) => {
-				return supportTickets.find(
-					(elm) => supportTicketId === elm.supportTicketId
-				)
-			}
-
-			let data = supportTicketMedias.map((el) => {
-				return {
-					...el,
-					supportTicketDetails: getSupportTicketById(el.supportTicketId)
+			const [supportTicketMedias, total] = await prisma.$transaction(
+				async (transaction: PrismaClientTransaction) => {
+					return await Promise.all([
+						this.commonModelSupportTicketMedia.list(transaction, {
+							filter,
+							range,
+							sort
+						}),
+						this.commonModelSupportTicketMedia.list(transaction, {
+							filter,
+							isCountOnly: true
+						}),
+						this.commonModelSupportTicket.list(transaction, {})
+					])
 				}
-			})
-
+			)
 			return response.successResponse({
 				message: `Support ticket media data`,
 				metadata: {
@@ -109,7 +94,7 @@ class SupportTicketMediaController {
 					page: range?.page ?? DEFAULT_PAGE,
 					pageSize: range?.pageSize ?? DEFAULT_PAGE_SIZE
 				},
-				data
+				data: supportTicketMedias?.length ? supportTicketMedias : []
 			})
 		} catch (error) {
 			next(error)
