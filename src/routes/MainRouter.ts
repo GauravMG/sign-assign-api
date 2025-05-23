@@ -5,10 +5,11 @@ import {
 	RoleRouter,
 	UploadRouter,
 	UserRouter,
+	AttributeRouter,
 	ProductCategoryRouter,
 	ProductSubCategoryRouter,
 	ProductRouter,
-	AttributeRouter,
+	ProductFAQRouter,
 	VariantRouter,
 	VariantMediaRouter,
 	VariantAttributeRouter,
@@ -32,10 +33,11 @@ router.use("/v1/upload", new UploadRouter().router)
 router.use("/v1/user", new UserRouter().router)
 
 // product routes
+router.use("/v1/attribute", new AttributeRouter().router)
 router.use("/v1/product-category", new ProductCategoryRouter().router)
 router.use("/v1/product-subcategory", new ProductSubCategoryRouter().router)
 router.use("/v1/product", new ProductRouter().router)
-router.use("/v1/attribute", new AttributeRouter().router)
+router.use("/v1/product-faq", new ProductFAQRouter().router)
 router.use("/v1/variant", new VariantRouter().router)
 router.use("/v1/variant-media", new VariantMediaRouter().router)
 router.use("/v1/variant-attribute", new VariantAttributeRouter().router)

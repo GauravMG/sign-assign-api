@@ -11,10 +11,11 @@ export * from "./UploadRouter"
 export * from "./UserRouter"
 
 // product routes
+export * from "./AttributeRouter"
 export * from "./ProductCategoryRouter"
 export * from "./ProductSubCategoryRouter"
 export * from "./ProductRouter"
-export * from "./AttributeRouter"
+export * from "./ProductFAQRouter"
 export * from "./VariantRouter"
 export * from "./VariantMediaRouter"
 export * from "./VariantAttributeRouter"
