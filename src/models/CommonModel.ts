@@ -144,7 +144,12 @@ export default class CommonModel {
 						where[key] = {in: value}
 					}
 					// General filter handling for primitive values
-					else {
+					else if (typeof value === "string") {
+						where[key] = {
+							equals: value,
+							mode: "insensitive" // Case-insensitive comparison for strings
+						}
+					} else {
 						where[key] = value
 					}
 				}

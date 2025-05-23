@@ -374,6 +374,13 @@ model Product {
   productSubCategoryId Int
   productSubCategory   ProductSubCategory @relation(fields: [productSubCategoryId], references: [productSubCategoryId], onDelete: Cascade)
   name                 String
+  shortDescription     String?
+  section1Title        String?
+  section1Description  String?
+  section2Title        String?
+  section2Description  String?
+  section3Title        String?
+  section3Description  String?
   description          String?
   specification        String?
   status               Boolean            @default(true)
