@@ -34,5 +34,9 @@
 	{
 		"apiPath": "/v1/product/list",
 		"method": "POST"
+	},
+	{
+		"apiPath": "/v1/product-faq/list",
+		"method": "POST"
 	}
 ]
