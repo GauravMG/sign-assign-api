@@ -11,10 +11,14 @@ class ProductController {
 	private commonModelProduct
 	private commonModelProductCategory
 	private commonModelProductSubCategory
+	private commonModelVariant
+	private commonModelVariantMedia
 
 	private idColumnProduct: string = "productId"
 	private idColumnProductCategory: string = "productCategoryId"
 	private idColumnProductSubCategory: string = "productSubCategoryId"
+	private idColumnVariant: string = "variantId"
+	private idColumnVariantMedia: string = "variantMediaId"
 
 	constructor() {
 		this.commonModelProduct = new CommonModel("Product", this.idColumnProduct, [
@@ -31,6 +35,14 @@ class ProductController {
 			"ProductSubCategory",
 			this.idColumnProductSubCategory,
 			["name", "description"]
+		)
+		this.commonModelVariant = new CommonModel("Variant", this.idColumnVariant, [
+			"name"
+		])
+		this.commonModelVariantMedia = new CommonModel(
+			"VariantMedia",
+			this.idColumnVariantMedia,
+			[]
 		)
 
 		this.create = this.create.bind(this)
@@ -105,8 +117,8 @@ class ProductController {
 							productSubCategoryIds.push(products[i].productSubCategoryId)
 						}
 
-						const [productCategories, productSubCategories] = await Promise.all(
-							[
+						let [productCategories, productSubCategories, variants] =
+							await Promise.all([
 								this.commonModelProductCategory.list(transaction, {
 									filter: {
 										productCategoryId: productCategoryIds
@@ -123,8 +135,34 @@ class ProductController {
 									range: {
 										all: true
 									}
+								}),
+
+								this.commonModelVariant.list(transaction, {
+									filter: {
+										productId: productIds
+									},
+									range: {
+										all: true
+									}
 								})
-							]
+							])
+
+						const variantIds: number[] = []
+
+						for (let i = 0; i < variants?.length; i++) {
+							variantIds.push(variants[i].variantId)
+						}
+
+						const variantMedias = await this.commonModelVariantMedia.list(
+							transaction,
+							{
+								filter: {
+									variantId: variantIds
+								},
+								range: {
+									all: true
+								}
+							}
 						)
 
 						const productCategoryMap = new Map(
@@ -141,12 +179,33 @@ class ProductController {
 							])
 						)
 
+						const productVariantMediaMap = variantMedias.reduce(
+							(acc, variantMedia) => {
+								acc[variantMedia.variantId] = acc[variantMedia.variantId] || []
+								acc[variantMedia.variantId].push(variantMedia)
+								return acc
+							},
+							{}
+						)
+
+						variants = variants.map((variant) => ({
+							...variant,
+							variantMedias: productVariantMediaMap[variant.variantId] || []
+						}))
+
+						const productVariantMap = variants.reduce((acc, variant) => {
+							acc[variant.productId] = acc[variant.productId] || []
+							acc[variant.productId].push(variant)
+							return acc
+						}, {})
+
 						products = products.map((product) => ({
 							...product,
 							productCategory:
 								productCategoryMap.get(product.productCategoryId) || null,
 							productSubCategory:
-								productSubCategoryMap.get(product.productSubCategoryId) || null
+								productSubCategoryMap.get(product.productSubCategoryId) || null,
+							variants: productVariantMap[product.productId] || []
 						}))
 					}
 

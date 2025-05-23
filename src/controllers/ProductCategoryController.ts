@@ -111,13 +111,22 @@ class ProductCategoryController {
 								}
 							})
 
+						const productSubCategoryMap = productSubCategories.reduce(
+							(acc, productSubCategory) => {
+								acc[productSubCategory.productCategoryId] =
+									acc[productSubCategory.productCategoryId] || []
+								acc[productSubCategory.productCategoryId].push(
+									productSubCategory
+								)
+								return acc
+							},
+							{}
+						)
+
 						productCategories = productCategories.map((productCategory) => ({
 							...productCategory,
-							productSubCategories: productSubCategories.filter(
-								(productSubCategory) =>
-									productSubCategory.productCategoryId ===
-									productCategory.productCategoryId
-							)
+							productSubCategories:
+								productSubCategoryMap[productCategory.productCategoryId] || []
 						}))
 					}
 
