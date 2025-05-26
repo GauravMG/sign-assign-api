@@ -14,12 +14,14 @@ class ProductController {
 	private commonModelProductSubCategory
 	private commonModelVariant
 	private commonModelVariantMedia
+	private commonModelVariantAttribute
 
 	private idColumnProduct: string = "productId"
 	private idColumnProductCategory: string = "productCategoryId"
 	private idColumnProductSubCategory: string = "productSubCategoryId"
 	private idColumnVariant: string = "variantId"
 	private idColumnVariantMedia: string = "variantMediaId"
+	private idColumnVariantAtribute: string = "variantAttributeId"
 
 	constructor() {
 		this.commonModelProduct = new CommonModel("Product", this.idColumnProduct, [
@@ -43,6 +45,11 @@ class ProductController {
 		this.commonModelVariantMedia = new CommonModel(
 			"VariantMedia",
 			this.idColumnVariantMedia,
+			[]
+		)
+		this.commonModelVariantAttribute = new CommonModel(
+			"VariantAttribute",
+			this.idColumnVariantAtribute,
 			[]
 		)
 
@@ -96,30 +103,96 @@ class ProductController {
 				}
 			}
 
-			const {filter, range, sort, linkedEntities} = await listAPIPayload(
-				req.body
-			)
+			const {
+				filter: allFilter,
+				range,
+				sort,
+				linkedEntities
+			} = await listAPIPayload(req.body)
+			const {attributeFilters, ...filter} = allFilter ?? {}
 
 			const [products, total] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
-					let [products, total] = await Promise.all([
-						this.commonModelProduct.list(transaction, {
-							filter: {
-								...mandatoryFilters,
-								...filter
-							},
-							range,
-							sort
-						}),
+					const customFiltersProduct: any[] = []
+					if (attributeFilters && Object.keys(attributeFilters)?.length) {
+						const customFilters: any[] = []
+						for (const [variantAttributeId, values] of Object.entries(
+							attributeFilters
+						)) {
+							if (Array.isArray(values) && values.length) {
+								// If it's an array with values, use "in" filter
+								customFilters.push({
+									AND: [
+										{variantAttributeId: Number(variantAttributeId)},
+										{value: {in: values}}
+									]
+								})
+							} else if (typeof values === "string" && values.trim() !== "") {
+								// If it's a non-empty string, use "equals" filter
+								customFilters.push({
+									AND: [
+										{variantAttributeId: Number(variantAttributeId)},
+										{value: {equals: values}}
+									]
+								})
+							}
+						}
 
-						this.commonModelProduct.list(transaction, {
+						const variantAttributes =
+							await this.commonModelVariantAttribute.list(transaction, {
+								filter: {},
+								customFilters,
+								range: {
+									all: true
+								}
+							})
+						const variantIds: number[] = variantAttributes.map(
+							(variantAttribute) => Number(variantAttribute.variantId)
+						)
+
+						const variants = await this.commonModelVariant.list(transaction, {
 							filter: {
-								...mandatoryFilters,
-								...filter
+								variantId: variantIds
 							},
-							isCountOnly: true
+							range: {
+								all: true
+							}
 						})
-					])
+
+						if (variants?.length) {
+							customFiltersProduct.push({
+								productId: {
+									in: variants.map((variant) => Number(variant.productId))
+								}
+							})
+						}
+					}
+
+					let [products, total] =
+						attributeFilters &&
+						Object.keys(attributeFilters)?.length &&
+						!customFiltersProduct?.length
+							? [[], 0]
+							: await Promise.all([
+									this.commonModelProduct.list(transaction, {
+										filter: {
+											...mandatoryFilters,
+											...filter
+										},
+										customFilters: customFiltersProduct,
+										range,
+										sort
+									}),
+
+									this.commonModelProduct.list(transaction, {
+										filter: {
+											...mandatoryFilters,
+											...filter
+										},
+										customFilters: customFiltersProduct,
+										isCountOnly: true
+									})
+								])
 
 					if (linkedEntities) {
 						const productIds: number[] = []

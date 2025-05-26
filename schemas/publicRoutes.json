@@ -36,6 +36,10 @@
 		"method": "POST"
 	},
 	{
+		"apiPath": "/v1/attribute/list",
+		"method": "POST"
+	},
+	{
 		"apiPath": "/v1/variant/list",
 		"method": "POST"
 	},
