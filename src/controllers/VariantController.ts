@@ -6,6 +6,7 @@ import {PrismaClientTransaction, prisma} from "../lib/PrismaLib"
 import {BadRequestException} from "../lib/exceptions"
 import CommonModel from "../models/CommonModel"
 import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, Headers} from "../types/common"
+import {isWebUser} from "../types/auth"
 
 class VariantController {
 	private commonModelVariant
@@ -66,6 +67,14 @@ class VariantController {
 
 			const {roleId}: Headers = req.headers
 
+			let mandatoryFilters: any = {}
+			if (isWebUser(roleId)) {
+				mandatoryFilters = {
+					...mandatoryFilters,
+					status: true
+				}
+			}
+
 			const {filter, range, sort, linkedEntities} = await listAPIPayload(
 				req.body
 			)
@@ -74,13 +83,19 @@ class VariantController {
 				async (transaction: PrismaClientTransaction) => {
 					let [variants, total] = await Promise.all([
 						this.commonModelVariant.list(transaction, {
-							filter,
+							filter: {
+								...mandatoryFilters,
+								...filter
+							},
 							range,
 							sort
 						}),
 
 						this.commonModelVariant.list(transaction, {
-							filter,
+							filter: {
+								...mandatoryFilters,
+								...filter
+							},
 							isCountOnly: true
 						})
 					])
@@ -95,6 +110,7 @@ class VariantController {
 						const [variantMedias] = await Promise.all([
 							this.commonModelVariantMedia.list(transaction, {
 								filter: {
+									...mandatoryFilters,
 									variantId: variantIds
 								},
 								range: {

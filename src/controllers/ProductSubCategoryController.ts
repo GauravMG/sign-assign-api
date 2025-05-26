@@ -6,6 +6,7 @@ import {PrismaClientTransaction, prisma} from "../lib/PrismaLib"
 import {BadRequestException} from "../lib/exceptions"
 import CommonModel from "../models/CommonModel"
 import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, Headers} from "../types/common"
+import {isWebUser} from "../types/auth"
 
 class ProductSubCategoryController {
 	private commonModelProductSubCategory
@@ -60,7 +61,15 @@ class ProductSubCategoryController {
 		try {
 			const response = new ApiResponse(res)
 
-			const {roleId}: Headers = req.headers
+			const {userId, roleId}: Headers = req.headers
+
+			let mandatoryFilters: any = {}
+			if (isWebUser(roleId)) {
+				mandatoryFilters = {
+					...mandatoryFilters,
+					status: true
+				}
+			}
 
 			const {filter, range, sort} = await listAPIPayload(req.body)
 
@@ -68,13 +77,19 @@ class ProductSubCategoryController {
 				async (transaction: PrismaClientTransaction) => {
 					return await Promise.all([
 						this.commonModelProductSubCategory.list(transaction, {
-							filter,
+							filter: {
+								...mandatoryFilters,
+								...filter
+							},
 							range,
 							sort
 						}),
 
 						this.commonModelProductSubCategory.list(transaction, {
-							filter,
+							filter: {
+								...mandatoryFilters,
+								...filter
+							},
 							isCountOnly: true
 						})
 					])

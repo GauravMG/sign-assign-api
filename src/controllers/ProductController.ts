@@ -6,6 +6,7 @@ import {PrismaClientTransaction, prisma} from "../lib/PrismaLib"
 import {BadRequestException} from "../lib/exceptions"
 import CommonModel from "../models/CommonModel"
 import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, Headers} from "../types/common"
+import {isWebUser} from "../types/auth"
 
 class ProductController {
 	private commonModelProduct
@@ -85,7 +86,15 @@ class ProductController {
 		try {
 			const response = new ApiResponse(res)
 
-			const {roleId}: Headers = req.headers
+			const {userId, roleId}: Headers = req.headers
+
+			let mandatoryFilters: any = {}
+			if (isWebUser(roleId)) {
+				mandatoryFilters = {
+					...mandatoryFilters,
+					status: true
+				}
+			}
 
 			const {filter, range, sort, linkedEntities} = await listAPIPayload(
 				req.body
@@ -95,13 +104,19 @@ class ProductController {
 				async (transaction: PrismaClientTransaction) => {
 					let [products, total] = await Promise.all([
 						this.commonModelProduct.list(transaction, {
-							filter,
+							filter: {
+								...mandatoryFilters,
+								...filter
+							},
 							range,
 							sort
 						}),
 
 						this.commonModelProduct.list(transaction, {
-							filter,
+							filter: {
+								...mandatoryFilters,
+								...filter
+							},
 							isCountOnly: true
 						})
 					])
@@ -121,6 +136,7 @@ class ProductController {
 							await Promise.all([
 								this.commonModelProductCategory.list(transaction, {
 									filter: {
+										...mandatoryFilters,
 										productCategoryId: productCategoryIds
 									},
 									range: {
@@ -130,6 +146,7 @@ class ProductController {
 
 								this.commonModelProductSubCategory.list(transaction, {
 									filter: {
+										...mandatoryFilters,
 										productSubCategoryId: productSubCategoryIds
 									},
 									range: {
@@ -139,6 +156,7 @@ class ProductController {
 
 								this.commonModelVariant.list(transaction, {
 									filter: {
+										...mandatoryFilters,
 										productId: productIds
 									},
 									range: {
@@ -157,6 +175,7 @@ class ProductController {
 							transaction,
 							{
 								filter: {
+									...mandatoryFilters,
 									variantId: variantIds
 								},
 								range: {
