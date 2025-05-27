@@ -16,17 +16,7 @@ class UserAddressController {
 		this.commonModelUserAddress = new CommonModel(
 			"UserAddress",
 			this.idColumnUserAddress,
-			[
-				"firstName",
-				"lastName",
-				"companyName",
-				"phoneNumber",
-				"streetAddress",
-				"postal",
-				"city",
-				"state",
-				"country"
-			]
+			[]
 		)
 
 		this.create = this.create.bind(this)
@@ -167,7 +157,7 @@ class UserAddressController {
 
 			if (!userAddressIds?.length) {
 				throw new BadRequestException(
-					`Please select user address (s) to be deleted`
+					`Please select user address(es) to be deleted`
 				)
 			}
 
@@ -179,12 +169,13 @@ class UserAddressController {
 								userAddressId: userAddressIds
 							}
 						})
-					if (!existingUserAddresss.length) {
+
+						if (!existingUserAddresss?.length) {
 						const userAddressIdsSet: Set<number> = new Set(
-							existingUserAddresss.map((obj) => obj.userId)
+							existingUserAddresss.map((obj) => obj.userAddressId)
 						)
 						throw new BadRequestException(
-							`Selected user address(es) not found: ${userAddressIds.filter((userAddressId) => !userAddressIdsSet.has(userAddressId))}`
+							`Selected user address(es) not found: ${userAddressIds?.filter((userAddressId) => !userAddressIdsSet.has(userAddressId))}`
 						)
 					}
 
