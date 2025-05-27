@@ -96,10 +96,10 @@ model User {
   updatedById Int?
   deletedById Int?
 
-  verifications          Verification[]
-  loginHistories         LoginHistory[]
-  businessUserMappings   BusinessUserMapping[]
-  userAddresses UserAddress[]
+  verifications        Verification[]
+  loginHistories       LoginHistory[]
+  businessUserMappings BusinessUserMapping[]
+  userAddresses        UserAddress[]
 
   // Inverse relations
   usersCreatedBy               User[]                @relation("UserCreatedBy")
@@ -588,7 +588,7 @@ model VariantAttribute {
 }
 
 model UserAddress {
-  userAddressId  Int       @id @default(autoincrement())
+  userAddressId            Int       @id @default(autoincrement())
   userId                   Int
   firstName                String
   lastName                 String
