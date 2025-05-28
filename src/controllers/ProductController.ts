@@ -113,6 +113,8 @@ class ProductController {
 
 			const [products, total] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
+					let isAttributeFilterApplicable: boolean = false
+
 					const customFiltersProduct: any[] = []
 					if (attributeFilters && Object.keys(attributeFilters)?.length) {
 						let customFiltersPairs: any[] = []
@@ -120,6 +122,8 @@ class ProductController {
 							attributeFilters
 						)) {
 							if (Array.isArray(values) && values.length) {
+								isAttributeFilterApplicable = true
+
 								// If it's an array with values, use "in" filter
 								customFiltersPairs.push({
 									AND: [
@@ -128,6 +132,8 @@ class ProductController {
 									]
 								})
 							} else if (typeof values === "string" && values.trim() !== "") {
+								isAttributeFilterApplicable = true
+
 								// If it's a non-empty string, use "equals" filter
 								customFiltersPairs.push({
 									AND: [
@@ -139,9 +145,11 @@ class ProductController {
 						}
 						let customFilters: any[] = []
 						if (customFiltersPairs.length) {
-							customFilters = [{
-								OR: customFiltersPairs
-							}]
+							customFilters = [
+								{
+									OR: customFiltersPairs
+								}
+							]
 						}
 
 						if (customFilters?.length) {
@@ -158,15 +166,18 @@ class ProductController {
 							)
 
 							if (variantIds?.length) {
-								const variants = await this.commonModelVariant.list(transaction, {
-									filter: {
-										variantId: variantIds
-									},
-									range: {
-										all: true
+								const variants = await this.commonModelVariant.list(
+									transaction,
+									{
+										filter: {
+											variantId: variantIds
+										},
+										range: {
+											all: true
+										}
 									}
-								})
-		
+								)
+
 								if (variants?.length) {
 									customFiltersProduct.push({
 										productId: {
@@ -191,18 +202,21 @@ class ProductController {
 						}
 					}
 
-					let [products, total] = await Promise.all([
-						this.commonModelProduct.list(transaction, {
-							...payloadProduct,
-							range,
-							sort
-						}),
+					let [products, total] =
+						isAttributeFilterApplicable && !customFiltersProduct?.length
+							? [[], 0]
+							: await Promise.all([
+									this.commonModelProduct.list(transaction, {
+										...payloadProduct,
+										range,
+										sort
+									}),
 
-						this.commonModelProduct.list(transaction, {
-							...payloadProduct,
-							isCountOnly: true
-						})
-					])
+									this.commonModelProduct.list(transaction, {
+										...payloadProduct,
+										isCountOnly: true
+									})
+								])
 
 					if (linkedEntities) {
 						const productIds: number[] = []

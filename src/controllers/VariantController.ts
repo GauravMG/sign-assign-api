@@ -143,22 +143,26 @@ class VariantController {
 							})
 						])
 
-						const attributeIds: number[] = variantAttributes.map(({attributeId}) => attributeId)
+						const attributeIds: number[] = variantAttributes.map(
+							({attributeId}) => attributeId
+						)
 
-						const attributes = await this.commonModelAttribute.list(transaction, {
-							filter: {
-								...mandatoryFilters,
-								attributeId: attributeIds
-							},
-							range: {
-								all: true
+						const attributes = await this.commonModelAttribute.list(
+							transaction,
+							{
+								filter: {
+									...mandatoryFilters,
+									attributeId: attributeIds
+								},
+								range: {
+									all: true
+								}
 							}
-						})
+						)
 
 						const attributeMap = new Map<number, any[]>()
 						for (const attribute of attributes) {
-							const attributeGroup =
-								attributeMap.get(attribute.variantId) || []
+							const attributeGroup = attributeMap.get(attribute.variantId) || []
 							attributeGroup.push(attribute)
 							attributeMap.set(attribute.variantId, attributeGroup)
 						}
@@ -181,13 +185,17 @@ class VariantController {
 							const variantAttributeGroup =
 								variantAttributeMap.get(variantAttribute.variantId) || []
 							variantAttributeGroup.push(variantAttribute)
-							variantAttributeMap.set(variantAttribute.variantId, variantAttributeGroup)
+							variantAttributeMap.set(
+								variantAttribute.variantId,
+								variantAttributeGroup
+							)
 						}
 
 						variants = variants.map((variant) => ({
 							...variant,
 							variantMedias: variantMediaMap.get(variant.variantId) || [],
-							variantAttributes: variantAttributeMap.get(variant.variantId) || []
+							variantAttributes:
+								variantAttributeMap.get(variant.variantId) || []
 						}))
 					}
 
