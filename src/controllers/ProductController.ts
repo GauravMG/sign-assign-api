@@ -127,7 +127,7 @@ class ProductController {
 								// If it's an array with values, use "in" filter
 								customFiltersPairs.push({
 									AND: [
-										{variantAttributeId: Number(variantAttributeId)},
+										{attributeId: Number(variantAttributeId)},
 										{value: {in: values}}
 									]
 								})
@@ -137,7 +137,7 @@ class ProductController {
 								// If it's a non-empty string, use "equals" filter
 								customFiltersPairs.push({
 									AND: [
-										{variantAttributeId: Number(variantAttributeId)},
+										{attributeId: Number(variantAttributeId)},
 										{value: {equals: values}}
 									]
 								})
@@ -151,7 +151,6 @@ class ProductController {
 								}
 							]
 						}
-						console.log(`JSON.stringify(customFilters) ===`, JSON.stringify(customFilters))
 
 						if (customFilters?.length) {
 							const variantAttributes =
@@ -165,7 +164,6 @@ class ProductController {
 							const variantIds: number[] = variantAttributes.map(
 								(variantAttribute) => Number(variantAttribute.variantId)
 							)
-							console.log(`variantIds ===`, variantIds)
 
 							if (variantIds?.length) {
 								const variants = await this.commonModelVariant.list(
@@ -180,7 +178,6 @@ class ProductController {
 									}
 								)
 
-								console.log(`variants ===`, variants)
 								if (variants?.length) {
 									customFiltersProduct.push({
 										productId: {
@@ -205,9 +202,6 @@ class ProductController {
 						}
 					}
 
-					console.log(`isAttributeFilterApplicable ===`, isAttributeFilterApplicable)
-					console.log(`JSON.stringify(customFiltersProduct) ===`, JSON.stringify(customFiltersProduct))
-					console.log(`JSON.stringify(payloadProduct) ===`, JSON.stringify(payloadProduct))
 					let [products, total] =
 						isAttributeFilterApplicable && !customFiltersProduct?.length
 							? [[], 0]
