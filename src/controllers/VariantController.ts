@@ -11,9 +11,13 @@ import {isWebUser} from "../types/auth"
 class VariantController {
 	private commonModelVariant
 	private commonModelVariantMedia
+	private commonModelVariantAttribute
+	private commonModelAttribute
 
 	private idColumnVariant: string = "variantId"
 	private idColumnVariantMedia: string = "variantMediaId"
+	private idColumnProductAttribute: string = "variantAttributeId"
+	private idColumnAttribute: string = "attributeId"
 
 	constructor() {
 		this.commonModelVariant = new CommonModel("Variant", this.idColumnVariant, [
@@ -22,6 +26,16 @@ class VariantController {
 		this.commonModelVariantMedia = new CommonModel(
 			"VariantMedia",
 			this.idColumnVariantMedia,
+			[]
+		)
+		this.commonModelVariantAttribute = new CommonModel(
+			"VariantAttribute",
+			this.idColumnProductAttribute,
+			[]
+		)
+		this.commonModelAttribute = new CommonModel(
+			"Attribute",
+			this.idColumnAttribute,
 			[]
 		)
 
@@ -107,8 +121,18 @@ class VariantController {
 							variantIds.push(variants[i].variantId)
 						}
 
-						const [variantMedias] = await Promise.all([
+						let [variantMedias, variantAttributes] = await Promise.all([
 							this.commonModelVariantMedia.list(transaction, {
+								filter: {
+									...mandatoryFilters,
+									variantId: variantIds
+								},
+								range: {
+									all: true
+								}
+							}),
+
+							this.commonModelVariantAttribute.list(transaction, {
 								filter: {
 									...mandatoryFilters,
 									variantId: variantIds
@@ -119,6 +143,31 @@ class VariantController {
 							})
 						])
 
+						const attributeIds: number[] = variantAttributes.map(({attributeId}) => attributeId)
+
+						const attributes = await this.commonModelAttribute.list(transaction, {
+							filter: {
+								...mandatoryFilters,
+								attributeId: attributeIds
+							},
+							range: {
+								all: true
+							}
+						})
+
+						const attributeMap = new Map<number, any[]>()
+						for (const attribute of attributes) {
+							const attributeGroup =
+								attributeMap.get(attribute.variantId) || []
+							attributeGroup.push(attribute)
+							attributeMap.set(attribute.variantId, attributeGroup)
+						}
+
+						variantAttributes = variantAttributes.map((variantAttribute) => ({
+							...variantAttribute,
+							attributes: attributeMap.get(variantAttribute.attributeId) || []
+						}))
+
 						const variantMediaMap = new Map<number, any[]>()
 						for (const variantMedia of variantMedias) {
 							const variantMediaGroup =
@@ -127,9 +176,18 @@ class VariantController {
 							variantMediaMap.set(variantMedia.variantId, variantMediaGroup)
 						}
 
+						const variantAttributeMap = new Map<number, any[]>()
+						for (const variantAttribute of variantAttributes) {
+							const variantAttributeGroup =
+								variantAttributeMap.get(variantAttribute.variantId) || []
+							variantAttributeGroup.push(variantAttribute)
+							variantAttributeMap.set(variantAttribute.variantId, variantAttributeGroup)
+						}
+
 						variants = variants.map((variant) => ({
 							...variant,
-							variantMedias: variantMediaMap.get(variant.variantId) || []
+							variantMedias: variantMediaMap.get(variant.variantId) || [],
+							variantAttributes: variantAttributeMap.get(variant.variantId) || []
 						}))
 					}
 
