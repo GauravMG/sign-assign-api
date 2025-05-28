@@ -115,13 +115,13 @@ class ProductController {
 				async (transaction: PrismaClientTransaction) => {
 					const customFiltersProduct: any[] = []
 					if (attributeFilters && Object.keys(attributeFilters)?.length) {
-						const customFilters: any[] = []
+						let customFiltersPairs: any[] = []
 						for (const [variantAttributeId, values] of Object.entries(
 							attributeFilters
 						)) {
 							if (Array.isArray(values) && values.length) {
 								// If it's an array with values, use "in" filter
-								customFilters.push({
+								customFiltersPairs.push({
 									AND: [
 										{variantAttributeId: Number(variantAttributeId)},
 										{value: {in: values}}
@@ -129,7 +129,7 @@ class ProductController {
 								})
 							} else if (typeof values === "string" && values.trim() !== "") {
 								// If it's a non-empty string, use "equals" filter
-								customFilters.push({
+								customFiltersPairs.push({
 									AND: [
 										{variantAttributeId: Number(variantAttributeId)},
 										{value: {equals: values}}
@@ -137,62 +137,72 @@ class ProductController {
 								})
 							}
 						}
+						let customFilters: any[] = []
+						if (customFiltersPairs.length) {
+							customFilters = [{
+								OR: customFiltersPairs
+							}]
+						}
 
-						const variantAttributes =
-							await this.commonModelVariantAttribute.list(transaction, {
-								filter: {},
-								customFilters,
-								range: {
-									all: true
+						if (customFilters?.length) {
+							const variantAttributes =
+								await this.commonModelVariantAttribute.list(transaction, {
+									filter: {},
+									customFilters,
+									range: {
+										all: true
+									}
+								})
+							const variantIds: number[] = variantAttributes.map(
+								(variantAttribute) => Number(variantAttribute.variantId)
+							)
+
+							if (variantIds?.length) {
+								const variants = await this.commonModelVariant.list(transaction, {
+									filter: {
+										variantId: variantIds
+									},
+									range: {
+										all: true
+									}
+								})
+		
+								if (variants?.length) {
+									customFiltersProduct.push({
+										productId: {
+											in: variants.map((variant) => Number(variant.productId))
+										}
+									})
 								}
-							})
-						const variantIds: number[] = variantAttributes.map(
-							(variantAttribute) => Number(variantAttribute.variantId)
-						)
-
-						const variants = await this.commonModelVariant.list(transaction, {
-							filter: {
-								variantId: variantIds
-							},
-							range: {
-								all: true
 							}
-						})
-
-						if (variants?.length) {
-							customFiltersProduct.push({
-								productId: {
-									in: variants.map((variant) => Number(variant.productId))
-								}
-							})
 						}
 					}
 
-					let [products, total] =
-						attributeFilters &&
-						Object.keys(attributeFilters)?.length &&
-						!customFiltersProduct?.length
-							? [[], 0]
-							: await Promise.all([
-									this.commonModelProduct.list(transaction, {
-										filter: {
-											...mandatoryFilters,
-											...filter
-										},
-										customFilters: customFiltersProduct,
-										range,
-										sort
-									}),
+					let payloadProduct: any = {
+						filter: {
+							...mandatoryFilters,
+							...filter
+						}
+					}
+					if (customFiltersProduct?.length) {
+						payloadProduct = {
+							...payloadProduct,
+							customFilters: customFiltersProduct
+						}
+					}
 
-									this.commonModelProduct.list(transaction, {
-										filter: {
-											...mandatoryFilters,
-											...filter
-										},
-										customFilters: customFiltersProduct,
-										isCountOnly: true
-									})
-								])
+					let [products, total] = await Promise.all([
+						this.commonModelProduct.list(transaction, {
+							...payloadProduct,
+							range,
+							sort
+						}),
+
+						this.commonModelProduct.list(transaction, {
+							...payloadProduct,
+							isCountOnly: true
+						})
+					])
 
 					if (linkedEntities) {
 						const productIds: number[] = []
