@@ -151,6 +151,7 @@ class ProductController {
 								}
 							]
 						}
+						console.log(`JSON.stringify(customFilters) ===`, JSON.stringify(customFilters))
 
 						if (customFilters?.length) {
 							const variantAttributes =
@@ -164,6 +165,7 @@ class ProductController {
 							const variantIds: number[] = variantAttributes.map(
 								(variantAttribute) => Number(variantAttribute.variantId)
 							)
+							console.log(`variantIds ===`, variantIds)
 
 							if (variantIds?.length) {
 								const variants = await this.commonModelVariant.list(
@@ -178,6 +180,7 @@ class ProductController {
 									}
 								)
 
+								console.log(`variants ===`, variants)
 								if (variants?.length) {
 									customFiltersProduct.push({
 										productId: {
@@ -202,6 +205,9 @@ class ProductController {
 						}
 					}
 
+					console.log(`isAttributeFilterApplicable ===`, isAttributeFilterApplicable)
+					console.log(`JSON.stringify(customFiltersProduct) ===`, JSON.stringify(customFiltersProduct))
+					console.log(`JSON.stringify(payloadProduct) ===`, JSON.stringify(payloadProduct))
 					let [products, total] =
 						isAttributeFilterApplicable && !customFiltersProduct?.length
 							? [[], 0]
