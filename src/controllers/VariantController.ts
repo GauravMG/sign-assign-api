@@ -160,16 +160,14 @@ class VariantController {
 							}
 						)
 
-						const attributeMap = new Map<number, any[]>()
+						const attributeMap = new Map<number, any>()
 						for (const attribute of attributes) {
-							const attributeGroup = attributeMap.get(attribute.variantId) || []
-							attributeGroup.push(attribute)
-							attributeMap.set(attribute.variantId, attributeGroup)
+							attributeMap.set(attribute.attributeId, attribute)
 						}
 
 						variantAttributes = variantAttributes.map((variantAttribute) => ({
 							...variantAttribute,
-							attributes: attributeMap.get(variantAttribute.attributeId) || []
+							attribute: attributeMap.get(variantAttribute.attributeId) || null
 						}))
 
 						const variantMediaMap = new Map<number, any[]>()
