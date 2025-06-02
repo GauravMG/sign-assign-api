@@ -12,7 +12,7 @@ class BlogController {
 	private commonModelBlog
 	private commonModelBlogMedia
 
-	private idColumnBlog: string = "productId"
+	private idColumnBlog: string = "blogId"
 	private idColumnBlogMedia: string = "blogMediaId"
 
 	constructor() {
