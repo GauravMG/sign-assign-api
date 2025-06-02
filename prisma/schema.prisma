@@ -182,6 +182,13 @@ model User {
   productBulkDiscountCreatedBy ProductBulkDiscount[] @relation("ProductBulkDiscountCreatedBy")
   productBulkDiscountUpdatedBy ProductBulkDiscount[] @relation("ProductBulkDiscountUpdatedBy")
   productBulkDiscountDeletedBy ProductBulkDiscount[] @relation("ProductBulkDiscountDeletedBy")
+
+  blogCreatedBy      Blog[]      @relation("BlogCreatedBy")
+  blogUpdatedBy      Blog[]      @relation("BlogUpdatedBy")
+  blogDeletedBy      Blog[]      @relation("BlogDeletedBy")
+  blogMediaCreatedBy BlogMedia[] @relation("BlogMediaCreatedBy")
+  blogMediaUpdatedBy BlogMedia[] @relation("BlogMediaUpdatedBy")
+  blogMediaDeletedBy BlogMedia[] @relation("BlogMediaDeletedBy")
 }
 
 model Verification {
@@ -663,4 +670,45 @@ model VariantAttribute {
   deletedById Int?
   attributes  Attribute? @relation(fields: [attributeId], references: [attributeId], onDelete: Cascade)
   variants    Variant?   @relation(fields: [variantId], references: [variantId], onDelete: Cascade)
+}
+
+model Blog {
+  blogId      Int       @id @default(autoincrement())
+  title       String
+  description String
+  status      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime?
+  deletedAt   DateTime?
+  createdBy   User?     @relation("BlogCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy   User?     @relation("BlogUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy   User?     @relation("BlogDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+
+  blogMedia BlogMedia[]
+}
+
+model BlogMedia {
+  blogMediaId    Int       @id @default(autoincrement())
+  blogId         Int
+  blog           Blog?     @relation(fields: [blogId], references: [blogId], onDelete: Cascade)
+  name           String
+  mediaType      String
+  mediaUrl       String
+  size           String
+  sequenceNumber Int
+  status         Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime?
+  deletedAt      DateTime?
+  createdBy      User?     @relation("BlogMediaCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy      User?     @relation("BlogMediaUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy      User?     @relation("BlogMediaDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
 }
