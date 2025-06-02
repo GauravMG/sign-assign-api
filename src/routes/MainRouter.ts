@@ -16,7 +16,9 @@ import {
 	VariantAttributeRouter,
 	SupportTicketRouter,
 	SupportTicketMediaRouter,
-	BannerRouter
+	BannerRouter,
+	BlogRouter,
+	BlogMediaRouter
 } from "."
 
 const router = express.Router()
@@ -48,6 +50,8 @@ router.use("/v1/variant-attribute", new VariantAttributeRouter().router)
 router.use("/v1/support-ticket", new SupportTicketRouter().router)
 router.use("/v1/support-ticket-media", new SupportTicketMediaRouter().router)
 router.use("/v1/banner", new BannerRouter().router)
+router.use("/v1/blog", new BlogRouter().router)
+router.use("/v1/blog-media", new BlogMediaRouter().router)
 
 // attribute and variants
 // router.use("/v1/attribute", new SupportTicketMediaRouter().router)
