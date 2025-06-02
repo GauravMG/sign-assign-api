@@ -24,6 +24,10 @@
 		"method": "POST"
 	},
 	{
+		"apiPath": "/v1/attribute/list",
+		"method": "POST"
+	},
+	{
 		"apiPath": "/v1/product-category/list",
 		"method": "POST"
 	},
@@ -36,7 +40,7 @@
 		"method": "POST"
 	},
 	{
-		"apiPath": "/v1/attribute/list",
+		"apiPath": "/v1/product-bulk-discount/list",
 		"method": "POST"
 	},
 	{
