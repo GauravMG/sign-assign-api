@@ -704,7 +704,7 @@ model UserAddress {
   updatedById Int?
   deletedById Int?
 
-  users       User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  users User @relation(fields: [userId], references: [userId], onDelete: Cascade)
 }
 
 model Blog {
