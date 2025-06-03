@@ -14,6 +14,7 @@ import {
 	VariantRouter,
 	VariantMediaRouter,
 	VariantAttributeRouter,
+	UserAddressRouter,
 	SupportTicketRouter,
 	SupportTicketMediaRouter,
 	BannerRouter,
@@ -34,6 +35,7 @@ router.use("/v1/upload", new UploadRouter().router)
 
 // user routes
 router.use("/v1/user", new UserRouter().router)
+router.use("/v1/user-address", new UserAddressRouter().router)
 
 // product routes
 router.use("/v1/attribute", new AttributeRouter().router)
@@ -52,10 +54,5 @@ router.use("/v1/support-ticket-media", new SupportTicketMediaRouter().router)
 router.use("/v1/banner", new BannerRouter().router)
 router.use("/v1/blog", new BlogRouter().router)
 router.use("/v1/blog-media", new BlogMediaRouter().router)
-
-// attribute and variants
-// router.use("/v1/attribute", new SupportTicketMediaRouter().router)
-// router.use("/v1/variant", new SupportTicketMediaRouter().router)
-// router.use("/v1/variant-attribute", new SupportTicketMediaRouter().router)
 
 export default router

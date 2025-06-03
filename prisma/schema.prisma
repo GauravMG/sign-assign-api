@@ -99,6 +99,7 @@ model User {
   verifications        Verification[]
   loginHistories       LoginHistory[]
   businessUserMappings BusinessUserMapping[]
+  userAddresses        UserAddress[]
 
   // Inverse relations
   usersCreatedBy               User[]                @relation("UserCreatedBy")
@@ -178,6 +179,10 @@ model User {
   variantAttributeCreatedBy VariantAttribute[] @relation("VariantAttributeCreatedBy")
   variantAttributeUpdatedBy VariantAttribute[] @relation("VariantAttributeUpdatedBy")
   variantAttributeDeletedBy VariantAttribute[] @relation("VariantAttributeDeletedBy")
+
+  userAddressCreatedBy UserAddress[] @relation("UserAddressCreatedBy")
+  userAddressUpdatedBy UserAddress[] @relation("UserAddressUpdatedBy")
+  userAddressDeletedBy UserAddress[] @relation("UserAddressDeletedBy")
 
   productBulkDiscountCreatedBy ProductBulkDiscount[] @relation("ProductBulkDiscountCreatedBy")
   productBulkDiscountUpdatedBy ProductBulkDiscount[] @relation("ProductBulkDiscountUpdatedBy")
@@ -671,6 +676,35 @@ model VariantAttribute {
   deletedById Int?
   attributes  Attribute? @relation(fields: [attributeId], references: [attributeId], onDelete: Cascade)
   variants    Variant?   @relation(fields: [variantId], references: [variantId], onDelete: Cascade)
+}
+
+model UserAddress {
+  userAddressId            Int       @id @default(autoincrement())
+  userId                   Int
+  firstName                String
+  lastName                 String
+  companyName              String?
+  phoneNumber              String
+  streetAddress            String
+  postal                   String
+  city                     String
+  state                    String
+  country                  String
+  isDefaultBillingAddress  Boolean   @default(true)
+  isDefaultShippingAddress Boolean   @default(true)
+  status                   Boolean   @default(true)
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime?
+  deletedAt                DateTime?
+  createdBy                User?     @relation("UserAddressCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy                User?     @relation("UserAddressUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy                User?     @relation("UserAddressDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+
+  users User @relation(fields: [userId], references: [userId], onDelete: Cascade)
 }
 
 model Blog {

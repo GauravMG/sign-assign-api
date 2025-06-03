@@ -9,6 +9,7 @@ export * from "./UploadRouter"
 
 // user routes
 export * from "./UserRouter"
+export * from "./UserAddressRouter"
 
 // product routes
 export * from "./AttributeRouter"

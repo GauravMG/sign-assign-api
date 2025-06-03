@@ -60,7 +60,7 @@ app.use(morgan("dev")) // Log to console in development
 app.get("/", async (req, res, next) => {
 	res.status(200).send("This is sign-assign-api repo running...")
 })
-app.use(validateJWTToken)
+// app.use(validateJWTToken)
 app.use(routes)
 
 // Route not found middleware
