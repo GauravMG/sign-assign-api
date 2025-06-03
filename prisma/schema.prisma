@@ -421,6 +421,7 @@ model Product {
   section2Description  String?
   section3Title        String?
   section3Description  String?
+  features             String?
   description          String?
   specification        String?
   status               Boolean            @default(true)
