@@ -568,8 +568,9 @@ class AuthController {
 			const response = new ApiResponse(res)
 
 			const {email, hash, verificationType, newPassword} = req.body
+			const deviceType: string = "web"
 
-			await prisma.$transaction(
+			const [user, jwtToken] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					// check if email exists
 					const [existingUser] = await this.commonModelUser.list(transaction, {
@@ -640,12 +641,31 @@ class AuthController {
 						)
 					])
 
-					return [verificationData]
+					// generate jwt token
+					const jwtToken: string = createJWTToken({
+						userId
+					})
+					// create login history
+					await this.commonModelLoginHistory.bulkCreate(
+						transaction,
+						[
+							{
+								userId,
+								jwtToken,
+								deviceType
+							}
+						],
+						userId
+					)
+
+					return [existingUser, jwtToken]
 				}
 			)
 
 			return response.successResponse({
-				message: `Email verified and password set successfully`
+				message: `Email verified and password set successfully`,
+				jwtToken,
+				data: user
 			})
 		} catch (error) {
 			next(error)

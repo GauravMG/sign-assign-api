@@ -24,11 +24,35 @@
 		"method": "POST"
 	},
 	{
+		"apiPath": "/v1/attribute/list",
+		"method": "POST"
+	},
+	{
 		"apiPath": "/v1/product-category/list",
 		"method": "POST"
 	},
 	{
 		"apiPath": "/v1/product-subcategory/list",
+		"method": "POST"
+	},
+	{
+		"apiPath": "/v1/product/list",
+		"method": "POST"
+	},
+	{
+		"apiPath": "/v1/product-bulk-discount/list",
+		"method": "POST"
+	},
+	{
+		"apiPath": "/v1/variant/list",
+		"method": "POST"
+	},
+	{
+		"apiPath": "/v1/product-faq/list",
+		"method": "POST"
+	},
+	{
+		"apiPath": "/v1/blog/list",
 		"method": "POST"
 	}
 ]

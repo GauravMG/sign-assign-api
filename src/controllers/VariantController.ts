@@ -6,13 +6,18 @@ import {PrismaClientTransaction, prisma} from "../lib/PrismaLib"
 import {BadRequestException} from "../lib/exceptions"
 import CommonModel from "../models/CommonModel"
 import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, Headers} from "../types/common"
+import {isWebUser} from "../types/auth"
 
 class VariantController {
 	private commonModelVariant
 	private commonModelVariantMedia
+	private commonModelVariantAttribute
+	private commonModelAttribute
 
 	private idColumnVariant: string = "variantId"
 	private idColumnVariantMedia: string = "variantMediaId"
+	private idColumnProductAttribute: string = "variantAttributeId"
+	private idColumnAttribute: string = "attributeId"
 
 	constructor() {
 		this.commonModelVariant = new CommonModel("Variant", this.idColumnVariant, [
@@ -21,6 +26,16 @@ class VariantController {
 		this.commonModelVariantMedia = new CommonModel(
 			"VariantMedia",
 			this.idColumnVariantMedia,
+			[]
+		)
+		this.commonModelVariantAttribute = new CommonModel(
+			"VariantAttribute",
+			this.idColumnProductAttribute,
+			[]
+		)
+		this.commonModelAttribute = new CommonModel(
+			"Attribute",
+			this.idColumnAttribute,
 			[]
 		)
 
@@ -66,6 +81,14 @@ class VariantController {
 
 			const {roleId}: Headers = req.headers
 
+			let mandatoryFilters: any = {}
+			if (isWebUser(roleId)) {
+				mandatoryFilters = {
+					...mandatoryFilters,
+					status: true
+				}
+			}
+
 			const {filter, range, sort, linkedEntities} = await listAPIPayload(
 				req.body
 			)
@@ -74,13 +97,19 @@ class VariantController {
 				async (transaction: PrismaClientTransaction) => {
 					let [variants, total] = await Promise.all([
 						this.commonModelVariant.list(transaction, {
-							filter,
+							filter: {
+								...mandatoryFilters,
+								...filter
+							},
 							range,
 							sort
 						}),
 
 						this.commonModelVariant.list(transaction, {
-							filter,
+							filter: {
+								...mandatoryFilters,
+								...filter
+							},
 							isCountOnly: true
 						})
 					])
@@ -92,9 +121,20 @@ class VariantController {
 							variantIds.push(variants[i].variantId)
 						}
 
-						const [variantMedias] = await Promise.all([
+						let [variantMedias, variantAttributes] = await Promise.all([
 							this.commonModelVariantMedia.list(transaction, {
 								filter: {
+									...mandatoryFilters,
+									variantId: variantIds
+								},
+								range: {
+									all: true
+								}
+							}),
+
+							this.commonModelVariantAttribute.list(transaction, {
+								filter: {
+									...mandatoryFilters,
 									variantId: variantIds
 								},
 								range: {
@@ -102,6 +142,33 @@ class VariantController {
 								}
 							})
 						])
+
+						const attributeIds: number[] = variantAttributes.map(
+							({attributeId}) => attributeId
+						)
+
+						const attributes = await this.commonModelAttribute.list(
+							transaction,
+							{
+								filter: {
+									...mandatoryFilters,
+									attributeId: attributeIds
+								},
+								range: {
+									all: true
+								}
+							}
+						)
+
+						const attributeMap = new Map<number, any>()
+						for (const attribute of attributes) {
+							attributeMap.set(attribute.attributeId, attribute)
+						}
+
+						variantAttributes = variantAttributes.map((variantAttribute) => ({
+							...variantAttribute,
+							attribute: attributeMap.get(variantAttribute.attributeId) || null
+						}))
 
 						const variantMediaMap = new Map<number, any[]>()
 						for (const variantMedia of variantMedias) {
@@ -111,9 +178,22 @@ class VariantController {
 							variantMediaMap.set(variantMedia.variantId, variantMediaGroup)
 						}
 
+						const variantAttributeMap = new Map<number, any[]>()
+						for (const variantAttribute of variantAttributes) {
+							const variantAttributeGroup =
+								variantAttributeMap.get(variantAttribute.variantId) || []
+							variantAttributeGroup.push(variantAttribute)
+							variantAttributeMap.set(
+								variantAttribute.variantId,
+								variantAttributeGroup
+							)
+						}
+
 						variants = variants.map((variant) => ({
 							...variant,
-							variantMedias: variantMediaMap.get(variant.variantId) || []
+							variantMedias: variantMediaMap.get(variant.variantId) || [],
+							variantAttributes:
+								variantAttributeMap.get(variant.variantId) || []
 						}))
 					}
 

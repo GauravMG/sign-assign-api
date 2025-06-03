@@ -8,16 +8,22 @@ import CommonModel from "../models/CommonModel"
 import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, Headers} from "../types/common"
 import {isWebUser} from "../types/auth"
 
-class AttributeController {
-	private commonModelAttribute
+class BlogController {
+	private commonModelBlog
+	private commonModelBlogMedia
 
-	private idColumnAttribute: string = "attributeId"
+	private idColumnBlog: string = "blogId"
+	private idColumnBlogMedia: string = "blogMediaId"
 
 	constructor() {
-		this.commonModelAttribute = new CommonModel(
-			"Attribute",
-			this.idColumnAttribute,
-			["name"]
+		this.commonModelBlog = new CommonModel("Blog", this.idColumnBlog, [
+			"title",
+			"description"
+		])
+		this.commonModelBlogMedia = new CommonModel(
+			"BlogMedia",
+			this.idColumnBlogMedia,
+			[]
 		)
 
 		this.create = this.create.bind(this)
@@ -34,22 +40,22 @@ class AttributeController {
 
 			let payload = Array.isArray(req.body) ? req.body : [req.body]
 
-			const [attributes] = await prisma.$transaction(
+			const [blog] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					// create
-					const attributes = await this.commonModelAttribute.bulkCreate(
+					const blog = await this.commonModelBlog.bulkCreate(
 						transaction,
 						payload,
 						userId
 					)
 
-					return [attributes]
+					return [blog]
 				}
 			)
 
 			return response.successResponse({
-				message: `Attribute(s) created successfully`,
-				data: attributes
+				message: `Blog created successfully`,
+				data: blog
 			})
 		} catch (error) {
 			next(error)
@@ -70,12 +76,14 @@ class AttributeController {
 				}
 			}
 
-			const {filter, range, sort} = await listAPIPayload(req.body)
+			const {filter, range, sort, linkedEntities} = await listAPIPayload(
+				req.body
+			)
 
-			const [attributes, total] = await prisma.$transaction(
+			const [blogs, total] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
-					return await Promise.all([
-						this.commonModelAttribute.list(transaction, {
+					let [blogs, total] = await Promise.all([
+						this.commonModelBlog.list(transaction, {
 							filter: {
 								...mandatoryFilters,
 								...filter
@@ -84,7 +92,7 @@ class AttributeController {
 							sort
 						}),
 
-						this.commonModelAttribute.list(transaction, {
+						this.commonModelBlog.list(transaction, {
 							filter: {
 								...mandatoryFilters,
 								...filter
@@ -92,17 +100,49 @@ class AttributeController {
 							isCountOnly: true
 						})
 					])
+
+					if (linkedEntities) {
+						const blogIds: number[] = []
+
+						for (let i = 0; i < blogs?.length; i++) {
+							blogIds.push(blogs[i].blogId)
+						}
+
+						let blogMedias = await this.commonModelBlogMedia.list(transaction, {
+							filter: {
+								...mandatoryFilters,
+								blogId: blogIds
+							},
+							range: {
+								all: true
+							}
+						})
+
+						const blogMediaMap = new Map<number, any[]>()
+						for (const blogMedia of blogMedias) {
+							const blogMediaGroup = blogMediaMap.get(blogMedia.blogId) || []
+							blogMediaGroup.push(blogMedia)
+							blogMediaMap.set(blogMedia.blogId, blogMediaGroup)
+						}
+
+						blogs = blogs.map((blog) => ({
+							...blog,
+							blogMedias: blogMediaMap.get(blog.blogId) || []
+						}))
+					}
+
+					return [blogs, total]
 				}
 			)
 
 			return response.successResponse({
-				message: `Attribute(s) data`,
+				message: `Blog data`,
 				metadata: {
 					total,
 					page: range?.page ?? DEFAULT_PAGE,
 					pageSize: range?.pageSize ?? DEFAULT_PAGE_SIZE
 				},
-				data: attributes
+				data: blogs
 			})
 		} catch (error) {
 			next(error)
@@ -115,48 +155,42 @@ class AttributeController {
 
 			const {userId, roleId}: Headers = req.headers
 
-			const {attributeId, ...restPayload} = req.body
+			const {blogId, ...restPayload} = req.body
 
-			const [attribute] = await prisma.$transaction(
+			const [blog] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					// check if exists
-					const [existingAttribute] = await this.commonModelAttribute.list(
-						transaction,
-						{
-							filter: {
-								attributeId
-							}
+					const [existingBlog] = await this.commonModelBlog.list(transaction, {
+						filter: {
+							blogId
 						}
-					)
-					if (!existingAttribute) {
-						throw new BadRequestException("Attribute doesn't exist")
+					})
+					if (!existingBlog) {
+						throw new BadRequestException("Blog doesn't exist")
 					}
 
 					// update
-					await this.commonModelAttribute.updateById(
+					await this.commonModelBlog.updateById(
 						transaction,
 						restPayload,
-						attributeId,
+						blogId,
 						userId
 					)
 
 					// get updated details
-					const [attribute] = await this.commonModelAttribute.list(
-						transaction,
-						{
-							filter: {
-								attributeId
-							}
+					const [blog] = await this.commonModelBlog.list(transaction, {
+						filter: {
+							blogId
 						}
-					)
+					})
 
-					return [attribute]
+					return [blog]
 				}
 			)
 
 			return response.successResponse({
 				message: `Details updated successfully`,
-				data: attribute
+				data: blog
 			})
 		} catch (error) {
 			next(error)
@@ -169,43 +203,38 @@ class AttributeController {
 
 			const {userId, roleId}: Headers = req.headers
 
-			const {attributeIds} = req.body
+			const {blogIds} = req.body
 
-			if (!attributeIds?.length) {
-				throw new BadRequestException(
-					`Please select attribute(s) to be deleted`
-				)
+			if (!blogIds?.length) {
+				throw new BadRequestException(`Please select blog to be deleted`)
 			}
 
 			await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
-					const existingAttributes = await this.commonModelAttribute.list(
-						transaction,
-						{
-							filter: {
-								attributeId: attributeIds
-							}
+					const existingBlogs = await this.commonModelBlog.list(transaction, {
+						filter: {
+							blogId: blogIds
 						}
-					)
-					if (!existingAttributes.length) {
-						const attributeIdsSet: Set<number> = new Set(
-							existingAttributes.map((obj) => obj.attributeId)
+					})
+					if (!existingBlogs.length) {
+						const blogIdsSet: Set<number> = new Set(
+							existingBlogs.map((obj) => obj.blogId)
 						)
 						throw new BadRequestException(
-							`Selected Attribute(s) not found: ${attributeIds.filter((attributeId) => !attributeIdsSet.has(attributeId))}`
+							`Selected blog not found: ${blogIds.filter((blogId) => !blogIdsSet.has(blogId))}`
 						)
 					}
 
-					await this.commonModelAttribute.softDeleteByIds(
+					await this.commonModelBlog.softDeleteByIds(
 						transaction,
-						attributeIds,
+						blogIds,
 						userId
 					)
 				}
 			)
 
 			return response.successResponse({
-				message: `Attribute(s) deleted successfully`
+				message: `Blog deleted successfully`
 			})
 		} catch (error) {
 			next(error)
@@ -213,4 +242,4 @@ class AttributeController {
 	}
 }
 
-export default new AttributeController()
+export default new BlogController()

@@ -6,6 +6,7 @@ import {PrismaClientTransaction, prisma} from "../lib/PrismaLib"
 import {BadRequestException} from "../lib/exceptions"
 import CommonModel from "../models/CommonModel"
 import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, Headers} from "../types/common"
+import {isWebUser} from "../types/auth"
 
 class ProductCategoryController {
 	private commonModelProductCategory
@@ -67,7 +68,15 @@ class ProductCategoryController {
 		try {
 			const response = new ApiResponse(res)
 
-			const {roleId}: Headers = req.headers
+			const {userId, roleId}: Headers = req.headers
+
+			let mandatoryFilters: any = {}
+			if (isWebUser(roleId)) {
+				mandatoryFilters = {
+					...mandatoryFilters,
+					status: true
+				}
+			}
 
 			const {filter, range, sort, linkedEntities} = await listAPIPayload(
 				req.body
@@ -77,13 +86,19 @@ class ProductCategoryController {
 				async (transaction: PrismaClientTransaction) => {
 					let [productCategories, total] = await Promise.all([
 						this.commonModelProductCategory.list(transaction, {
-							filter,
+							filter: {
+								...mandatoryFilters,
+								...filter
+							},
 							range,
 							sort
 						}),
 
 						this.commonModelProductCategory.list(transaction, {
-							filter,
+							filter: {
+								...mandatoryFilters,
+								...filter
+							},
 							isCountOnly: true
 						})
 					])
@@ -105,19 +120,31 @@ class ProductCategoryController {
 
 						const productSubCategories =
 							await this.commonModelProductSubCategory.list(transaction, {
-								filter: filterProductSubCategory,
+								filter: {
+									...mandatoryFilters,
+									...filterProductSubCategory
+								},
 								range: {
 									all: true
 								}
 							})
 
+						const productSubCategoryMap = productSubCategories.reduce(
+							(acc, productSubCategory) => {
+								acc[productSubCategory.productCategoryId] =
+									acc[productSubCategory.productCategoryId] || []
+								acc[productSubCategory.productCategoryId].push(
+									productSubCategory
+								)
+								return acc
+							},
+							{}
+						)
+
 						productCategories = productCategories.map((productCategory) => ({
 							...productCategory,
-							productSubCategories: productSubCategories.filter(
-								(productSubCategory) =>
-									productSubCategory.productCategoryId ===
-									productCategory.productCategoryId
-							)
+							productSubCategories:
+								productSubCategoryMap[productCategory.productCategoryId] || []
 						}))
 					}
 
