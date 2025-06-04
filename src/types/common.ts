@@ -50,6 +50,8 @@ export type Error = {
 export type Headers = any & {
 	userId: number
 	roleId: number
+	userFullName?: string | null
+	businessId?: number | null
 	transaction: PrismaClient
 }
 

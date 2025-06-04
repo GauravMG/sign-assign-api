@@ -194,6 +194,10 @@ model User {
   blogMediaCreatedBy BlogMedia[] @relation("BlogMediaCreatedBy")
   blogMediaUpdatedBy BlogMedia[] @relation("BlogMediaUpdatedBy")
   blogMediaDeletedBy BlogMedia[] @relation("BlogMediaDeletedBy")
+
+  businessClientCreatedBy BusinessClient[] @relation("BusinessClientCreatedBy")
+  businessClientUpdatedBy BusinessClient[] @relation("BusinessClientUpdatedBy")
+  businessClientDeletedBy BusinessClient[] @relation("BusinessClientDeletedBy")
 }
 
 model Verification {
@@ -256,6 +260,7 @@ model Business {
   deletedBy           User?     @relation("BusinessDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
 
   businessUserMappings BusinessUserMapping[]
+  businessClient       BusinessClient[]
 
   createdById Int?
   updatedById Int?
@@ -742,6 +747,35 @@ model BlogMedia {
   createdBy      User?     @relation("BlogMediaCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
   updatedBy      User?     @relation("BlogMediaUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
   deletedBy      User?     @relation("BlogMediaDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+}
+
+model BusinessClient {
+  businessClientId Int       @id @default(autoincrement())
+  businessId       Int
+  business         Business? @relation(fields: [businessId], references: [businessId], onDelete: Cascade)
+  firstName        String
+  lastName         String
+  mobile           String
+  email            String
+  gender           String?   @db.VarChar(100)
+  pinCode          String?   @db.VarChar(30)
+  address          String?
+  city             String?   @db.VarChar(100)
+  state            String?   @db.VarChar(100)
+  country          String?   @db.VarChar(100)
+  profilePhoto     String?
+  isActive         Boolean   @default(true)
+  status           Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime?
+  deletedAt        DateTime?
+  createdBy        User?     @relation("BusinessClientCreatedBy", fields: [createdById], references: [userId], onDelete: SetNull)
+  updatedBy        User?     @relation("BusinessClientUpdatedBy", fields: [updatedById], references: [userId], onDelete: SetNull)
+  deletedBy        User?     @relation("BusinessClientDeletedBy", fields: [deletedById], references: [userId], onDelete: SetNull)
 
   createdById Int?
   updatedById Int?

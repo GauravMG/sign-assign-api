@@ -63,24 +63,36 @@ export const validateJWTToken = async (
 			"loginHistoryId",
 			[]
 		)
-
-		const [[user], [loginHistory]] = await prisma.$transaction(
-			async (transaction: PrismaClientTransaction) => {
-				return await Promise.all([
-					commonModelUser.list(transaction, {
-						filter: {
-							userId
-						}
-					}),
-
-					commonModelLoginHistory.list(transaction, {
-						filter: {
-							userId
-						}
-					})
-				])
-			}
+		const commonModelBusinessUserMapping = new CommonModel(
+			"BusinessUserMapping",
+			"businessUserMappingId",
+			[]
 		)
+
+		const [[user], [loginHistory], [businessUserMapping]] =
+			await prisma.$transaction(
+				async (transaction: PrismaClientTransaction) => {
+					return await Promise.all([
+						commonModelUser.list(transaction, {
+							filter: {
+								userId
+							}
+						}),
+
+						commonModelLoginHistory.list(transaction, {
+							filter: {
+								userId
+							}
+						}),
+
+						commonModelBusinessUserMapping.list(transaction, {
+							filter: {
+								userId
+							}
+						})
+					])
+				}
+			)
 		if (!user) {
 			throw new UnauthorizedException("User does not exist")
 		}
@@ -98,6 +110,7 @@ export const validateJWTToken = async (
 		req.headers.userFullName = JSON.stringify({
 			fullName: createFullName(user)
 		})
+		req.headers.businessId = businessUserMapping?.businessId ?? null
 
 		next()
 	} catch (error) {
