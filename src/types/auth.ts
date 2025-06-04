@@ -9,12 +9,13 @@ export enum Role {
 	SUPER_ADMIN = 1,
 	USER = 2,
 	BUSINESS_ADMIN = 3,
-	BUSINESS_STAFF = 4
+	BUSINESS_STAFF = 4,
+	BUSINESS_CLIENT = 5
 }
 
 export const isWebUser = (roleId: number) =>
 	!roleId ||
-	[Role.USER, Role.BUSINESS_ADMIN, Role.BUSINESS_STAFF].indexOf(roleId) >= 0
+	[Role.USER, Role.BUSINESS_ADMIN, Role.BUSINESS_STAFF, Role.BUSINESS_CLIENT].indexOf(roleId) >= 0
 
 export enum DefaultData {
 	superAdminEmail = "superadmin@yopmail.com"
