@@ -1,12 +1,19 @@
 import bcrypt from "bcrypt"
 import {NextFunction, Request, Response} from "express"
 import jwt from "jsonwebtoken"
+import moment from "moment"
 
-import {generateOTP, validateEmail, validatePassword} from "../helpers"
+import {
+	createFullName,
+	generateOTP,
+	validateEmail,
+	validatePassword
+} from "../helpers"
 import {ApiResponse} from "../lib/APIResponse"
 import {PrismaClientTransaction, prisma} from "../lib/PrismaLib"
 import {BadRequestException, UnauthorizedException} from "../lib/exceptions"
 import CommonModel from "../models/CommonModel"
+import {sendEmail} from "../services/EmailSenderService"
 import {Role, VerificationType} from "../types/auth"
 import {Headers} from "../types/common"
 import {createJWTToken} from "../utils/Jwt"
@@ -503,8 +510,22 @@ class AuthController {
 				}
 			)
 
+			// send verification otp
+			if ((email ?? "").trim() !== "") {
+				sendEmail(
+					`${VerificationType.Registration}_otp`,
+					"Verify your email",
+					[email],
+					{
+						USER_FULL_NAME: createFullName({firstName, lastName}),
+						OTP_CODE: otp,
+						CURRENT_YEAR: moment().format("YYYY")
+					}
+				)
+			}
+
 			return response.successResponse({
-				message: `Account created successfully. Please use the following OTP to verify your account - ${otp}.`
+				message: `Account created successfully. Please use the following OTP to verify your account.`
 			})
 		} catch (error) {
 			next(error)
@@ -519,7 +540,7 @@ class AuthController {
 
 			const otp: string = generateOTP(6)
 
-			await prisma.$transaction(
+			const [user] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					// check if email already exists
 					const [existingUser] = await this.commonModelUser.list(transaction, {
@@ -551,12 +572,26 @@ class AuthController {
 						userId
 					)
 
-					return []
+					return [existingUser]
 				}
 			)
 
+			// send verification otp
+			if ((user.email ?? "").trim() !== "") {
+				sendEmail(
+					`${verificationType}_otp`,
+					"Verify your email",
+					[user.email],
+					{
+						USER_FULL_NAME: createFullName(user),
+						OTP_CODE: otp,
+						CURRENT_YEAR: moment().format("YYYY")
+					}
+				)
+			}
+
 			return response.successResponse({
-				message: `Please use the following OTP - ${otp}.`
+				message: `OTP sent successfully!`
 			})
 		} catch (error) {
 			next(error)

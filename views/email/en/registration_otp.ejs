@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Email Verification</title>
+	<style>
+		body {
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+			background-color: #f6f6f6;
+			margin: 0;
+			padding: 0;
+		}
+
+		.email-container {
+			max-width: 600px;
+			margin: 40px auto;
+			background-color: #ffffff;
+			border-radius: 8px;
+			overflow: hidden;
+			box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+		}
+
+		.header {
+			background-color: #452e73;
+			color: #ffffff;
+			text-align: center;
+			padding: 24px;
+		}
+
+		.header h1 {
+			margin: 0;
+			font-size: 24px;
+		}
+
+		.content {
+			padding: 32px 24px;
+			color: #333333;
+		}
+
+		.content h2 {
+			margin-top: 0;
+			font-size: 20px;
+			color: #452e73;
+		}
+
+		.otp-code {
+			font-size: 32px;
+			font-weight: bold;
+			color: #277e30;
+			background-color: #f2fef2;
+			padding: 16px;
+			text-align: center;
+			border-radius: 6px;
+			letter-spacing: 6px;
+			margin: 20px 0;
+		}
+
+		.footer {
+			text-align: center;
+			padding: 16px;
+			font-size: 12px;
+			color: #777;
+			background-color: #f1f1f1;
+		}
+
+		@media (max-width: 600px) {
+			.content {
+				padding: 24px 16px;
+			}
+
+			.otp-code {
+				font-size: 28px;
+				letter-spacing: 4px;
+			}
+		}
+	</style>
+</head>
+
+<body>
+	<div class="email-container">
+		<div class="header">
+			<h1>Verify Your Email</h1>
+		</div>
+		<div class="content">
+			<h2>Hello <%- USER_FULL_NAME -%>,</h2>
+			<p>Thank you for registering with us. To complete your registration, please enter the following One-Time
+				Password (OTP) to verify your email address:</p>
+			<div class="otp-code"><%- OTP_CODE -%></div>
+			<p>This OTP is valid for the next 10 minutes. Please do not share this code with anyone.</p>
+			<p>If you didn’t request this, you can safely ignore this email.</p>
+			<p>Regards,<br />sign Assign</p>
+		</div>
+		<div class="footer">
+			&copy; <%- CURRENT_YEAR -%> Sign Assign. All rights reserved.
+		</div>
+	</div>
+</body>
+
+</html>
