@@ -194,6 +194,10 @@ model User {
   blogMediaCreatedBy BlogMedia[] @relation("BlogMediaCreatedBy")
   blogMediaUpdatedBy BlogMedia[] @relation("BlogMediaUpdatedBy")
   blogMediaDeletedBy BlogMedia[] @relation("BlogMediaDeletedBy")
+
+  notificationServiceCreatedBy NotificationService[] @relation("NotificationServiceCreatedBy")
+  notificationServiceUpdatedBy NotificationService[] @relation("NotificationServiceUpdatedBy")
+  notificationServiceDeletedBy NotificationService[] @relation("NotificationServiceDeletedBy")
 }
 
 model Verification {
@@ -742,6 +746,28 @@ model BlogMedia {
   createdBy      User?     @relation("BlogMediaCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
   updatedBy      User?     @relation("BlogMediaUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
   deletedBy      User?     @relation("BlogMediaDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+}
+
+model NotificationService {
+  notificationServiceId Int       @id @default(autoincrement())
+  service               String
+  serviceType           String
+  host                  String
+  port                  Int
+  encryption            String
+  configuration         Json?
+  isActive              Boolean   @default(false)
+  status                Boolean   @default(true)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime?
+  deletedAt             DateTime?
+  createdBy             User?     @relation("NotificationServiceCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy             User?     @relation("NotificationServiceUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy             User?     @relation("NotificationServiceDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
 
   createdById Int?
   updatedById Int?

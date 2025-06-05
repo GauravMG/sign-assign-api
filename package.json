@@ -61,7 +61,8 @@
 		"nodemailer": "^6.9.16",
 		"pg": "^8.13.1",
 		"prisma": "^6.1.0",
-		"rotating-file-stream": "^3.2.5"
+		"rotating-file-stream": "^3.2.5",
+		"twilio": "^5.7.0"
 	},
 	"devDependencies": {
 		"@types/axios": "^0.14.4",
