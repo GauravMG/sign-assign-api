@@ -13,7 +13,8 @@ export enum NotificationServices {
 	Mailjet = "mailjet",
 	Google = "google",
 	Tiara = "tiara",
-	Twilio = "twilio"
+	Twilio = "twilio",
+	Outlook = "outlook"
 }
 
 export enum NotificationTypes {

@@ -6,15 +6,18 @@ export default class CommonModel {
 	private TABLE_NAME: string
 	private ID_COLUMN_NAME: string
 	private SEARCH_COLUMN_NAME: string[]
+	private CASE_SENSITIVE_COLUMN_NAME: string[]
 
 	constructor(
 		tableName: string,
 		idColumnName: string,
-		searchColumnName: string[]
+		searchColumnName: string[],
+		caseSensitiveColumnName?: string[]
 	) {
 		this.TABLE_NAME = tableName
 		this.ID_COLUMN_NAME = idColumnName
 		this.SEARCH_COLUMN_NAME = searchColumnName
+		this.CASE_SENSITIVE_COLUMN_NAME = caseSensitiveColumnName ?? []
 	}
 
 	rawQuery = async (
@@ -132,12 +135,21 @@ export default class CommonModel {
 
 					// If the key is 'search', apply case-insensitive searching on the specified columns
 					if (key === "search" && value) {
-						where.OR = this.SEARCH_COLUMN_NAME.map((column) => ({
-							[column]: {
-								contains: value,
-								mode: "insensitive" // Case-insensitive search
+						where.OR = this.SEARCH_COLUMN_NAME.map((column) => {
+							let newData: any = {
+								[column]: {
+									contains: value
+								}
 							}
-						}))
+							if (this.CASE_SENSITIVE_COLUMN_NAME.indexOf(key) < 0) {
+								newData[column] = {
+									...newData[column],
+									mode: "insensitive" // Case-insensitive search
+								}
+							}
+
+							return {...newData}
+						})
 					}
 					// Handle array values with 'in' for fields like email
 					else if (Array.isArray(value)) {
@@ -146,8 +158,13 @@ export default class CommonModel {
 					// General filter handling for primitive values
 					else if (typeof value === "string") {
 						where[key] = {
-							equals: value,
-							mode: "insensitive" // Case-insensitive comparison for strings
+							equals: value
+						}
+						if (this.CASE_SENSITIVE_COLUMN_NAME.indexOf(key) < 0) {
+							where[key] = {
+								...where[key],
+								mode: "insensitive" // Case-insensitive search
+							}
 						}
 					} else {
 						where[key] = value

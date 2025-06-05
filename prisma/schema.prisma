@@ -48,6 +48,19 @@ enum AttributeType {
   dimension
 }
 
+enum NotificationServices {
+  mailjet
+  google
+  tiara
+  twilio
+  outlook
+}
+
+enum NotificationTypes {
+  email
+  sms
+}
+
 model Role {
   roleId         Int       @id @default(autoincrement())
   name           String    @db.VarChar(100)
@@ -198,7 +211,7 @@ model User {
   notificationServiceCreatedBy NotificationService[] @relation("NotificationServiceCreatedBy")
   notificationServiceUpdatedBy NotificationService[] @relation("NotificationServiceUpdatedBy")
   notificationServiceDeletedBy NotificationService[] @relation("NotificationServiceDeletedBy")
-  
+
   businessClientCreatedBy BusinessClient[] @relation("BusinessClientCreatedBy")
   businessClientUpdatedBy BusinessClient[] @relation("BusinessClientUpdatedBy")
   businessClientDeletedBy BusinessClient[] @relation("BusinessClientDeletedBy")
@@ -758,21 +771,20 @@ model BlogMedia {
 }
 
 model NotificationService {
-  notificationServiceId Int       @id @default(autoincrement())
-  service               String
-  serviceType           String
+  notificationServiceId Int                  @id @default(autoincrement())
+  service               NotificationServices
+  serviceType           NotificationTypes
   host                  String
-  port                  Int
+  port                  String
   encryption            String
   configuration         Json?
-  isActive              Boolean   @default(false)
-  status                Boolean   @default(true)
-  createdAt             DateTime  @default(now())
+  status                Boolean              @default(true)
+  createdAt             DateTime             @default(now())
   updatedAt             DateTime?
   deletedAt             DateTime?
-  createdBy             User?     @relation("NotificationServiceCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
-  updatedBy             User?     @relation("NotificationServiceUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
-  deletedBy             User?     @relation("NotificationServiceDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+  createdBy             User?                @relation("NotificationServiceCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy             User?                @relation("NotificationServiceUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy             User?                @relation("NotificationServiceDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
 
   createdById Int?
   updatedById Int?

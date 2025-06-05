@@ -14,7 +14,8 @@ export async function getActiveProvider(serviceType: NotificationTypes) {
 		const commonModelNotificationService = new CommonModel(
 			"NotificationService",
 			"notificationServiceId",
-			[]
+			[],
+			["serviceType", "service"]
 		)
 
 		const [detailData] = await prisma.$transaction(
@@ -23,8 +24,7 @@ export async function getActiveProvider(serviceType: NotificationTypes) {
 					await commonModelNotificationService.list(transaction, {
 						filter: {
 							status: true,
-							isActive: true,
-							serviceType: serviceType
+							serviceType
 						}
 					})
 				if (!activeNotificationService?.length) {

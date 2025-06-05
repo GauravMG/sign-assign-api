@@ -1,5 +1,5 @@
 import twilio from "twilio"
-import {getActiveProvider} from "./ActiveNotification"
+import {getActiveProvider} from "../lib/ActiveNotification"
 import {
 	NotificationServiceDetails,
 	NotificationTypes
