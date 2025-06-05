@@ -1,25 +1,26 @@
 import express from "express"
 
 import {
-	AuthRouter,
-	RoleRouter,
-	UploadRouter,
-	UserRouter,
 	AttributeRouter,
-	ProductCategoryRouter,
-	ProductSubCategoryRouter,
-	ProductRouter,
-	ProductFAQRouter,
-	ProductBulkDiscountRouter,
-	VariantRouter,
-	VariantMediaRouter,
-	VariantAttributeRouter,
-	UserAddressRouter,
-	SupportTicketRouter,
-	SupportTicketMediaRouter,
+	AuthRouter,
 	BannerRouter,
+	BlogMediaRouter,
 	BlogRouter,
-	BlogMediaRouter
+	BusinessClientRouter,
+	ProductBulkDiscountRouter,
+	ProductCategoryRouter,
+	ProductFAQRouter,
+	ProductRouter,
+	ProductSubCategoryRouter,
+	RoleRouter,
+	SupportTicketMediaRouter,
+	SupportTicketRouter,
+	UploadRouter,
+	UserAddressRouter,
+	UserRouter,
+	VariantAttributeRouter,
+	VariantMediaRouter,
+	VariantRouter
 } from "."
 
 const router = express.Router()
@@ -36,6 +37,7 @@ router.use("/v1/upload", new UploadRouter().router)
 // user routes
 router.use("/v1/user", new UserRouter().router)
 router.use("/v1/user-address", new UserAddressRouter().router)
+router.use("/v1/business-client", new BusinessClientRouter().router)
 
 // product routes
 router.use("/v1/attribute", new AttributeRouter().router)

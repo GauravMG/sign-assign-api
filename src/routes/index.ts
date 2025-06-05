@@ -10,6 +10,7 @@ export * from "./UploadRouter"
 // user routes
 export * from "./UserRouter"
 export * from "./UserAddressRouter"
+export * from "./BusinessClientRouter"
 
 // product routes
 export * from "./AttributeRouter"

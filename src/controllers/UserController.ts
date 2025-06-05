@@ -17,9 +17,11 @@ import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, Headers} from "../types/common"
 class UserController {
 	private commonModelUser
 	private commonModelBusinessUserMapping
+	private commonModelUserAddress
 
 	private idColumnUser: string = "userId"
 	private idColumnBusinessUserMapping: string = "businessUserMappingId"
+	private idColumnUserAddress: string = "userAddressId"
 
 	constructor() {
 		this.commonModelUser = new CommonModel("User", this.idColumnUser, [
@@ -30,6 +32,11 @@ class UserController {
 		this.commonModelBusinessUserMapping = new CommonModel(
 			"BusinessUserMapping",
 			this.idColumnBusinessUserMapping,
+			[]
+		)
+		this.commonModelUserAddress = new CommonModel(
+			"UserAddress",
+			this.idColumnUserAddress,
 			[]
 		)
 
@@ -197,9 +204,30 @@ class UserController {
 						})
 					])
 
+					const userIds: number[] = users.map(({userId}) => Number(userId))
+
+					const userAddresses = await this.commonModelUserAddress.list(
+						transaction,
+						{
+							filter: {
+								userId: userIds
+							},
+							range: {
+								all: true
+							}
+						}
+					)
+
+					const userAddressMap = userAddresses.reduce((acc, userAddress) => {
+						acc[userAddress.userId] = acc[userAddress.userId] || []
+						acc[userAddress.userId].push(userAddress)
+						return acc
+					}, {})
+
 					users = users.map((user) => ({
 						...user,
-						fullName: createFullName(user)
+						fullName: createFullName(user),
+						userAddresses: userAddressMap[user.userId] || []
 					}))
 
 					return [users, total]
