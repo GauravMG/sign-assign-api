@@ -25,6 +25,7 @@ class AuthController {
 	private commonModelLoginHistory
 	private commonModelBusiness
 	private commonModelBusinessUserMapping
+	private commonModelUserDiscount
 
 	private idColumnUser: string = "userId"
 	private idColumnRole: string = "roleId"
@@ -32,6 +33,7 @@ class AuthController {
 	private idColumnLoginHistory: string = "loginHistoryId"
 	private idColumnBusiness: string = "businessId"
 	private idColumnBusinessUserMapping: string = "businessUserMappingId"
+	private idColumnUserDiscount: string = "userDiscountId"
 
 	constructor() {
 		this.commonModelUser = new CommonModel("User", this.idColumnUser, [
@@ -66,6 +68,11 @@ class AuthController {
 		this.commonModelBusinessUserMapping = new CommonModel(
 			"BusinessUserMapping",
 			this.idColumnBusinessUserMapping,
+			[]
+		)
+		this.commonModelUserDiscount = new CommonModel(
+			"UserDiscount",
+			this.idColumnUserDiscount,
 			[]
 		)
 
@@ -205,6 +212,26 @@ class AuthController {
 					// 		}
 					// 	}
 					// }
+
+					const [userDiscount] = await this.commonModelUserDiscount.list(
+						transaction,
+						{
+							filter: {
+								userId: user.userId
+							},
+							range: {
+								page: 1,
+								pageSize: 1
+							}
+						}
+					)
+
+					user = {
+						...user,
+						userDiscountPercentage: Number(
+							userDiscount?.discountPercentage ?? 0
+						)
+					}
 
 					return [{...user, unreadCount: 10}]
 				}

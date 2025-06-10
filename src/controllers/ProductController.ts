@@ -273,7 +273,7 @@ class ProductController {
 									all: true
 								}
 							}),
-							
+
 							this.commonModelProductBulkDiscount.list(transaction, {
 								filter: {
 									...mandatoryFilters,
@@ -353,7 +353,8 @@ class ProductController {
 						)
 
 						products = products.map((product) => {
-							let productBulkDiscount = productBulkDiscountMap.get(product.productId)?.dataJson || []
+							let productBulkDiscount =
+								productBulkDiscountMap.get(product.productId)?.dataJson || []
 							if (!productBulkDiscount) {
 								productBulkDiscount = []
 							}
@@ -366,14 +367,15 @@ class ProductController {
 								productCategory:
 									productCategoryMap.get(product.productCategoryId) || null,
 								productSubCategory:
-									productSubCategoryMap.get(product.productSubCategoryId) || null,
+									productSubCategoryMap.get(product.productSubCategoryId) ||
+									null,
 								productMedias: productMediaMap.get(product.productId) || [],
 								productAttributes:
 									productAttributeMap.get(product.productId) || [],
 								productBulkDiscounts: productBulkDiscount.sort((a, b) => {
-									if (a.minQty !== b.minQty) return a.minQty - b.minQty;
-									if (a.maxQty !== b.maxQty) return a.maxQty - b.maxQty;
-									return a.discount - b.discount;
+									if (a.minQty !== b.minQty) return a.minQty - b.minQty
+									if (a.maxQty !== b.maxQty) return a.maxQty - b.maxQty
+									return a.discount - b.discount
 								})
 							}
 						})
