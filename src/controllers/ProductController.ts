@@ -12,16 +12,16 @@ class ProductController {
 	private commonModelProduct
 	private commonModelProductCategory
 	private commonModelProductSubCategory
-	private commonModelVariant
-	private commonModelVariantMedia
-	private commonModelVariantAttribute
+	private commonModelProductMedia
+	private commonModelProductAttribute
+	private commonModelAttribute
 
 	private idColumnProduct: string = "productId"
 	private idColumnProductCategory: string = "productCategoryId"
 	private idColumnProductSubCategory: string = "productSubCategoryId"
-	private idColumnVariant: string = "variantId"
-	private idColumnVariantMedia: string = "variantMediaId"
-	private idColumnVariantAtribute: string = "variantAttributeId"
+	private idColumnProductMedia: string = "productMediaId"
+	private idColumnProductAtribute: string = "productAttributeId"
+	private idColumnAttribute: string = "attributeId"
 
 	constructor() {
 		this.commonModelProduct = new CommonModel("Product", this.idColumnProduct, [
@@ -42,17 +42,19 @@ class ProductController {
 			this.idColumnProductSubCategory,
 			["name", "description"]
 		)
-		this.commonModelVariant = new CommonModel("Variant", this.idColumnVariant, [
-			"name"
-		])
-		this.commonModelVariantMedia = new CommonModel(
-			"VariantMedia",
-			this.idColumnVariantMedia,
+		this.commonModelProductMedia = new CommonModel(
+			"ProductMedia",
+			this.idColumnProductMedia,
 			[]
 		)
-		this.commonModelVariantAttribute = new CommonModel(
-			"VariantAttribute",
-			this.idColumnVariantAtribute,
+		this.commonModelProductAttribute = new CommonModel(
+			"ProductAttribute",
+			this.idColumnProductAtribute,
+			[]
+		)
+		this.commonModelAttribute = new CommonModel(
+			"Attribute",
+			this.idColumnAttribute,
 			[]
 		)
 
@@ -121,7 +123,7 @@ class ProductController {
 					const customFiltersProduct: any[] = []
 					if (attributeFilters && Object.keys(attributeFilters)?.length) {
 						let customFiltersPairs: any[] = []
-						for (const [variantAttributeId, values] of Object.entries(
+						for (const [productAttributeId, values] of Object.entries(
 							attributeFilters
 						)) {
 							if (Array.isArray(values) && values.length) {
@@ -130,7 +132,7 @@ class ProductController {
 								// If it's an array with values, use "in" filter
 								customFiltersPairs.push({
 									AND: [
-										{attributeId: Number(variantAttributeId)},
+										{attributeId: Number(productAttributeId)},
 										{value: {in: values}}
 									]
 								})
@@ -140,7 +142,7 @@ class ProductController {
 								// If it's a non-empty string, use "equals" filter
 								customFiltersPairs.push({
 									AND: [
-										{attributeId: Number(variantAttributeId)},
+										{attributeId: Number(productAttributeId)},
 										{value: {equals: values}}
 									]
 								})
@@ -156,38 +158,24 @@ class ProductController {
 						}
 
 						if (customFilters?.length) {
-							const variantAttributes =
-								await this.commonModelVariantAttribute.list(transaction, {
+							const productAttributes =
+								await this.commonModelProductAttribute.list(transaction, {
 									filter: {},
 									customFilters,
 									range: {
 										all: true
 									}
 								})
-							const variantIds: number[] = variantAttributes.map(
-								(variantAttribute) => Number(variantAttribute.variantId)
+							const productIds: number[] = productAttributes.map(
+								(productAttribute) => Number(productAttribute.productId)
 							)
 
-							if (variantIds?.length) {
-								const variants = await this.commonModelVariant.list(
-									transaction,
-									{
-										filter: {
-											variantId: variantIds
-										},
-										range: {
-											all: true
-										}
+							if (productIds?.length) {
+								customFiltersProduct.push({
+									productId: {
+										in: productIds
 									}
-								)
-
-								if (variants?.length) {
-									customFiltersProduct.push({
-										productId: {
-											in: variants.map((variant) => Number(variant.productId))
-										}
-									})
-								}
+								})
 							}
 						}
 					}
@@ -232,51 +220,63 @@ class ProductController {
 							productSubCategoryIds.push(products[i].productSubCategoryId)
 						}
 
-						let [productCategories, productSubCategories, variants] =
-							await Promise.all([
-								this.commonModelProductCategory.list(transaction, {
-									filter: {
-										...mandatoryFilters,
-										productCategoryId: productCategoryIds
-									},
-									range: {
-										all: true
-									}
-								}),
+						let [
+							productCategories,
+							productSubCategories,
+							productMedias,
+							productAttributes
+						] = await Promise.all([
+							this.commonModelProductCategory.list(transaction, {
+								filter: {
+									...mandatoryFilters,
+									productCategoryId: productCategoryIds
+								},
+								range: {
+									all: true
+								}
+							}),
 
-								this.commonModelProductSubCategory.list(transaction, {
-									filter: {
-										...mandatoryFilters,
-										productSubCategoryId: productSubCategoryIds
-									},
-									range: {
-										all: true
-									}
-								}),
+							this.commonModelProductSubCategory.list(transaction, {
+								filter: {
+									...mandatoryFilters,
+									productSubCategoryId: productSubCategoryIds
+								},
+								range: {
+									all: true
+								}
+							}),
 
-								this.commonModelVariant.list(transaction, {
-									filter: {
-										...mandatoryFilters,
-										productId: productIds
-									},
-									range: {
-										all: true
-									}
-								})
-							])
+							this.commonModelProductMedia.list(transaction, {
+								filter: {
+									...mandatoryFilters,
+									productId: productIds
+								},
+								range: {
+									all: true
+								}
+							}),
 
-						const variantIds: number[] = []
+							this.commonModelProductAttribute.list(transaction, {
+								filter: {
+									...mandatoryFilters,
+									productId: productIds
+								},
+								range: {
+									all: true
+								}
+							})
+						])
 
-						for (let i = 0; i < variants?.length; i++) {
-							variantIds.push(variants[i].variantId)
-						}
+						const attributeIds: number[] = productAttributes.map(
+							({attributeId}) => attributeId
+						)
 
-						const variantMedias = await this.commonModelVariantMedia.list(
+						const attributes = await this.commonModelAttribute.list(
 							transaction,
 							{
 								filter: {
 									...mandatoryFilters,
-									variantId: variantIds
+									attributeId: attributeIds
 								},
 								range: {
 									all: true
@@ -298,25 +298,34 @@ class ProductController {
 							])
 						)
 
-						const productVariantMediaMap = variantMedias.reduce(
-							(acc, variantMedia) => {
-								acc[variantMedia.variantId] = acc[variantMedia.variantId] || []
-								acc[variantMedia.variantId].push(variantMedia)
-								return acc
-							},
-							{}
-						)
+						const attributeMap = new Map<number, any>()
+						for (const attribute of attributes) {
+							attributeMap.set(attribute.attributeId, attribute)
+						}
 
-						variants = variants.map((variant) => ({
-							...variant,
-							variantMedias: productVariantMediaMap[variant.variantId] || []
+						productAttributes = productAttributes.map((productAttribute) => ({
+							...productAttribute,
+							attribute: attributeMap.get(productAttribute.attributeId) || null
 						}))
 
-						const productVariantMap = variants.reduce((acc, variant) => {
-							acc[variant.productId] = acc[variant.productId] || []
-							acc[variant.productId].push(variant)
-							return acc
-						}, {})
+						const productMediaMap = new Map<number, any[]>()
+						for (const productMedia of productMedias) {
+							const productMediaGroup =
+								productMediaMap.get(productMedia.productId) || []
+							productMediaGroup.push(productMedia)
+							productMediaMap.set(productMedia.productId, productMediaGroup)
+						}
+
+						const productAttributeMap = new Map<number, any[]>()
+						for (const productAttribute of productAttributes) {
+							const productAttributeGroup =
+								productAttributeMap.get(productAttribute.productId) || []
+							productAttributeGroup.push(productAttribute)
+							productAttributeMap.set(
+								productAttribute.productId,
+								productAttributeGroup
+							)
+						}
 
 						products = products.map((product) => ({
 							...product,
@@ -324,7 +333,9 @@ class ProductController {
 								productCategoryMap.get(product.productCategoryId) || null,
 							productSubCategory:
 								productSubCategoryMap.get(product.productSubCategoryId) || null,
-							variants: productVariantMap[product.productId] || []
+							productMedias: productMediaMap.get(product.productId) || [],
+							productAttributes:
+								productAttributeMap.get(product.productId) || []
 						}))
 					}
 

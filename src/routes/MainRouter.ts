@@ -7,9 +7,11 @@ import {
 	BlogMediaRouter,
 	BlogRouter,
 	BusinessClientRouter,
+	ProductAttributeRouter,
 	ProductBulkDiscountRouter,
 	ProductCategoryRouter,
 	ProductFAQRouter,
+	ProductMediaRouter,
 	ProductRouter,
 	ProductSubCategoryRouter,
 	RoleRouter,
@@ -18,10 +20,7 @@ import {
 	UploadRouter,
 	UserAddressRouter,
 	UserDiscountRouter,
-	UserRouter,
-	VariantAttributeRouter,
-	VariantMediaRouter,
-	VariantRouter
+	UserRouter
 } from "."
 
 const router = express.Router()
@@ -48,9 +47,8 @@ router.use("/v1/product-subcategory", new ProductSubCategoryRouter().router)
 router.use("/v1/product", new ProductRouter().router)
 router.use("/v1/product-faq", new ProductFAQRouter().router)
 router.use("/v1/product-bulk-discount", new ProductBulkDiscountRouter().router)
-router.use("/v1/variant", new VariantRouter().router)
-router.use("/v1/variant-media", new VariantMediaRouter().router)
-router.use("/v1/variant-attribute", new VariantAttributeRouter().router)
+router.use("/v1/product-media", new ProductMediaRouter().router)
+router.use("/v1/product-attribute", new ProductAttributeRouter().router)
 
 // other routes
 router.use("/v1/support-ticket", new SupportTicketRouter().router)

@@ -7,16 +7,16 @@ import {BadRequestException} from "../lib/exceptions"
 import CommonModel from "../models/CommonModel"
 import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, Headers} from "../types/common"
 
-class VariantAttributeController {
-	private commonModelVariantAttribute
+class ProductAttributeController {
+	private commonModelProductAttribute
 	private commonModelAttribute
 
-	private idColumnProductAttribute: string = "variantAttributeId"
+	private idColumnProductAttribute: string = "productAttributeId"
 	private idColumnAttribute: string = "attributeId"
 
 	constructor() {
-		this.commonModelVariantAttribute = new CommonModel(
-			"VariantAttribute",
+		this.commonModelProductAttribute = new CommonModel(
+			"ProductAttribute",
 			this.idColumnProductAttribute,
 			[]
 		)
@@ -40,23 +40,23 @@ class VariantAttributeController {
 
 			let payload = Array.isArray(req.body) ? req.body : [req.body]
 
-			const [variantAttributes] = await prisma.$transaction(
+			const [productAttributes] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					// create
-					const variantAttributes =
-						await this.commonModelVariantAttribute.bulkCreate(
+					const productAttributes =
+						await this.commonModelProductAttribute.bulkCreate(
 							transaction,
 							payload,
 							userId
 						)
 
-					return [variantAttributes]
+					return [productAttributes]
 				}
 			)
 
 			return response.successResponse({
-				message: `Variant attribute(s) created successfully`,
-				data: variantAttributes
+				message: `Product attribute(s) created successfully`,
+				data: productAttributes
 			})
 		} catch (error) {
 			next(error)
@@ -71,16 +71,16 @@ class VariantAttributeController {
 
 			const {filter, range, sort} = await listAPIPayload(req.body)
 
-			let [variantAttributes, total, attributes] = await prisma.$transaction(
+			let [productAttributes, total, attributes] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					return await Promise.all([
-						this.commonModelVariantAttribute.list(transaction, {
+						this.commonModelProductAttribute.list(transaction, {
 							filter,
 							range,
 							sort
 						}),
 
-						this.commonModelVariantAttribute.list(transaction, {
+						this.commonModelProductAttribute.list(transaction, {
 							filter,
 							isCountOnly: true
 						}),
@@ -95,7 +95,7 @@ class VariantAttributeController {
 			const getAttributeById = (id: number) =>
 				attributes.find((attribute) => id === attribute.attributeId)
 
-			variantAttributes = variantAttributes.map((el) => {
+			productAttributes = productAttributes.map((el) => {
 				return {
 					...el,
 					attribute: getAttributeById(el.attributeId)
@@ -103,13 +103,13 @@ class VariantAttributeController {
 			})
 
 			return response.successResponse({
-				message: `Variant attribute(s) data`,
+				message: `Product attribute(s) data`,
 				metadata: {
 					total,
 					page: range?.page ?? DEFAULT_PAGE,
 					pageSize: range?.pageSize ?? DEFAULT_PAGE_SIZE
 				},
-				data: variantAttributes
+				data: productAttributes
 			})
 		} catch (error) {
 			next(error)
@@ -122,44 +122,44 @@ class VariantAttributeController {
 
 			const {userId, roleId}: Headers = req.headers
 
-			const {variantAttributeId, ...restPayload} = req.body
+			const {productAttributeId, ...restPayload} = req.body
 
-			const [variantAttribute] = await prisma.$transaction(
+			const [productAttribute] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					// check if exists
-					const [existingVariantAttribute] =
-						await this.commonModelVariantAttribute.list(transaction, {
+					const [existingProductAttribute] =
+						await this.commonModelProductAttribute.list(transaction, {
 							filter: {
-								variantAttributeId
+								productAttributeId
 							}
 						})
-					if (!existingVariantAttribute) {
-						throw new BadRequestException("Variant attribute doesn't exist")
+					if (!existingProductAttribute) {
+						throw new BadRequestException("Product attribute doesn't exist")
 					}
 
 					// update
-					await this.commonModelVariantAttribute.updateById(
+					await this.commonModelProductAttribute.updateById(
 						transaction,
 						restPayload,
-						variantAttributeId,
+						productAttributeId,
 						userId
 					)
 
 					// get updated details
-					const [variantAttribute] =
-						await this.commonModelVariantAttribute.list(transaction, {
+					const [productAttribute] =
+						await this.commonModelProductAttribute.list(transaction, {
 							filter: {
-								variantAttributeId
+								productAttributeId
 							}
 						})
 
-					return [variantAttribute]
+					return [productAttribute]
 				}
 			)
 
 			return response.successResponse({
 				message: `Details updated successfully`,
-				data: variantAttribute
+				data: productAttribute
 			})
 		} catch (error) {
 			next(error)
@@ -172,41 +172,41 @@ class VariantAttributeController {
 
 			const {userId, roleId}: Headers = req.headers
 
-			const {variantAttributeIds} = req.body
+			const {productAttributeIds} = req.body
 
-			if (!variantAttributeIds?.length) {
+			if (!productAttributeIds?.length) {
 				throw new BadRequestException(
-					`Please select variant attribute(s) to be deleted`
+					`Please select product attribute(s) to be deleted`
 				)
 			}
 
 			await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
-					const existingVariantAttributes =
-						await this.commonModelVariantAttribute.list(transaction, {
+					const existingProductAttributes =
+						await this.commonModelProductAttribute.list(transaction, {
 							filter: {
-								variantAttributeId: variantAttributeIds
+								productAttributeId: productAttributeIds
 							}
 						})
-					if (!existingVariantAttributes.length) {
+					if (!existingProductAttributes.length) {
 						const productAttributeIdsSet: Set<number> = new Set(
-							existingVariantAttributes.map((obj) => obj.variantAttributeId)
+							existingProductAttributes.map((obj) => obj.productAttributeId)
 						)
 						throw new BadRequestException(
-							`Selected Variant attribute(s) not found: ${variantAttributeIds.filter((variantAttributeId) => !productAttributeIdsSet.has(variantAttributeId))}`
+							`Selected product attribute(s) not found: ${productAttributeIds.filter((productAttributeId) => !productAttributeIdsSet.has(productAttributeId))}`
 						)
 					}
 
-					await this.commonModelVariantAttribute.softDeleteByIds(
+					await this.commonModelProductAttribute.softDeleteByIds(
 						transaction,
-						variantAttributeIds,
+						productAttributeIds,
 						userId
 					)
 				}
 			)
 
 			return response.successResponse({
-				message: `Variant attribute(s) deleted successfully`
+				message: `Product attribute(s) deleted successfully`
 			})
 		} catch (error) {
 			next(error)
@@ -214,4 +214,4 @@ class VariantAttributeController {
 	}
 }
 
-export default new VariantAttributeController()
+export default new ProductAttributeController()

@@ -20,9 +20,8 @@ export * from "./ProductSubCategoryRouter"
 export * from "./ProductRouter"
 export * from "./ProductFAQRouter"
 export * from "./ProductBulkDiscountRouter"
-export * from "./VariantRouter"
-export * from "./VariantMediaRouter"
-export * from "./VariantAttributeRouter"
+export * from "./ProductMediaRouter"
+export * from "./ProductAttributeRouter"
 
 // other routes
 export * from "./SupportTicketRouter"
