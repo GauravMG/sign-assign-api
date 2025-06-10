@@ -113,6 +113,7 @@ model User {
   loginHistories       LoginHistory[]
   businessUserMappings BusinessUserMapping[]
   userAddresses        UserAddress[]
+  userDiscounts        UserDiscount[]
 
   // Inverse relations
   usersCreatedBy               User[]                @relation("UserCreatedBy")
@@ -215,6 +216,10 @@ model User {
   businessClientCreatedBy BusinessClient[] @relation("BusinessClientCreatedBy")
   businessClientUpdatedBy BusinessClient[] @relation("BusinessClientUpdatedBy")
   businessClientDeletedBy BusinessClient[] @relation("BusinessClientDeletedBy")
+
+  userDiscountCreatedBy UserDiscount[] @relation("UserDiscountCreatedBy")
+  userDiscountUpdatedBy UserDiscount[] @relation("UserDiscountUpdatedBy")
+  userDiscountDeletedBy UserDiscount[] @relation("UserDiscountDeletedBy")
 }
 
 model Verification {
@@ -305,6 +310,103 @@ model BusinessUserMapping {
   @@unique([businessId, userId]) // Enforcing unique mapping between business and user
 }
 
+model UserAddress {
+  userAddressId            Int       @id @default(autoincrement())
+  userId                   Int
+  firstName                String
+  lastName                 String
+  companyName              String?
+  phoneNumber              String
+  streetAddress            String
+  postal                   String
+  city                     String
+  state                    String
+  country                  String
+  isDefaultBillingAddress  Boolean   @default(true)
+  isDefaultShippingAddress Boolean   @default(true)
+  status                   Boolean   @default(true)
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime?
+  deletedAt                DateTime?
+  createdBy                User?     @relation("UserAddressCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy                User?     @relation("UserAddressUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy                User?     @relation("UserAddressDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+
+  users User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+}
+
+model UserDiscount {
+  userDiscountId     Int       @id @default(autoincrement())
+  userId             Int
+  user               User      @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  discountPercentage Float
+  status             Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime?
+  deletedAt          DateTime?
+  createdBy          User?     @relation("UserDiscountCreatedBy", fields: [createdById], references: [userId], onDelete: SetNull)
+  updatedBy          User?     @relation("UserDiscountUpdatedBy", fields: [updatedById], references: [userId], onDelete: SetNull)
+  deletedBy          User?     @relation("UserDiscountDeletedBy", fields: [deletedById], references: [userId], onDelete: SetNull)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+}
+
+model BusinessClient {
+  businessClientId Int       @id @default(autoincrement())
+  businessId       Int
+  business         Business? @relation(fields: [businessId], references: [businessId], onDelete: Cascade)
+  firstName        String
+  lastName         String
+  mobile           String
+  email            String
+  gender           String?   @db.VarChar(100)
+  pinCode          String?   @db.VarChar(30)
+  address          String?
+  city             String?   @db.VarChar(100)
+  state            String?   @db.VarChar(100)
+  country          String?   @db.VarChar(100)
+  profilePhoto     String?
+  isActive         Boolean   @default(true)
+  status           Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime?
+  deletedAt        DateTime?
+  createdBy        User?     @relation("BusinessClientCreatedBy", fields: [createdById], references: [userId], onDelete: SetNull)
+  updatedBy        User?     @relation("BusinessClientUpdatedBy", fields: [updatedById], references: [userId], onDelete: SetNull)
+  deletedBy        User?     @relation("BusinessClientDeletedBy", fields: [deletedById], references: [userId], onDelete: SetNull)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+}
+
+model NotificationService {
+  notificationServiceId Int                  @id @default(autoincrement())
+  service               NotificationServices
+  serviceType           NotificationTypes
+  host                  String
+  port                  String
+  encryption            String
+  configuration         Json?
+  status                Boolean              @default(true)
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime?
+  deletedAt             DateTime?
+  createdBy             User?                @relation("NotificationServiceCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy             User?                @relation("NotificationServiceUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy             User?                @relation("NotificationServiceDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+}
+
 model SupportTicket {
   supportTicketId Int          @id @default(autoincrement())
   subject         String
@@ -340,6 +442,47 @@ model SupportTicketMedia {
   createdBy            User?          @relation("SupportTicketMediaCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
   updatedBy            User?          @relation("SupportTicketMediaUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
   deletedBy            User?          @relation("SupportTicketMediaDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+}
+
+model Blog {
+  blogId      Int       @id @default(autoincrement())
+  title       String
+  description String
+  status      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime?
+  deletedAt   DateTime?
+  createdBy   User?     @relation("BlogCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy   User?     @relation("BlogUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy   User?     @relation("BlogDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+
+  blogMedia BlogMedia[]
+}
+
+model BlogMedia {
+  blogMediaId    Int       @id @default(autoincrement())
+  blogId         Int
+  blog           Blog?     @relation(fields: [blogId], references: [blogId], onDelete: Cascade)
+  name           String
+  mediaType      String
+  mediaUrl       String
+  size           String
+  sequenceNumber Int
+  status         Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime?
+  deletedAt      DateTime?
+  createdBy      User?     @relation("BlogMediaCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy      User?     @relation("BlogMediaUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy      User?     @relation("BlogMediaDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
 
   createdById Int?
   updatedById Int?
@@ -698,124 +841,4 @@ model VariantAttribute {
   deletedById Int?
   attributes  Attribute? @relation(fields: [attributeId], references: [attributeId], onDelete: Cascade)
   variants    Variant?   @relation(fields: [variantId], references: [variantId], onDelete: Cascade)
-}
-
-model UserAddress {
-  userAddressId            Int       @id @default(autoincrement())
-  userId                   Int
-  firstName                String
-  lastName                 String
-  companyName              String?
-  phoneNumber              String
-  streetAddress            String
-  postal                   String
-  city                     String
-  state                    String
-  country                  String
-  isDefaultBillingAddress  Boolean   @default(true)
-  isDefaultShippingAddress Boolean   @default(true)
-  status                   Boolean   @default(true)
-  createdAt                DateTime  @default(now())
-  updatedAt                DateTime?
-  deletedAt                DateTime?
-  createdBy                User?     @relation("UserAddressCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
-  updatedBy                User?     @relation("UserAddressUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
-  deletedBy                User?     @relation("UserAddressDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
-
-  createdById Int?
-  updatedById Int?
-  deletedById Int?
-
-  users User @relation(fields: [userId], references: [userId], onDelete: Cascade)
-}
-
-model Blog {
-  blogId      Int       @id @default(autoincrement())
-  title       String
-  description String
-  status      Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime?
-  deletedAt   DateTime?
-  createdBy   User?     @relation("BlogCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
-  updatedBy   User?     @relation("BlogUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
-  deletedBy   User?     @relation("BlogDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
-
-  createdById Int?
-  updatedById Int?
-  deletedById Int?
-
-  blogMedia BlogMedia[]
-}
-
-model BlogMedia {
-  blogMediaId    Int       @id @default(autoincrement())
-  blogId         Int
-  blog           Blog?     @relation(fields: [blogId], references: [blogId], onDelete: Cascade)
-  name           String
-  mediaType      String
-  mediaUrl       String
-  size           String
-  sequenceNumber Int
-  status         Boolean   @default(true)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime?
-  deletedAt      DateTime?
-  createdBy      User?     @relation("BlogMediaCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
-  updatedBy      User?     @relation("BlogMediaUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
-  deletedBy      User?     @relation("BlogMediaDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
-
-  createdById Int?
-  updatedById Int?
-  deletedById Int?
-}
-
-model NotificationService {
-  notificationServiceId Int                  @id @default(autoincrement())
-  service               NotificationServices
-  serviceType           NotificationTypes
-  host                  String
-  port                  String
-  encryption            String
-  configuration         Json?
-  status                Boolean              @default(true)
-  createdAt             DateTime             @default(now())
-  updatedAt             DateTime?
-  deletedAt             DateTime?
-  createdBy             User?                @relation("NotificationServiceCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
-  updatedBy             User?                @relation("NotificationServiceUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
-  deletedBy             User?                @relation("NotificationServiceDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
-
-  createdById Int?
-  updatedById Int?
-  deletedById Int?
-}
-
-model BusinessClient {
-  businessClientId Int       @id @default(autoincrement())
-  businessId       Int
-  business         Business? @relation(fields: [businessId], references: [businessId], onDelete: Cascade)
-  firstName        String
-  lastName         String
-  mobile           String
-  email            String
-  gender           String?   @db.VarChar(100)
-  pinCode          String?   @db.VarChar(30)
-  address          String?
-  city             String?   @db.VarChar(100)
-  state            String?   @db.VarChar(100)
-  country          String?   @db.VarChar(100)
-  profilePhoto     String?
-  isActive         Boolean   @default(true)
-  status           Boolean   @default(true)
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime?
-  deletedAt        DateTime?
-  createdBy        User?     @relation("BusinessClientCreatedBy", fields: [createdById], references: [userId], onDelete: SetNull)
-  updatedBy        User?     @relation("BusinessClientUpdatedBy", fields: [updatedById], references: [userId], onDelete: SetNull)
-  deletedBy        User?     @relation("BusinessClientDeletedBy", fields: [deletedById], references: [userId], onDelete: SetNull)
-
-  createdById Int?
-  updatedById Int?
-  deletedById Int?
 }

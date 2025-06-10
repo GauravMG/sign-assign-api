@@ -17,6 +17,7 @@ import {
 	SupportTicketRouter,
 	UploadRouter,
 	UserAddressRouter,
+	UserDiscountRouter,
 	UserRouter,
 	VariantAttributeRouter,
 	VariantMediaRouter,
@@ -38,6 +39,7 @@ router.use("/v1/upload", new UploadRouter().router)
 router.use("/v1/user", new UserRouter().router)
 router.use("/v1/user-address", new UserAddressRouter().router)
 router.use("/v1/business-client", new BusinessClientRouter().router)
+router.use("/v1/user-discount", new UserDiscountRouter().router)
 
 // product routes
 router.use("/v1/attribute", new AttributeRouter().router)

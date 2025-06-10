@@ -18,10 +18,12 @@ class UserController {
 	private commonModelUser
 	private commonModelBusinessUserMapping
 	private commonModelUserAddress
+	private commonModelUserDiscount
 
 	private idColumnUser: string = "userId"
 	private idColumnBusinessUserMapping: string = "businessUserMappingId"
 	private idColumnUserAddress: string = "userAddressId"
+	private idColumnUserDiscount: string = "userDiscountId"
 
 	constructor() {
 		this.commonModelUser = new CommonModel("User", this.idColumnUser, [
@@ -37,6 +39,11 @@ class UserController {
 		this.commonModelUserAddress = new CommonModel(
 			"UserAddress",
 			this.idColumnUserAddress,
+			[]
+		)
+		this.commonModelUserDiscount = new CommonModel(
+			"UserDiscount",
+			this.idColumnUserDiscount,
 			[]
 		)
 
@@ -206,17 +213,25 @@ class UserController {
 
 					const userIds: number[] = users.map(({userId}) => Number(userId))
 
-					const userAddresses = await this.commonModelUserAddress.list(
-						transaction,
-						{
+					const [userAddresses, userDiscounts] = await Promise.all([
+						this.commonModelUserAddress.list(transaction, {
 							filter: {
 								userId: userIds
 							},
 							range: {
 								all: true
 							}
-						}
-					)
+						}),
+
+						this.commonModelUserDiscount.list(transaction, {
+							filter: {
+								userId: userIds
+							},
+							range: {
+								all: true
+							}
+						})
+					])
 
 					const userAddressMap = userAddresses.reduce((acc, userAddress) => {
 						acc[userAddress.userId] = acc[userAddress.userId] || []
@@ -224,10 +239,19 @@ class UserController {
 						return acc
 					}, {})
 
+					const userDiscountMap: any = new Map(
+						userDiscounts.map((userDiscount) => [
+							userDiscount.userId,
+							userDiscount
+						])
+					)
+
 					users = users.map((user) => ({
 						...user,
 						fullName: createFullName(user),
-						userAddresses: userAddressMap[user.userId] || []
+						userAddresses: userAddressMap[user.userId] || [],
+						userDiscountPercentage:
+							userDiscountMap.get(user.userId)?.discountPercentage || null
 					}))
 
 					return [users, total]
