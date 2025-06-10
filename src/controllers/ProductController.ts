@@ -15,6 +15,7 @@ class ProductController {
 	private commonModelProductMedia
 	private commonModelProductAttribute
 	private commonModelAttribute
+	private commonModelProductBulkDiscount
 
 	private idColumnProduct: string = "productId"
 	private idColumnProductCategory: string = "productCategoryId"
@@ -22,6 +23,7 @@ class ProductController {
 	private idColumnProductMedia: string = "productMediaId"
 	private idColumnProductAtribute: string = "productAttributeId"
 	private idColumnAttribute: string = "attributeId"
+	private idColumnProductBulkDiscount: string = "productBulkDiscountId"
 
 	constructor() {
 		this.commonModelProduct = new CommonModel("Product", this.idColumnProduct, [
@@ -55,6 +57,11 @@ class ProductController {
 		this.commonModelAttribute = new CommonModel(
 			"Attribute",
 			this.idColumnAttribute,
+			[]
+		)
+		this.commonModelProductBulkDiscount = new CommonModel(
+			"ProductBulkDiscount",
+			this.idColumnProductBulkDiscount,
 			[]
 		)
 
@@ -224,7 +231,8 @@ class ProductController {
 							productCategories,
 							productSubCategories,
 							productMedias,
-							productAttributes
+							productAttributes,
+							productBulkDiscounts
 						] = await Promise.all([
 							this.commonModelProductCategory.list(transaction, {
 								filter: {
@@ -257,6 +265,16 @@ class ProductController {
 							}),
 
 							this.commonModelProductAttribute.list(transaction, {
+								filter: {
+									...mandatoryFilters,
+									productId: productIds
+								},
+								range: {
+									all: true
+								}
+							}),
+							
+							this.commonModelProductBulkDiscount.list(transaction, {
 								filter: {
 									...mandatoryFilters,
 									productId: productIds
@@ -327,16 +345,38 @@ class ProductController {
 							)
 						}
 
-						products = products.map((product) => ({
-							...product,
-							productCategory:
-								productCategoryMap.get(product.productCategoryId) || null,
-							productSubCategory:
-								productSubCategoryMap.get(product.productSubCategoryId) || null,
-							productMedias: productMediaMap.get(product.productId) || [],
-							productAttributes:
-								productAttributeMap.get(product.productId) || []
-						}))
+						const productBulkDiscountMap: any = new Map(
+							productBulkDiscounts.map((productBulkDiscount) => [
+								productBulkDiscount.productId,
+								productBulkDiscount
+							])
+						)
+
+						products = products.map((product) => {
+							let productBulkDiscount = productBulkDiscountMap.get(product.productId)?.dataJson || []
+							if (!productBulkDiscount) {
+								productBulkDiscount = []
+							}
+							if (typeof productBulkDiscount === "string") {
+								productBulkDiscount = JSON.parse(productBulkDiscount)
+							}
+
+							return {
+								...product,
+								productCategory:
+									productCategoryMap.get(product.productCategoryId) || null,
+								productSubCategory:
+									productSubCategoryMap.get(product.productSubCategoryId) || null,
+								productMedias: productMediaMap.get(product.productId) || [],
+								productAttributes:
+									productAttributeMap.get(product.productId) || [],
+								productBulkDiscounts: productBulkDiscount.sort((a, b) => {
+									if (a.minQty !== b.minQty) return a.minQty - b.minQty;
+									if (a.maxQty !== b.maxQty) return a.maxQty - b.maxQty;
+									return a.discount - b.discount;
+								})
+							}
+						})
 					}
 
 					return [products, total]
