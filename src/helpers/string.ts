@@ -36,3 +36,11 @@ export function normalToKebabCase(input: string): string {
 		.replace(/^-+|-+$/g, "") // Remove leading and trailing hyphens
 		.toLowerCase() // Convert to lowercase
 }
+
+export function randomString(length: number) {
+	return Math.round(
+		Math.pow(36, length + 1) - Math.random() * Math.pow(36, length)
+	)
+		.toString(36)
+		.slice(1)
+}

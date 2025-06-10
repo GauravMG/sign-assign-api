@@ -56,3 +56,13 @@ export async function decryptBycrypto(encryptedData: string) {
 			decipher.final("utf8")
 	)
 }
+
+// Function to encrypt and limit to 8 digits
+export function encryptTo8Digits(input) {
+	// Create a SHA-256 hash of the input
+	const hash = Crypto.createHash("sha256").update(input).digest("hex")
+	// Take part of the hash, convert to an integer, and limit to 8 digits
+	const numericHash = parseInt(hash.slice(0, 8), 16) % 100000000
+	// Return the result as a string
+	return numericHash.toString().padStart(8, "0") // Ensure it is 8 digits long
+}

@@ -61,6 +61,16 @@ enum NotificationTypes {
   sms
 }
 
+enum OrderStatus {
+  pending
+}
+
+enum PaymentStatus {
+  pending
+  approved
+  cancelled
+}
+
 model Role {
   roleId         Int       @id @default(autoincrement())
   name           String    @db.VarChar(100)
@@ -114,6 +124,7 @@ model User {
   businessUserMappings BusinessUserMapping[]
   userAddresses        UserAddress[]
   userDiscounts        UserDiscount[]
+  orders               Order[]
 
   // Inverse relations
   usersCreatedBy               User[]                @relation("UserCreatedBy")
@@ -220,6 +231,16 @@ model User {
   userDiscountCreatedBy UserDiscount[] @relation("UserDiscountCreatedBy")
   userDiscountUpdatedBy UserDiscount[] @relation("UserDiscountUpdatedBy")
   userDiscountDeletedBy UserDiscount[] @relation("UserDiscountDeletedBy")
+
+  orderCreatedBy        Order[]        @relation("OrderCreatedBy")
+  orderUpdatedBy        Order[]        @relation("OrderUpdatedBy")
+  orderDeletedBy        Order[]        @relation("OrderDeletedBy")
+  orderProductCreatedBy OrderProduct[] @relation("OrderProductCreatedBy")
+  orderProductUpdatedBy OrderProduct[] @relation("OrderProductUpdatedBy")
+  orderProductDeletedBy OrderProduct[] @relation("OrderProductDeletedBy")
+  transactionCreatedBy  Transaction[]  @relation("TransactionCreatedBy")
+  transactionUpdatedBy  Transaction[]  @relation("TransactionUpdatedBy")
+  transactionDeletedBy  Transaction[]  @relation("TransactionDeletedBy")
 }
 
 model Verification {
@@ -615,6 +636,7 @@ model Product {
   productReviews      ProductReview[]
   productBulkDiscount ProductBulkDiscount[]
   variants            Variant[]
+  orderProduct        OrderProduct[]
 }
 
 model ProductMedia {
@@ -774,6 +796,70 @@ model ProductBulkDiscount {
   createdBy             User?     @relation("ProductBulkDiscountCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
   updatedBy             User?     @relation("ProductBulkDiscountUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
   deletedBy             User?     @relation("ProductBulkDiscountDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+}
+
+model Order {
+  orderId       Int           @id @default(autoincrement())
+  userId        Int
+  user          User          @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  createdFor    Int
+  amount        Float
+  amountDetails Json?
+  orderStatus   OrderStatus   @default(pending)
+  paymentStatus PaymentStatus @default(pending)
+  status        Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime?
+  deletedAt     DateTime?
+  createdBy     User?         @relation("OrderCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy     User?         @relation("OrderUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy     User?         @relation("OrderDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+
+  orderProducts OrderProduct[]
+  transactions  Transaction[]
+}
+
+model OrderProduct {
+  orderProductId Int       @id @default(autoincrement())
+  orderId        Int
+  order          Order     @relation(fields: [orderId], references: [orderId], onDelete: Cascade)
+  productId      Int
+  product        Product   @relation(fields: [productId], references: [productId], onDelete: Cascade)
+  dataJson       Json
+  status         Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime?
+  deletedAt      DateTime?
+  createdBy      User?     @relation("OrderProductCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy      User?     @relation("OrderProductUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy      User?     @relation("OrderProductDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+}
+
+model Transaction {
+  transactionId    Int       @id @default(autoincrement())
+  orderId          Int
+  order            Order     @relation(fields: [orderId], references: [orderId], onDelete: Cascade)
+  requestDataJson  Json
+  responseDataJson Json?
+  status           Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime?
+  deletedAt        DateTime?
+  createdBy        User?     @relation("TransactionCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy        User?     @relation("TransactionUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy        User?     @relation("TransactionDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
 
   createdById Int?
   updatedById Int?
