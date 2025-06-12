@@ -813,9 +813,9 @@ model Order {
   referenceNumber        String
   amount                 Float
   amountDetails          Json?
-  shippingAddressId      Int
+  shippingAddressId      Int?
   shippingAddressDetails Json
-  shippingAddress        UserAddress   @relation(fields: [shippingAddressId], references: [userAddressId], onDelete: NoAction)
+  shippingAddress        UserAddress?  @relation(fields: [shippingAddressId], references: [userAddressId], onDelete: NoAction)
   orderStatus            OrderStatus   @default(pending)
   paymentStatus          PaymentStatus @default(pending)
   status                 Boolean       @default(true)
