@@ -7,6 +7,7 @@ import {
 	BlogMediaRouter,
 	BlogRouter,
 	BusinessClientRouter,
+	OrderRouter,
 	PaymentRouter,
 	ProductAttributeRouter,
 	ProductBulkDiscountRouter,
@@ -51,6 +52,7 @@ router.use("/v1/product-bulk-discount", new ProductBulkDiscountRouter().router)
 router.use("/v1/product-media", new ProductMediaRouter().router)
 router.use("/v1/product-attribute", new ProductAttributeRouter().router)
 router.use("/v1/payment", new PaymentRouter().router)
+router.use("/v1/order", new OrderRouter().router)
 
 // other routes
 router.use("/v1/support-ticket", new SupportTicketRouter().router)

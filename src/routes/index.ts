@@ -23,6 +23,7 @@ export * from "./ProductBulkDiscountRouter"
 export * from "./ProductMediaRouter"
 export * from "./ProductAttributeRouter"
 export * from "./PaymentRouter"
+export * from "./OrderRouter"
 
 // other routes
 export * from "./SupportTicketRouter"

@@ -73,7 +73,7 @@ class PaymentController {
 			let {amount, sourceToken, cart} = req.body
 			cart = typeof cart === "string" ? JSON.parse(cart) : cart
 
-			const invoiceNumber: string = `INV-${encryptTo8Digits(
+			const orderReferenceNumber: string = `ORD-${encryptTo8Digits(
 				`${randomString(6).toUpperCase()}-${userId}`
 			)}`
 
@@ -95,8 +95,8 @@ class PaymentController {
 				amount: amount * 100, // The amount to charge in the smallest unit of the currency (e.g., cents for USD)
 				currency: "USD",
 				capture: true,
-				description: `Order #${invoiceNumber}`,
-				external_reference_id: invoiceNumber,
+				description: `Order #${orderReferenceNumber}`,
+				external_reference_id: orderReferenceNumber,
 				source: sourceToken
 			}
 			if ((user?.email ?? "").trim() !== "") {
@@ -113,6 +113,7 @@ class PaymentController {
 						[
 							{
 								userId,
+								referenceNumber: orderReferenceNumber,
 								createdFor: userId,
 								amount
 							}

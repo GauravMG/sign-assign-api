@@ -803,21 +803,22 @@ model ProductBulkDiscount {
 }
 
 model Order {
-  orderId       Int           @id @default(autoincrement())
-  userId        Int
-  user          User          @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  createdFor    Int
-  amount        Float
-  amountDetails Json?
-  orderStatus   OrderStatus   @default(pending)
-  paymentStatus PaymentStatus @default(pending)
-  status        Boolean       @default(true)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime?
-  deletedAt     DateTime?
-  createdBy     User?         @relation("OrderCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
-  updatedBy     User?         @relation("OrderUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
-  deletedBy     User?         @relation("OrderDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+  orderId         Int           @id @default(autoincrement())
+  userId          Int
+  user            User          @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  createdFor      Int
+  referenceNumber String?
+  amount          Float
+  amountDetails   Json?
+  orderStatus     OrderStatus   @default(pending)
+  paymentStatus   PaymentStatus @default(pending)
+  status          Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime?
+  deletedAt       DateTime?
+  createdBy       User?         @relation("OrderCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy       User?         @relation("OrderUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy       User?         @relation("OrderDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
 
   createdById Int?
   updatedById Int?
