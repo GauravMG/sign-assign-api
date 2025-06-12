@@ -194,8 +194,8 @@ class PaymentController {
 						transaction,
 						{
 							paymentStatus: paymentChargeResponse.data.captured
-								? "approved"
-								: "cancelled"
+								? "paid"
+								: "failed"
 						},
 						order.orderId,
 						userId

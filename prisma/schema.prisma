@@ -67,8 +67,9 @@ enum OrderStatus {
 
 enum PaymentStatus {
   pending
-  approved
-  cancelled
+  paid
+  failed
+  refunded
 }
 
 model Role {
@@ -807,7 +808,7 @@ model Order {
   userId          Int
   user            User          @relation(fields: [userId], references: [userId], onDelete: Cascade)
   createdFor      Int
-  referenceNumber String?
+  referenceNumber String
   amount          Float
   amountDetails   Json?
   orderStatus     OrderStatus   @default(pending)
