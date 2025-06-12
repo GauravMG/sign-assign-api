@@ -630,7 +630,7 @@ model Product {
   updatedById Int?
   deletedById Int?
 
-  ProductMedia        ProductMedia[]
+  productMedia        ProductMedia[]
   productAttribute    ProductAttribute[]
   productFAQs         ProductFAQ[]
   productReviews      ProductReview[]
