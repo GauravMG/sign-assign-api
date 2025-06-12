@@ -12,10 +12,14 @@ class OrderController {
 	private commonModelOrder
 	private commonModelOrderProduct
 	private commonModelProduct
+	private commonModelProductMedia
+	private commonModelTransaction
 
 	private idColumnOrder: string = "orderId"
 	private idColumnOrderProduct: string = "orderProductId"
 	private idColumnProduct: string = "productId"
+	private idColumnProductMedia: string = "productMediaId"
+	private idColumnTransaction: string = "transactionId"
 
 	constructor() {
 		this.commonModelOrder = new CommonModel("Order", this.idColumnOrder, [
@@ -36,6 +40,16 @@ class OrderController {
 			"specification",
 			"features"
 		])
+		this.commonModelProductMedia = new CommonModel(
+			"ProductMedia",
+			this.idColumnProductMedia,
+			[]
+		)
+		this.commonModelTransaction = new CommonModel(
+			"Transaction",
+			this.idColumnTransaction,
+			[]
+		)
 
 		this.list = this.list.bind(this)
 		this.update = this.update.bind(this)
@@ -94,19 +108,39 @@ class OrderController {
 							}
 						}
 
-						const orderProducts = await this.commonModelOrderProduct.list(
-							transaction,
-							{
+						let filterTransaction: any = {
+							orderId: orderIds
+						}
+						if ([true, false].indexOf(filter?.status) >= 0) {
+							filterTransaction = {
+								...filterTransaction,
+								status: filter.status
+							}
+						}
+
+						const [orderProducts, orderTransactions] = await Promise.all([
+							this.commonModelOrderProduct.list(transaction, {
 								filter: {
 									...filterOrderProduct
 								},
 								range: {
 									all: true
 								}
-							}
-						)
+							}),
 
-						const productIds: number[] = orderProducts.map((orderProduct) => Number(orderProduct.productId))
+							this.commonModelTransaction.list(transaction, {
+								filter: {
+									...filterTransaction
+								},
+								range: {
+									all: true
+								}
+							})
+						])
+
+						const productIds: number[] = orderProducts.map((orderProduct) =>
+							Number(orderProduct.productId)
+						)
 
 						let filterProduct: any = {
 							productId: productIds
@@ -117,22 +151,50 @@ class OrderController {
 								status: filter.status
 							}
 						}
-						const products = await this.commonModelProduct.list(
-							transaction,
-							{
+						let filterProductMedia: any = {
+							productId: productIds
+						}
+						if ([true, false].indexOf(filter?.status) >= 0) {
+							filterProductMedia = {
+								...filterProductMedia,
+								status: filter.status
+							}
+						}
+						const [products, productMedias] = await Promise.all([
+							this.commonModelProduct.list(transaction, {
 								filter: {
 									...filterProduct
 								},
 								range: {
 									all: true
 								}
-							}
-						)
+							}),
+
+							this.commonModelProductMedia.list(transaction, {
+								filter: {
+									...filterProductMedia
+								},
+								range: {
+									all: true
+								}
+							})
+						])
+
+						const productMediaMap = new Map<number, any[]>()
+						for (const productMedia of productMedias) {
+							const productMediaGroup =
+								productMediaMap.get(productMedia.productId) || []
+							productMediaGroup.push(productMedia)
+							productMediaMap.set(productMedia.productId, productMediaGroup)
+						}
 
 						const productMap = new Map(
 							products.map((product) => [
 								product.productId,
-								product
+								{
+									...product,
+									productMedias: productMediaMap.get(product.productId) || []
+								}
 							])
 						)
 
@@ -148,9 +210,20 @@ class OrderController {
 							{}
 						)
 
+						const orderTransactionMap = orderTransactions.reduce(
+							(acc, orderTransaction) => {
+								acc[orderTransaction.orderId] =
+									acc[orderTransaction.orderId] || []
+								acc[orderTransaction.orderId].push(orderTransaction)
+								return acc
+							},
+							{}
+						)
+
 						orders = orders.map((order) => ({
 							...order,
-							orderProducts: orderProductMap[order.orderId] || []
+							orderProducts: orderProductMap[order.orderId] || [],
+							transaction: (orderTransactionMap[order.orderId] || []).pop()
 						}))
 					}
 

@@ -632,8 +632,8 @@ model Product {
   updatedById Int?
   deletedById Int?
 
-  productMedia        ProductMedia[]
-  productAttribute    ProductAttribute[]
+  productMedias       ProductMedia[]
+  productAttributes   ProductAttribute[]
   productFAQs         ProductFAQ[]
   productReviews      ProductReview[]
   productBulkDiscount ProductBulkDiscount[]
