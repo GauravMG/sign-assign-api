@@ -11,9 +11,11 @@ import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, Headers} from "../types/common"
 class OrderController {
 	private commonModelOrder
 	private commonModelOrderProduct
+	private commonModelProduct
 
 	private idColumnOrder: string = "orderId"
 	private idColumnOrderProduct: string = "orderProductId"
+	private idColumnProduct: string = "productId"
 
 	constructor() {
 		this.commonModelOrder = new CommonModel("Order", this.idColumnOrder, [
@@ -26,6 +28,14 @@ class OrderController {
 			this.idColumnOrderProduct,
 			[]
 		)
+		this.commonModelProduct = new CommonModel("Product", this.idColumnProduct, [
+			"name",
+			"sku",
+			"shortDescription",
+			"description",
+			"specification",
+			"features"
+		])
 
 		this.list = this.list.bind(this)
 		this.update = this.update.bind(this)
@@ -88,7 +98,6 @@ class OrderController {
 							transaction,
 							{
 								filter: {
-									...mandatoryFilters,
 									...filterOrderProduct
 								},
 								range: {
@@ -97,10 +106,43 @@ class OrderController {
 							}
 						)
 
+						const productIds: number[] = orderProducts.map((orderProduct) => Number(orderProduct.productId))
+
+						let filterProduct: any = {
+							productId: productIds
+						}
+						if ([true, false].indexOf(filter?.status) >= 0) {
+							filterProduct = {
+								...filterProduct,
+								status: filter.status
+							}
+						}
+						const products = await this.commonModelProduct.list(
+							transaction,
+							{
+								filter: {
+									...filterProduct
+								},
+								range: {
+									all: true
+								}
+							}
+						)
+
+						const productMap = new Map(
+							products.map((product) => [
+								product.productId,
+								product
+							])
+						)
+
 						const orderProductMap = orderProducts.reduce(
 							(acc, orderProduct) => {
 								acc[orderProduct.orderId] = acc[orderProduct.orderId] || []
-								acc[orderProduct.orderId].push(orderProduct)
+								acc[orderProduct.orderId].push({
+									...orderProduct,
+									product: productMap.get(orderProduct.productId)
+								})
 								return acc
 							},
 							{}
