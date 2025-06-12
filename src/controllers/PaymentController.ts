@@ -70,7 +70,15 @@ class PaymentController {
 
 			const {userId}: Headers = req.headers
 
-			let {amount, sourceToken, cart, amountDetails} = req.body
+			let {
+				amount,
+				sourceToken,
+				cart,
+				amountDetails,
+				shippingAddressId,
+				shippingAddressDetails,
+				businessClientId
+			} = req.body
 			cart = typeof cart === "string" ? JSON.parse(cart) : cart
 
 			const orderReferenceNumber: string = `ORD-${encryptTo8Digits(
@@ -114,12 +122,17 @@ class PaymentController {
 							{
 								userId,
 								referenceNumber: orderReferenceNumber,
-								createdFor: userId,
+								createdFor: businessClientId ?? userId,
 								amount,
 								amountDetails:
-									amountDetails && typeof amountDetails !== "string"
+									typeof amountDetails !== "string"
 										? JSON.stringify(amountDetails)
-										: amountDetails
+										: amountDetails,
+								shippingAddressId,
+								shippingAddressDetails:
+									typeof shippingAddressDetails !== "string"
+										? JSON.stringify(shippingAddressDetails)
+										: shippingAddressDetails
 							}
 						],
 						userId
