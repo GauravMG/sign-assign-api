@@ -25,6 +25,7 @@ export * from "./ProductAttributeRouter"
 export * from "./PaymentRouter"
 export * from "./OrderRouter"
 export * from "./OrderStaffMappingRouter"
+export * from "./OrderStaffTaskRouter"
 
 // other routes
 export * from "./SupportTicketRouter"

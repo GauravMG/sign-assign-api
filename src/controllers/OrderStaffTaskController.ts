@@ -8,14 +8,21 @@ import CommonModel from "../models/CommonModel"
 import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, Headers} from "../types/common"
 import {isWebUser} from "../types/auth"
 
-class OrderStaffMappingController {
+class OrderStaffTaskController {
+	private commonModelOrderStaffTask
 	private commonModelOrderStaffMapping
 	private commonModelUser
 
+	private idColumnOrderStaffTask: string = "orderStaffTaskId"
 	private idColumnOrderStaffMapping: string = "orderStaffMappingId"
 	private idColumnUser: string = "userId"
 
 	constructor() {
+		this.commonModelOrderStaffTask = new CommonModel(
+			"OrderStaffTask",
+			this.idColumnOrderStaffTask,
+			["task"]
+		)
 		this.commonModelOrderStaffMapping = new CommonModel(
 			"OrderStaffMapping",
 			this.idColumnOrderStaffMapping,
@@ -42,23 +49,23 @@ class OrderStaffMappingController {
 
 			let payload = Array.isArray(req.body) ? req.body : [req.body]
 
-			const [orderStaffMappings] = await prisma.$transaction(
+			const [orderStaffTasks] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					// create
-					const orderStaffMappings =
-						await this.commonModelOrderStaffMapping.bulkCreate(
+					const orderStaffTasks =
+						await this.commonModelOrderStaffTask.bulkCreate(
 							transaction,
 							payload,
 							userId
 						)
 
-					return [orderStaffMappings]
+					return [orderStaffTasks]
 				}
 			)
 
 			return response.successResponse({
-				message: `Order staff mappings created successfully`,
-				data: orderStaffMappings
+				message: `Order staff tasks created successfully`,
+				data: orderStaffTasks
 			})
 		} catch (error) {
 			next(error)
@@ -81,10 +88,10 @@ class OrderStaffMappingController {
 
 			const {filter, range, sort} = await listAPIPayload(req.body)
 
-			const [orderStaffMappings, total] = await prisma.$transaction(
+			const [orderStaffTasks, total] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
-					let [orderStaffMappings, total] = await Promise.all([
-						this.commonModelOrderStaffMapping.list(transaction, {
+					let [orderStaffTasks, total] = await Promise.all([
+						this.commonModelOrderStaffTask.list(transaction, {
 							filter: {
 								...mandatoryFilters,
 								...filter
@@ -93,7 +100,7 @@ class OrderStaffMappingController {
 							sort
 						}),
 
-						this.commonModelOrderStaffMapping.list(transaction, {
+						this.commonModelOrderStaffTask.list(transaction, {
 							filter: {
 								...mandatoryFilters,
 								...filter
@@ -101,6 +108,21 @@ class OrderStaffMappingController {
 							isCountOnly: true
 						})
 					])
+
+					const orderStaffMappingIds: number[] = orderStaffTasks.map(
+						(orderStaffTask) => orderStaffTask.orderStaffMappingId
+					)
+
+					let orderStaffMappings = await this.commonModelOrderStaffMapping.list(
+						transaction,
+						{
+							filter: {
+								orderStaffMappingId: orderStaffMappingIds
+							},
+							range,
+							sort
+						}
+					)
 
 					const userIds: number[] = orderStaffMappings.map(
 						(orderStaffMapping) => orderStaffMapping.userId
@@ -122,18 +144,32 @@ class OrderStaffMappingController {
 						user: userMap.get(orderStaffMapping.userId)
 					}))
 
-					return [orderStaffMappings, total]
+					const orderStaffMappingMap: any = new Map(
+						orderStaffMappings.map((orderStaffMapping) => [
+							orderStaffMapping.orderStaffMappingId,
+							orderStaffMapping
+						])
+					)
+
+					orderStaffTasks = orderStaffTasks.map((orderStaffTask) => ({
+						...orderStaffTask,
+						orderStaffMapping: orderStaffMappingMap.get(
+							orderStaffTask.orderStaffMappingId
+						)
+					}))
+
+					return [orderStaffTasks, total]
 				}
 			)
 
 			return response.successResponse({
-				message: `Order staff mappings data`,
+				message: `Order staff tasks data`,
 				metadata: {
 					total,
 					page: range?.page ?? DEFAULT_PAGE,
 					pageSize: range?.pageSize ?? DEFAULT_PAGE_SIZE
 				},
-				data: orderStaffMappings
+				data: orderStaffTasks
 			})
 		} catch (error) {
 			next(error)
@@ -146,44 +182,46 @@ class OrderStaffMappingController {
 
 			const {userId, roleId}: Headers = req.headers
 
-			const {orderStaffMappingId, ...restPayload} = req.body
+			const {orderStaffTaskId, ...restPayload} = req.body
 
-			const [orderStaffMapping] = await prisma.$transaction(
+			const [orderStaffTask] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					// check if exists
-					const [existingOrderStaffMapping] =
-						await this.commonModelOrderStaffMapping.list(transaction, {
+					const [existingOrderStaffTask] =
+						await this.commonModelOrderStaffTask.list(transaction, {
 							filter: {
-								orderStaffMappingId
+								orderStaffTaskId
 							}
 						})
-					if (!existingOrderStaffMapping) {
-						throw new BadRequestException("Order staff mapping doesn't exist")
+					if (!existingOrderStaffTask) {
+						throw new BadRequestException("Order staff task doesn't exist")
 					}
 
 					// update
-					await this.commonModelOrderStaffMapping.updateById(
+					await this.commonModelOrderStaffTask.updateById(
 						transaction,
 						restPayload,
-						orderStaffMappingId,
+						orderStaffTaskId,
 						userId
 					)
 
 					// get updated details
-					const [orderStaffMapping] =
-						await this.commonModelOrderStaffMapping.list(transaction, {
+					const [orderStaffTask] = await this.commonModelOrderStaffTask.list(
+						transaction,
+						{
 							filter: {
-								orderStaffMappingId
+								orderStaffTaskId
 							}
-						})
+						}
+					)
 
-					return [orderStaffMapping]
+					return [orderStaffTask]
 				}
 			)
 
 			return response.successResponse({
 				message: `Details updated successfully`,
-				data: orderStaffMapping
+				data: orderStaffTask
 			})
 		} catch (error) {
 			next(error)
@@ -196,41 +234,41 @@ class OrderStaffMappingController {
 
 			const {userId, roleId}: Headers = req.headers
 
-			const {orderStaffMappingIds} = req.body
+			const {orderStaffTaskIds} = req.body
 
-			if (!orderStaffMappingIds?.length) {
+			if (!orderStaffTaskIds?.length) {
 				throw new BadRequestException(
-					`Please select order staff mappings to be deleted`
+					`Please select order staff tasks to be deleted`
 				)
 			}
 
 			await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					const existingProductSubCategories =
-						await this.commonModelOrderStaffMapping.list(transaction, {
+						await this.commonModelOrderStaffTask.list(transaction, {
 							filter: {
-								orderStaffMappingId: orderStaffMappingIds
+								orderStaffTaskId: orderStaffTaskIds
 							}
 						})
 					if (!existingProductSubCategories.length) {
-						const orderStaffMappingIdsSet: Set<number> = new Set(
-							existingProductSubCategories.map((obj) => obj.orderStaffMappingId)
+						const orderStaffTaskIdsSet: Set<number> = new Set(
+							existingProductSubCategories.map((obj) => obj.orderStaffTaskId)
 						)
 						throw new BadRequestException(
-							`Selected order staff mappings not found: ${orderStaffMappingIds.filter((orderStaffMappingId) => !orderStaffMappingIdsSet.has(orderStaffMappingId))}`
+							`Selected order staff tasks not found: ${orderStaffTaskIds.filter((orderStaffTaskId) => !orderStaffTaskIdsSet.has(orderStaffTaskId))}`
 						)
 					}
 
-					await this.commonModelOrderStaffMapping.softDeleteByIds(
+					await this.commonModelOrderStaffTask.softDeleteByIds(
 						transaction,
-						orderStaffMappingIds,
+						orderStaffTaskIds,
 						userId
 					)
 				}
 			)
 
 			return response.successResponse({
-				message: `Order staff mappings deleted successfully`
+				message: `Order staff tasks deleted successfully`
 			})
 		} catch (error) {
 			next(error)
@@ -238,4 +276,4 @@ class OrderStaffMappingController {
 	}
 }
 
-export default new OrderStaffMappingController()
+export default new OrderStaffTaskController()

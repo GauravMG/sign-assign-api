@@ -9,6 +9,7 @@ import {
 	BusinessClientRouter,
 	OrderRouter,
 	OrderStaffMappingRouter,
+	OrderStaffTaskRouter,
 	PaymentRouter,
 	ProductAttributeRouter,
 	ProductBulkDiscountRouter,
@@ -55,6 +56,7 @@ router.use("/v1/product-attribute", new ProductAttributeRouter().router)
 router.use("/v1/payment", new PaymentRouter().router)
 router.use("/v1/order", new OrderRouter().router)
 router.use("/v1/order-staff-mapping", new OrderStaffMappingRouter().router)
+router.use("/v1/order-staff-task", new OrderStaffTaskRouter().router)
 
 // other routes
 router.use("/v1/support-ticket", new SupportTicketRouter().router)
