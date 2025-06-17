@@ -66,7 +66,7 @@ class OrderController {
 				mandatoryFilters = {
 					...mandatoryFilters,
 					status: true,
-					createdFor: userId
+					userId
 				}
 			}
 
