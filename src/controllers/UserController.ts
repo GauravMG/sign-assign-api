@@ -75,7 +75,6 @@ class UserController {
 
 				return {
 					...restPayload,
-					roleId: Role.BUSINESS_STAFF,
 					isActive: true
 				}
 			})
@@ -174,7 +173,7 @@ class UserController {
 					if (
 						!filter.userId &&
 						filter.roleId !== Role.BUSINESS_STAFF &&
-						[Role.SUPER_ADMIN].indexOf(roleId) < 0
+						[Role.SUPER_ADMIN, Role.STAFF].indexOf(roleId) < 0
 					) {
 						const [businessUserMapping] =
 							await this.commonModelBusinessUserMapping.list(transaction, {

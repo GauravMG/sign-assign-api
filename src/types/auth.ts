@@ -9,7 +9,8 @@ export enum Role {
 	SUPER_ADMIN = 1,
 	USER = 2,
 	BUSINESS_ADMIN = 3,
-	BUSINESS_STAFF = 4
+	BUSINESS_STAFF = 4,
+	STAFF = 5
 }
 
 export const isWebUser = (roleId: number) =>

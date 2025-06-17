@@ -30,6 +30,11 @@ async function seedRoles() {
 				roleId: 4,
 				name: "Business Staff",
 				permissionJSON: null
+			},
+			{
+				roleId: 5,
+				name: "Staff",
+				permissionJSON: null
 			}
 		]
 
