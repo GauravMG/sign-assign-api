@@ -27,8 +27,9 @@ class UserController {
 
 	constructor() {
 		this.commonModelUser = new CommonModel("User", this.idColumnUser, [
-			"roleId",
-			"fullName",
+			"firstName",
+			"lastName",
+			"email",
 			"mobile"
 		])
 		this.commonModelBusinessUserMapping = new CommonModel(

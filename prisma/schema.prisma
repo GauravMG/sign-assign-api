@@ -127,6 +127,7 @@ model User {
   userAddresses        UserAddress[]
   userDiscounts        UserDiscount[]
   orders               Order[]
+  orderStaffMappings   OrderStaffMapping[]
 
   // Inverse relations
   usersCreatedBy               User[]                @relation("UserCreatedBy")
@@ -243,6 +244,13 @@ model User {
   transactionCreatedBy  Transaction[]  @relation("TransactionCreatedBy")
   transactionUpdatedBy  Transaction[]  @relation("TransactionUpdatedBy")
   transactionDeletedBy  Transaction[]  @relation("TransactionDeletedBy")
+
+  orderStaffMappingCreatedBy OrderStaffMapping[] @relation("OrderStaffMappingCreatedBy")
+  orderStaffMappingUpdatedBy OrderStaffMapping[] @relation("OrderStaffMappingUpdatedBy")
+  orderStaffMappingDeletedBy OrderStaffMapping[] @relation("OrderStaffMappingDeletedBy")
+  orderStaffTaskCreatedBy    OrderStaffTask[]    @relation("OrderStaffTaskCreatedBy")
+  orderStaffTaskUpdatedBy    OrderStaffTask[]    @relation("OrderStaffTaskUpdatedBy")
+  orderStaffTaskDeletedBy    OrderStaffTask[]    @relation("OrderStaffTaskDeletedBy")
 }
 
 model Verification {
@@ -830,8 +838,9 @@ model Order {
   updatedById Int?
   deletedById Int?
 
-  orderProducts OrderProduct[]
-  transactions  Transaction[]
+  orderProducts      OrderProduct[]
+  transactions       Transaction[]
+  orderStaffMappings OrderStaffMapping[]
 }
 
 model OrderProduct {
@@ -867,6 +876,49 @@ model Transaction {
   createdBy        User?     @relation("TransactionCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
   updatedBy        User?     @relation("TransactionUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
   deletedBy        User?     @relation("TransactionDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+}
+
+model OrderStaffMapping {
+  orderStaffMappingId Int       @id @default(autoincrement())
+  orderId             Int
+  order               Order     @relation(fields: [orderId], references: [orderId], onDelete: Cascade)
+  userId              Int
+  user                User      @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  status              Boolean   @default(true)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime?
+  deletedAt           DateTime?
+  createdBy           User?     @relation("OrderStaffMappingCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy           User?     @relation("OrderStaffMappingUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy           User?     @relation("OrderStaffMappingDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+
+  orderStaffTasks OrderStaffTask[]
+}
+
+model OrderStaffTask {
+  orderStaffTaskId    Int               @id @default(autoincrement())
+  orderStaffMappingId Int
+  orderStaffMapping   OrderStaffMapping @relation(fields: [orderStaffMappingId], references: [orderStaffMappingId], onDelete: Cascade)
+  task                String
+  taskStatus          String            @default("pending")
+  numberOfPeople      Int?
+  remarksByStaff      String?
+  remarksByAdmin      String?
+  status              Boolean           @default(true)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime?
+  deletedAt           DateTime?
+  createdBy           User?             @relation("OrderStaffTaskCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy           User?             @relation("OrderStaffTaskUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy           User?             @relation("OrderStaffTaskDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
 
   createdById Int?
   updatedById Int?
