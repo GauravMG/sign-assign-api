@@ -15,12 +15,16 @@ class ChatbotController {
 	private commonModelProductCategory
 	private commonModelProductSubCategory
 	private commonModelProduct
+	private commonModelProductAttribute
+	private commonModelAttribute
 
 	private idColumnChatSession: string = "chatSessionId"
 	private idColumnChatMessage: string = "chatMessageId"
 	private idColumnProductCategory: string = "productCategoryId"
 	private idColumnProductSubCategory: string = "productSubCategoryId"
 	private idColumnProduct: string = "productId"
+	private idColumnProductAtribute: string = "productAttributeId"
+	private idColumnAttribute: string = "attributeId"
 
 	constructor() {
 		this.commonModelChatSession = new CommonModel(
@@ -51,6 +55,16 @@ class ChatbotController {
 			"specification",
 			"features"
 		])
+		this.commonModelProductAttribute = new CommonModel(
+			"ProductAttribute",
+			this.idColumnProductAtribute,
+			[]
+		)
+		this.commonModelAttribute = new CommonModel(
+			"Attribute",
+			this.idColumnAttribute,
+			[]
+		)
 
 		this.chat = this.chat.bind(this)
 	}
@@ -139,7 +153,7 @@ class ChatbotController {
 							break
 
 						case "product_category":
-							const [productCategoryByInput] =
+							const [productCategoryStepProductCategory] =
 								await this.commonModelProductCategory.list(transaction, {
 									filter: {
 										name: input
@@ -150,7 +164,7 @@ class ChatbotController {
 									filter: {
 										status: true,
 										productCategoryId: Number(
-											productCategoryByInput.productCategoryId
+											productCategoryStepProductCategory.productCategoryId
 										)
 									},
 									range: {all: true},
@@ -173,34 +187,175 @@ class ChatbotController {
 							break
 
 						case "product_sub_category":
-							const [[productCategoryByState], [productSubCategoryByInput]] =
-								await Promise.all([
-									this.commonModelProductCategory.list(transaction, {
-										filter: {
-											name: state.category
-										}
-									}),
+							const [
+								[productCategoryStepProductSubCategory],
+								[productSubCategoryStepProductSubCategory]
+							] = await Promise.all([
+								this.commonModelProductCategory.list(transaction, {
+									filter: {
+										name: state.category
+									}
+								}),
 
-									this.commonModelProductSubCategory.list(transaction, {
-										filter: {
-											name: input
-										}
-									})
-								])
-							const products = await this.commonModelProduct.list(transaction, {
-								filter: {
-									productCategoryId: Number(
-										productCategoryByState.productCategoryId
-									),
-									productSubCategoryId: Number(
-										productSubCategoryByInput.productSubCategoryId
-									)
-								},
-								range: {
-									page: 1,
-									pageSize: 3
+								this.commonModelProductSubCategory.list(transaction, {
+									filter: {
+										name: input
+									}
+								})
+							])
+							const productsStepProductSubCategory =
+								await this.commonModelProduct.list(transaction, {
+									filter: {
+										productCategoryId: Number(
+											productCategoryStepProductSubCategory.productCategoryId
+										),
+										productSubCategoryId: Number(
+											productSubCategoryStepProductSubCategory.productSubCategoryId
+										)
+									},
+									range: {all: true}
+								})
+							const productIds: number[] = productsStepProductSubCategory.map(
+								(product) => product.productId
+							)
+							const productAttributes =
+								await this.commonModelProductAttribute.list(transaction, {
+									filter: {
+										productId: productIds
+									},
+									range: {all: true}
+								})
+							const attributeIds: number[] = productAttributes.map(
+								(productAttribute) => productAttribute.attributeId
+							)
+							const attributes = await this.commonModelAttribute.list(
+								transaction,
+								{
+									filter: {
+										attributeId: attributeIds
+									},
+									range: {all: true}
 								}
-							})
+							)
+							state.subCategory = input
+							state.step = "filter_attribute_answer"
+							state.attributesToAsk = attributes.map((attr) => ({
+								attributeId: attr.attributeId,
+								name: attr.name,
+								options: attr.options ? JSON.parse(attr.options) : null
+							}))
+							state.currentAttributeIndex = 0
+							state.selectedAttributes = {}
+							const attrStepProductSubCategory =
+								state.attributesToAsk[state.currentAttributeIndex]
+							botResponse = {
+								message: `Please select a ${attrStepProductSubCategory.name}`,
+								options: attrStepProductSubCategory.options.map((opt) => ({
+									label: opt,
+									value: opt
+								}))
+							}
+							break
+
+						case "filter_attribute_answer":
+							state.currentAttributeIndex += 1
+
+							const currentAttr =
+								state.attributesToAsk[state.currentAttributeIndex]
+							state.selectedAttributes[currentAttr.attributeId] = input
+
+							if (
+								state.currentAttributeIndex <
+								state.attributesToAsk.length - 1
+							) {
+								state.step = "filter_attribute_answer"
+							} else {
+								state.step = "final_product_suggestions"
+							}
+							state.selectedAttributes = {
+								...state.selectedAttributes,
+								[state.attributesToAsk[state.currentAttributeIndex - 1]
+									.attributeId]: input
+							}
+							const attrStepFilterAttributeAnswer =
+								state.attributesToAsk[state.currentAttributeIndex]
+							botResponse = {
+								message: `Please select a ${attrStepFilterAttributeAnswer.name}`,
+								options: attrStepFilterAttributeAnswer.options.map((opt) => ({
+									label: opt,
+									value: opt
+								}))
+							}
+							break
+
+						case "final_product_suggestions":
+							state.currentAttributeIndex += 1
+							state.selectedAttributes = {
+								...state.selectedAttributes,
+								[state.attributesToAsk[state.currentAttributeIndex - 1]
+									.attributeId]: input
+							}
+							const selectedAttributesPayload = Object.keys(
+								state.selectedAttributes
+							).map((selectedAttribute) => ({
+								attributeId: Number(selectedAttribute),
+								value: state.selectedAttributes[selectedAttribute]
+							}))
+							const [
+								[productCategoryStepFinalProductSuggestions],
+								[productSubCategoryStepFinalProductSuggestions],
+								productAttributesStepFinalProductSuggestions
+							] = await Promise.all([
+								this.commonModelProductCategory.list(transaction, {
+									filter: {
+										name: state.category
+									}
+								}),
+
+								this.commonModelProductSubCategory.list(transaction, {
+									filter: {
+										name: state.subCategory
+									}
+								}),
+
+								this.commonModelProductAttribute.list(transaction, {
+									customFilters: [
+										{
+											OR: [
+												...selectedAttributesPayload.map(
+													({attributeId, value}) => ({
+														attributeId,
+														value
+													})
+												)
+											]
+										}
+									],
+									range: {all: true}
+								})
+							])
+							const products =
+								productAttributesStepFinalProductSuggestions?.length
+									? await this.commonModelProduct.list(transaction, {
+											filter: {
+												productCategoryId: Number(
+													productCategoryStepFinalProductSuggestions.productCategoryId
+												),
+												productSubCategoryId: Number(
+													productSubCategoryStepFinalProductSuggestions.productSubCategoryId
+												),
+												productId:
+													productAttributesStepFinalProductSuggestions.map(
+														(productAttributesStepFinalProductSuggestion) =>
+															productAttributesStepFinalProductSuggestion.productId
+													)
+											},
+											range: {
+												page: 1,
+												pageSize: 3
+											}
+										})
+									: []
 							state.subCategory = input
 							state.step = "suggestion"
 							botResponse = {
