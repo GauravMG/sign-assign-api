@@ -238,14 +238,21 @@ class ChatbotController {
 								}
 							)
 							state.subCategory = input
-							state.step = "filter_attribute_answer"
+							state.currentAttributeIndex = 0
+							state.selectedAttributes = {}
 							state.attributesToAsk = attributes.map((attr) => ({
 								attributeId: attr.attributeId,
 								name: attr.name,
 								options: attr.options ? JSON.parse(attr.options) : null
 							}))
-							state.currentAttributeIndex = 0
-							state.selectedAttributes = {}
+							if (
+								state.currentAttributeIndex <
+								state.attributesToAsk.length - 1
+							) {
+								state.step = "filter_attribute_answer"
+							} else {
+								state.step = "final_product_suggestions"
+							}
 							const attrStepProductSubCategory =
 								state.attributesToAsk[state.currentAttributeIndex]
 							botResponse = {
