@@ -73,6 +73,11 @@ enum PaymentStatus {
   refunded
 }
 
+enum MessageSender {
+  user
+  bot
+}
+
 model Role {
   roleId         Int       @id @default(autoincrement())
   name           String    @db.VarChar(100)
@@ -989,4 +994,29 @@ model VariantAttribute {
   deletedById Int?
   attributes  Attribute? @relation(fields: [attributeId], references: [attributeId], onDelete: Cascade)
   variants    Variant?   @relation(fields: [variantId], references: [variantId], onDelete: Cascade)
+}
+
+model ChatSession {
+  chatSessionId Int           @id @default(autoincrement())
+  userId        String? // If user is logged in
+  sessionId     String? // For anonymous users (frontend stores in localStorage)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime?
+  deletedAt     DateTime?
+  messages      ChatMessage[]
+
+  @@index([userId])
+  @@index([sessionId])
+}
+
+model ChatMessage {
+  chatMessageId Int           @id @default(autoincrement())
+  chatSessionId Int
+  messageSender MessageSender
+  message       String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime?
+  deletedAt     DateTime?
+
+  chatSession ChatSession @relation(fields: [chatSessionId], references: [chatSessionId])
 }

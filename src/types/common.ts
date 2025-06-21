@@ -53,6 +53,8 @@ export type Headers = any & {
 	userFullName?: string | null
 	businessId?: number | null
 	transaction: PrismaClient
+	chatsessionid?: string | null
+	chatuserid?: string | null
 }
 
 export type UrlSchema =

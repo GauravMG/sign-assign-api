@@ -7,6 +7,7 @@ import {
 	BlogMediaRouter,
 	BlogRouter,
 	BusinessClientRouter,
+	ChatbotRouter,
 	OrderRouter,
 	OrderStaffMappingRouter,
 	OrderStaffTaskRouter,
@@ -64,5 +65,6 @@ router.use("/v1/support-ticket-media", new SupportTicketMediaRouter().router)
 router.use("/v1/banner", new BannerRouter().router)
 router.use("/v1/blog", new BlogRouter().router)
 router.use("/v1/blog-media", new BlogMediaRouter().router)
+router.use("/v1/chatbot", new ChatbotRouter().router)
 
 export default router
