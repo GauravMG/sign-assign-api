@@ -228,8 +228,8 @@ class ChatbotController {
 							botResponse = {
 								message: "Let's start again. Choose an option:",
 								options: [
-									{label: "Look for Products", value: "look_products"},
-									{label: "Check my Order", value: "check_order"}
+									{label: "Look for Products", value: "look_products"}
+									// {label: "Check my Order", value: "check_order"}
 								]
 							}
 					}
