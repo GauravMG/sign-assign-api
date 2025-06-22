@@ -27,6 +27,10 @@ export * from "./OrderRouter"
 export * from "./OrderStaffMappingRouter"
 export * from "./OrderStaffTaskRouter"
 
+// template routes
+export * from "./TemplateRouter"
+export * from "./TemplateTagRouter"
+
 // other routes
 export * from "./SupportTicketRouter"
 export * from "./SupportTicketMediaRouter"

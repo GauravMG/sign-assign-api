@@ -22,6 +22,8 @@ import {
 	RoleRouter,
 	SupportTicketMediaRouter,
 	SupportTicketRouter,
+	TemplateRouter,
+	TemplateTagRouter,
 	UploadRouter,
 	UserAddressRouter,
 	UserDiscountRouter,
@@ -58,6 +60,10 @@ router.use("/v1/payment", new PaymentRouter().router)
 router.use("/v1/order", new OrderRouter().router)
 router.use("/v1/order-staff-mapping", new OrderStaffMappingRouter().router)
 router.use("/v1/order-staff-task", new OrderStaffTaskRouter().router)
+
+// template routes
+router.use("/v1/template", new TemplateRouter().router)
+router.use("/v1/template-tag", new TemplateTagRouter().router)
 
 // other routes
 router.use("/v1/support-ticket", new SupportTicketRouter().router)
