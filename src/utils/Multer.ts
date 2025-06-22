@@ -28,13 +28,29 @@ const fileFilter = (
 	cb: multer.FileFilterCallback
 ) => {
 	const allowedTypes = [
+		// Images
 		"image/jpeg",
 		"image/png",
 		"image/gif",
+		"image/vnd.adobe.photoshop", // .psd
+
+		// Videos
 		"video/mp4",
 		"video/webm",
-		"video/ogg"
+		"video/ogg",
+
+		// Design / Template files
+		"application/postscript", // .ai, .eps
+		"application/pdf", // .pdf
+		"application/x-coreldraw", // .cdr
+		"application/illustrator", // sometimes used for .ai
+		"application/vnd.adobe.illustrator", // alternative for .ai
+		"image/x-coreldraw", // .cdr alternative
+		"application/x-photoshop", // another for .psd
+		"application/photoshop", // rare
+		"application/octet-stream" // fallback for unknown binary files like .sketch, .fig
 	]
+
 	if (allowedTypes.includes(file.mimetype)) {
 		cb(null, true) // Accept the file
 	} else {
@@ -44,7 +60,7 @@ const fileFilter = (
 
 // Set limits for uploaded files
 const limits = {
-	fileSize: 20 * 1024 * 1024 // 20 MB
+	fileSize: 100 * 1024 * 1024 // 100 MB
 }
 
 // Create the Multer instance
