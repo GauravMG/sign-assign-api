@@ -58,5 +58,9 @@
 	{
 		"apiPath": "/v1/chatbot/chat",
 		"method": "POST"
+	},
+	{
+		"apiPath": "/v1/template/list",
+		"method": "POST"
 	}
 ]
