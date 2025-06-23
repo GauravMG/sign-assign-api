@@ -62,5 +62,13 @@
 	{
 		"apiPath": "/v1/template/list",
 		"method": "POST"
+	},
+	{
+		"apiPath": "/v1/upload/single",
+		"method": "POST"
+	},
+	{
+		"apiPath": "/v1/upload/single-psd",
+		"method": "POST"
 	}
 ]
