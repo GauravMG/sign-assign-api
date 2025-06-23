@@ -60,8 +60,10 @@
 		"node-cron": "^3.0.3",
 		"node-mailjet": "^6.0.6",
 		"nodemailer": "^6.9.16",
+		"openai": "^5.6.0",
 		"pg": "^8.13.1",
 		"prisma": "^6.1.0",
+		"psd": "^3.4.0",
 		"rotating-file-stream": "^3.2.5",
 		"twilio": "^5.7.0"
 	},
