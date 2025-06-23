@@ -8,6 +8,7 @@ import {
 	BlogRouter,
 	BusinessClientRouter,
 	ChatbotRouter,
+	CouponRouter,
 	OrderRouter,
 	OrderStaffMappingRouter,
 	OrderStaffTaskRouter,
@@ -62,6 +63,7 @@ router.use("/v1/payment", new PaymentRouter().router)
 router.use("/v1/order", new OrderRouter().router)
 router.use("/v1/order-staff-mapping", new OrderStaffMappingRouter().router)
 router.use("/v1/order-staff-task", new OrderStaffTaskRouter().router)
+router.use("/v1/coupon", new CouponRouter().router)
 
 // template routes
 router.use("/v1/template", new TemplateRouter().router)

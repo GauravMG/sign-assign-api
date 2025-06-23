@@ -84,6 +84,16 @@ enum TemplateTagReference {
   product
 }
 
+enum DiscountType {
+  amount
+  percentage
+}
+
+enum CouponQuantityType {
+  limited
+  unlimited
+}
+
 model Role {
   roleId         Int       @id @default(autoincrement())
   name           String    @db.VarChar(100)
@@ -139,6 +149,7 @@ model User {
   userDiscounts        UserDiscount[]
   orders               Order[]
   orderStaffMappings   OrderStaffMapping[]
+  coupons              Coupon[]
 
   // Inverse relations
   usersCreatedBy               User[]                @relation("UserCreatedBy")
@@ -273,6 +284,10 @@ model User {
   templateTagCreatedBy TemplateTag[] @relation("TemplateTagCreatedBy")
   templateTagUpdatedBy TemplateTag[] @relation("TemplateTagUpdatedBy")
   templateTagDeletedBy TemplateTag[] @relation("TemplateTagDeletedBy")
+
+  couponCreatedBy Coupon[] @relation("CouponCreatedBy")
+  couponUpdatedBy Coupon[] @relation("CouponUpdatedBy")
+  couponDeletedBy Coupon[] @relation("CouponDeletedBy")
 }
 
 model Verification {
@@ -1092,6 +1107,28 @@ model TemplateTag {
   createdBy     User?                @relation("TemplateTagCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
   updatedBy     User?                @relation("TemplateTagUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
   deletedBy     User?                @relation("TemplateTagDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+}
+
+model Coupon {
+  couponId           Int                @id @default(autoincrement())
+  couponCode         String
+  discountType       DiscountType
+  discount           Float
+  couponQuantityType CouponQuantityType
+  couponQuantity     Int?
+  userId             Int?
+  user               User?              @relation(fields: [userId], references: [userId])
+  status             Boolean            @default(true)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime?
+  deletedAt          DateTime?
+  createdBy          User?              @relation("CouponCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy          User?              @relation("CouponUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy          User?              @relation("CouponDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
 
   createdById Int?
   updatedById Int?
