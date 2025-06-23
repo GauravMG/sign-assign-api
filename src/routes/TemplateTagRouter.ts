@@ -8,9 +8,8 @@ export class TemplateTagRouter {
 	constructor() {
 		this.router = express.Router()
 		this.router
-			.post("/create", TemplateTagController.create)
+			.post("/save", TemplateTagController.save)
 			.post("/list", TemplateTagController.list)
-			.post("/update", TemplateTagController.update)
 			.post("/delete", TemplateTagController.delete)
 	}
 }

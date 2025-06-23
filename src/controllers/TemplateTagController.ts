@@ -19,13 +19,12 @@ class TemplateTagController {
 			[]
 		)
 
-		this.create = this.create.bind(this)
+		this.save = this.save.bind(this)
 		this.list = this.list.bind(this)
-		this.update = this.update.bind(this)
 		this.delete = this.delete.bind(this)
 	}
 
-	public async create(req: Request, res: Response, next: NextFunction) {
+	public async save(req: Request, res: Response, next: NextFunction) {
 		try {
 			const response = new ApiResponse(res)
 
@@ -35,7 +34,16 @@ class TemplateTagController {
 
 			const [templateTags] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
-					// create
+					// delete old entries
+					await this.commonModelTemplateTag.softDeleteByFilter(
+						transaction,
+						{
+							templateId: payload.map((el) => el.templateId)
+						},
+						userId
+					)
+
+					// bulk create new entries
 					const templateTags = await this.commonModelTemplateTag.bulkCreate(
 						transaction,
 						payload,
@@ -47,7 +55,7 @@ class TemplateTagController {
 			)
 
 			return response.successResponse({
-				message: `Template tag created successfully`,
+				message: `Template tag${payload.length > 1 ? "s" : ""} updated successfully`,
 				data: templateTags
 			})
 		} catch (error) {
@@ -87,69 +95,6 @@ class TemplateTagController {
 					pageSize: range?.pageSize ?? DEFAULT_PAGE_SIZE
 				},
 				data: templateTags
-			})
-		} catch (error) {
-			next(error)
-		}
-	}
-
-	public async update(req: Request, res: Response, next: NextFunction) {
-		try {
-			const response = new ApiResponse(res)
-
-			const {userId, roleId}: Headers = req.headers
-
-			let {templateTagId, ...restPayload} = req.body
-
-			const [templateTag] = await prisma.$transaction(
-				async (transaction: PrismaClientTransaction) => {
-					// check if exists
-					const [existingTemplateTag] = await this.commonModelTemplateTag.list(
-						transaction,
-						{
-							filter: {
-								templateTagId
-							}
-						}
-					)
-					if (!existingTemplateTag) {
-						throw new BadRequestException("Template tag doesn't exist")
-					}
-
-					// for size as we are taking size as in kb so taking it as string
-					restPayload = {
-						...restPayload,
-						size:
-							typeof restPayload.size === "number"
-								? String(restPayload.size)
-								: restPayload.size
-					}
-
-					// update
-					await this.commonModelTemplateTag.updateById(
-						transaction,
-						restPayload,
-						templateTagId,
-						userId
-					)
-
-					// get updated details
-					const [templateTag] = await this.commonModelTemplateTag.list(
-						transaction,
-						{
-							filter: {
-								templateTagId
-							}
-						}
-					)
-
-					return [templateTag]
-				}
-			)
-
-			return response.successResponse({
-				message: `Details updated successfully`,
-				data: templateTag
 			})
 		} catch (error) {
 			next(error)

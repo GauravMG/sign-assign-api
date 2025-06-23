@@ -11,9 +11,15 @@ import {isWebUser} from "../types/auth"
 class TemplateController {
 	private commonModelTemplate
 	private commonModelTemplateTag
+	private commonModelProductCategory
+	private commonModelProductSubCategory
+	private commonModelProduct
 
 	private idColumnTemplate: string = "templateId"
 	private idColumnTemplateTag: string = "templateTagId"
+	private idColumnProductCategory: string = "productCategoryId"
+	private idColumnProductSubCategory: string = "productSubCategoryId"
+	private idColumnProduct: string = "productId"
 
 	constructor() {
 		this.commonModelTemplate = new CommonModel(
@@ -26,6 +32,24 @@ class TemplateController {
 			this.idColumnTemplateTag,
 			[]
 		)
+		this.commonModelProductCategory = new CommonModel(
+			"ProductCategory",
+			this.idColumnProductCategory,
+			["name", "description"]
+		)
+		this.commonModelProductSubCategory = new CommonModel(
+			"ProductSubCategory",
+			this.idColumnProductSubCategory,
+			["name", "description"]
+		)
+		this.commonModelProduct = new CommonModel("Product", this.idColumnProduct, [
+			"name",
+			"sku",
+			"shortDescription",
+			"description",
+			"specification",
+			"features"
+		])
 
 		this.create = this.create.bind(this)
 		this.list = this.list.bind(this)
@@ -122,8 +146,94 @@ class TemplateController {
 							}
 						)
 
+						let productCategoryIds: number[] = []
+						let productSubCategoryIds: number[] = []
+						let productIds: number[] = []
+						templateTags.forEach((templateTag) => {
+							if (templateTag.referenceType === "product_category") {
+								productCategoryIds.push(Number(templateTag.referenceId))
+							}
+							if (templateTag.referenceType === "product_sub_category") {
+								productSubCategoryIds.push(Number(templateTag.referenceId))
+							}
+							if (templateTag.referenceType === "product") {
+								productIds.push(Number(templateTag.referenceId))
+							}
+						})
+
+						const [
+							selectedProductCategories,
+							selectedProductSubCategories,
+							selectedProducts
+						] = await Promise.all([
+							this.commonModelProductCategory.list(transaction, {
+								filter: {
+									productCategoryId: productCategoryIds
+								},
+								range: {all: true}
+							}),
+
+							this.commonModelProductSubCategory.list(transaction, {
+								filter: {
+									productSubCategoryId: productSubCategoryIds
+								},
+								range: {all: true}
+							}),
+
+							this.commonModelProduct.list(transaction, {
+								filter: {
+									productId: productIds
+								},
+								range: {all: true}
+							})
+						])
+
+						const selectedProductCategoryMap: any = new Map(
+							selectedProductCategories.map((selectedProductCategory) => [
+								selectedProductCategory.productCategoryId,
+								selectedProductCategory
+							])
+						)
+
+						const selectedProductSubCategoryMap: any = new Map(
+							selectedProductSubCategories.map((selectedProductSubCategory) => [
+								selectedProductSubCategory.productSubCategoryId,
+								selectedProductSubCategory
+							])
+						)
+
+						const selectedProductMap: any = new Map(
+							selectedProducts.map((selectedProduct) => [
+								selectedProduct.productId,
+								selectedProduct
+							])
+						)
+
 						const templateTagMap = new Map<number, any[]>()
-						for (const templateTag of templateTags) {
+						for (let templateTag of templateTags) {
+							if (templateTag.referenceType === "product_category") {
+								templateTag = {
+									...templateTag,
+									referenceData: selectedProductCategoryMap.get(
+										templateTag.referenceId
+									)
+								}
+							}
+							if (templateTag.referenceType === "product_sub_category") {
+								templateTag = {
+									...templateTag,
+									referenceData: selectedProductSubCategoryMap.get(
+										templateTag.referenceId
+									)
+								}
+							}
+							if (templateTag.referenceType === "product") {
+								templateTag = {
+									...templateTag,
+									referenceData: selectedProductMap.get(templateTag.referenceId)
+								}
+							}
+
 							const templateTagGroup =
 								templateTagMap.get(templateTag.templateId) || []
 							templateTagGroup.push(templateTag)
