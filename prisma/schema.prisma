@@ -1040,6 +1040,7 @@ model Template {
   mediaType  String
   mediaUrl   String
   size       String
+  previewUrl String?
   status     Boolean   @default(true)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime?
