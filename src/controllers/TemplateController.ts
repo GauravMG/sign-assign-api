@@ -101,12 +101,71 @@ class TemplateController {
 				}
 			}
 
-			const {filter, range, sort, linkedEntities} = await listAPIPayload(
-				req.body
-			)
+			let {filter, range, sort, linkedEntities} = await listAPIPayload(req.body)
 
 			const [templates, total] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
+					if (filter?.productId) {
+						const [product] = await this.commonModelProduct.list(transaction, {
+							filter: {
+								productId: Number(filter.productId)
+							},
+							range: {
+								page: 1,
+								pageSize: 1
+							}
+						})
+
+						if (product) {
+							const customFiltersTemplateTag = [
+								{
+									OR: [
+										{
+											referenceType: "product_category",
+											referenceId: product.productCategoryId
+										},
+										{
+											referenceType: "product_sub_category",
+											referenceId: product.productSubCategoryId
+										},
+										{
+											referenceType: "product",
+											referenceId: product.productId
+										}
+									]
+								}
+							]
+
+							const templateTags = await this.commonModelTemplateTag.list(
+								transaction,
+								{
+									customFilters: customFiltersTemplateTag,
+									range: {all: true}
+								}
+							)
+
+							if (templateTags?.length) {
+								if (!filter.templateId) {
+									filter.templateId = []
+								}
+
+								if (!Array.isArray(filter.templateId)) {
+									filter.templateId = [filter.templateId]
+								}
+
+								// ✅ Merge and deduplicate using Set properly
+								const mergedTemplateIds = [
+									...filter.templateId,
+									...templateTags.map((el) => Number(el.templateId))
+								]
+								filter.templateId = Array.from(new Set(mergedTemplateIds))
+							}
+						}
+
+						// ✅ Remove productId from filter after processing
+						delete filter.productId
+					}
+
 					let [templates, total] = await Promise.all([
 						this.commonModelTemplate.list(transaction, {
 							filter: {
