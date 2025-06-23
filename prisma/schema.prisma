@@ -227,6 +227,10 @@ model User {
   productBulkDiscountUpdatedBy ProductBulkDiscount[] @relation("ProductBulkDiscountUpdatedBy")
   productBulkDiscountDeletedBy ProductBulkDiscount[] @relation("ProductBulkDiscountDeletedBy")
 
+  productRushHourRateCreatedBy ProductRushHourRate[] @relation("ProductRushHourRateCreatedBy")
+  productRushHourRateUpdatedBy ProductRushHourRate[] @relation("ProductRushHourRateUpdatedBy")
+  productRushHourRateDeletedBy ProductRushHourRate[] @relation("ProductRushHourRateDeletedBy")
+
   blogCreatedBy      Blog[]      @relation("BlogCreatedBy")
   blogUpdatedBy      Blog[]      @relation("BlogUpdatedBy")
   blogDeletedBy      Blog[]      @relation("BlogDeletedBy")
@@ -659,13 +663,14 @@ model Product {
   updatedById Int?
   deletedById Int?
 
-  productMedias       ProductMedia[]
-  productAttributes   ProductAttribute[]
-  productFAQs         ProductFAQ[]
-  productReviews      ProductReview[]
-  productBulkDiscount ProductBulkDiscount[]
-  variants            Variant[]
-  orderProduct        OrderProduct[]
+  productMedias        ProductMedia[]
+  productAttributes    ProductAttribute[]
+  productFAQs          ProductFAQ[]
+  productReviews       ProductReview[]
+  productBulkDiscount  ProductBulkDiscount[]
+  variants             Variant[]
+  orderProducts        OrderProduct[]
+  productRushHourRates ProductRushHourRate[]
 }
 
 model ProductMedia {
@@ -825,6 +830,24 @@ model ProductBulkDiscount {
   createdBy             User?     @relation("ProductBulkDiscountCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
   updatedBy             User?     @relation("ProductBulkDiscountUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
   deletedBy             User?     @relation("ProductBulkDiscountDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+}
+
+model ProductRushHourRate {
+  productRushHourRateId Int       @id @default(autoincrement())
+  productId             Int
+  product               Product   @relation(fields: [productId], references: [productId], onDelete: Cascade)
+  dataJson              Json
+  status                Boolean   @default(true)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime?
+  deletedAt             DateTime?
+  createdBy             User?     @relation("ProductRushHourRateCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy             User?     @relation("ProductRushHourRateUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy             User?     @relation("ProductRushHourRateDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
 
   createdById Int?
   updatedById Int?

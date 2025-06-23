@@ -18,6 +18,7 @@ import {
 	ProductFAQRouter,
 	ProductMediaRouter,
 	ProductRouter,
+	ProductRushHourRateRouter,
 	ProductSubCategoryRouter,
 	RoleRouter,
 	SupportTicketMediaRouter,
@@ -54,6 +55,7 @@ router.use("/v1/product-subcategory", new ProductSubCategoryRouter().router)
 router.use("/v1/product", new ProductRouter().router)
 router.use("/v1/product-faq", new ProductFAQRouter().router)
 router.use("/v1/product-bulk-discount", new ProductBulkDiscountRouter().router)
+router.use("/v1/product-rush-hour-rate", new ProductRushHourRateRouter().router)
 router.use("/v1/product-media", new ProductMediaRouter().router)
 router.use("/v1/product-attribute", new ProductAttributeRouter().router)
 router.use("/v1/payment", new PaymentRouter().router)

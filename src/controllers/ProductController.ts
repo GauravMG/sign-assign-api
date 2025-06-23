@@ -16,6 +16,7 @@ class ProductController {
 	private commonModelProductAttribute
 	private commonModelAttribute
 	private commonModelProductBulkDiscount
+	private commonModelProductRushHourRate
 
 	private idColumnProduct: string = "productId"
 	private idColumnProductCategory: string = "productCategoryId"
@@ -24,6 +25,7 @@ class ProductController {
 	private idColumnProductAtribute: string = "productAttributeId"
 	private idColumnAttribute: string = "attributeId"
 	private idColumnProductBulkDiscount: string = "productBulkDiscountId"
+	private idColumnProductRushHourRate: string = "productRushHourRateId"
 
 	constructor() {
 		this.commonModelProduct = new CommonModel("Product", this.idColumnProduct, [
@@ -62,6 +64,11 @@ class ProductController {
 		this.commonModelProductBulkDiscount = new CommonModel(
 			"ProductBulkDiscount",
 			this.idColumnProductBulkDiscount,
+			[]
+		)
+		this.commonModelProductRushHourRate = new CommonModel(
+			"ProductRushHourRate",
+			this.idColumnProductRushHourRate,
 			[]
 		)
 
@@ -232,7 +239,8 @@ class ProductController {
 							productSubCategories,
 							productMedias,
 							productAttributes,
-							productBulkDiscounts
+							productBulkDiscounts,
+							productRushHourRates
 						] = await Promise.all([
 							this.commonModelProductCategory.list(transaction, {
 								filter: {
@@ -275,6 +283,16 @@ class ProductController {
 							}),
 
 							this.commonModelProductBulkDiscount.list(transaction, {
+								filter: {
+									...mandatoryFilters,
+									productId: productIds
+								},
+								range: {
+									all: true
+								}
+							}),
+
+							this.commonModelProductRushHourRate.list(transaction, {
 								filter: {
 									...mandatoryFilters,
 									productId: productIds
@@ -352,6 +370,13 @@ class ProductController {
 							])
 						)
 
+						const productRushHourRateMap: any = new Map(
+							productRushHourRates.map((productRushHourRate) => [
+								productRushHourRate.productId,
+								productRushHourRate
+							])
+						)
+
 						products = products.map((product) => {
 							let productBulkDiscount =
 								productBulkDiscountMap.get(product.productId)?.dataJson || []
@@ -360,6 +385,15 @@ class ProductController {
 							}
 							if (typeof productBulkDiscount === "string") {
 								productBulkDiscount = JSON.parse(productBulkDiscount)
+							}
+
+							let productRushHourRate =
+								productRushHourRateMap.get(product.productId)?.dataJson || []
+							if (!productRushHourRate) {
+								productRushHourRate = []
+							}
+							if (typeof productRushHourRate === "string") {
+								productRushHourRate = JSON.parse(productRushHourRate)
 							}
 
 							return {
@@ -376,6 +410,11 @@ class ProductController {
 									if (a.minQty !== b.minQty) return a.minQty - b.minQty
 									if (a.maxQty !== b.maxQty) return a.maxQty - b.maxQty
 									return a.discount - b.discount
+								}),
+								productRushHourRates: productRushHourRate.sort((a, b) => {
+									if (a.minQty !== b.minQty) return a.minQty - b.minQty
+									if (a.maxQty !== b.maxQty) return a.maxQty - b.maxQty
+									return a.amount - b.amount
 								})
 							}
 						})
