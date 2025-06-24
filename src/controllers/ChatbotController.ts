@@ -100,6 +100,7 @@ class ChatbotController {
 				}
 
 				// --- Save User Message ---
+				console.log(`input ===`, input)
 				await this.commonModelChatMessage.bulkCreate(transaction, [
 					{
 						chatSessionId: chatSession.chatSessionId,
@@ -115,6 +116,7 @@ class ChatbotController {
 
 				switch (state.step) {
 					case "init":
+						console.log(`input init ===`, input)
 						function tryParseJSON(input: any): any {
 							try {
 								return typeof input === "string" ? JSON.parse(input) : input
@@ -123,6 +125,9 @@ class ChatbotController {
 							}
 						}
 						const parsedInput = tryParseJSON(input)
+						console.log(`parsedInput ===`, parsedInput)
+						console.log(`typeof parsedInput ===`, typeof parsedInput)
+						console.log(`parsedInput?.type ===`, parsedInput?.type)
 						if (
 							typeof parsedInput === "object" &&
 							parsedInput.type === "grievance"
@@ -355,6 +360,9 @@ class ChatbotController {
 							]
 						}
 				}
+				console.log(`stateKey ===`, stateKey)
+				console.log(`state ===`, state)
+				console.log(`botResponse ===`, botResponse)
 
 				userStates.set(stateKey, state)
 
