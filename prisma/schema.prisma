@@ -480,6 +480,9 @@ model SupportTicket {
   supportTicketId Int          @id @default(autoincrement())
   subject         String
   description     String
+  userName        String?
+  userEmail       String?
+  userMobile      String?
   ticketStatus    TicketStatus @default(open)
   status          Boolean      @default(true)
   createdAt       DateTime     @default(now())
