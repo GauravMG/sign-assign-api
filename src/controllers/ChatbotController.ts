@@ -115,18 +115,29 @@ class ChatbotController {
 
 				switch (state.step) {
 					case "init":
-						if (typeof input === "object" && input.type === "grievance") {
+						function tryParseJSON(input: any): any {
+							try {
+								return typeof input === "string" ? JSON.parse(input) : input
+							} catch (e) {
+								return input // return original if parse fails
+							}
+						}
+						const parsedInput = tryParseJSON(input)
+						if (
+							typeof parsedInput === "object" &&
+							parsedInput.type === "grievance"
+						) {
 							state = {step: "init"}
 
 							await this.commonModelSupportTicket.bulkCreate(
 								transaction,
 								[
 									{
-										userName: input.name,
-										userEmail: input.email,
-										userMobile: input.mobile,
-										subject: input.subject,
-										description: input.message
+										userName: parsedInput.name,
+										userEmail: parsedInput.email,
+										userMobile: parsedInput.mobile,
+										subject: parsedInput.subject,
+										description: parsedInput.message
 									}
 								],
 								chatuserid
