@@ -355,9 +355,6 @@ class ChatbotController {
 							]
 						}
 				}
-				console.log(`stateKey ===`, stateKey)
-				console.log(`state ===`, state)
-				console.log(`botResponse ===`, botResponse)
 
 				userStates.set(stateKey, state)
 
