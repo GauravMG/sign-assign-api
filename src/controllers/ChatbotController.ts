@@ -4,8 +4,12 @@ import {getLinkFromName} from "../helpers"
 import {ApiResponse} from "../lib/APIResponse"
 import {PrismaClientTransaction, prisma} from "../lib/PrismaLib"
 import CommonModel from "../models/CommonModel"
+import {ChromaDBService} from "../services/ChromaDBService"
 import {getOpenAIResponse} from "../services/OpenAIService"
 import {Headers} from "../types/common"
+
+const collectionName = "website_data"
+const chromaDBService: ChromaDBService = new ChromaDBService()
 
 const userStates = new Map<string, any>()
 
@@ -377,8 +381,20 @@ class ChatbotController {
 			})
 
 			if (isAIType) {
+				// get similar data from chromadb
+				const similarContext = await chromaDBService.queryCollection(
+					collectionName,
+					{
+						queryTexts: [input],
+						nResults: 3
+					}
+				)
+				const documents = (similarContext.documents?.[0] || [])
+					.map((text) => text ?? "")
+					.filter((text) => text.trim() !== "")
+
 				// Use OpenAI for unrecognized intent
-				const aiReply = await getOpenAIResponse(input)
+				const aiReply = await getOpenAIResponse(input, documents)
 				botResponse = {
 					message: aiReply
 				}

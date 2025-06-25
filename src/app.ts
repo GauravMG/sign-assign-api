@@ -18,6 +18,7 @@ import {errorHandler} from "./middlewares/ErrorHandler"
 import routes from "./routes/MainRouter"
 import {validateJWTToken} from "./utils/Jwt"
 import {accessLogStream, logMessage} from "./utils/Logger"
+import {vectoriseSiteData} from "./utils/VectoriseSiteData"
 
 const PORT = process.env.PORT
 const BASE_URL_API = process.env.BASE_URL_API
@@ -72,4 +73,5 @@ app.use(errorHandler)
 app.listen(PORT, async () => {
 	logMessage("access", `Server running on ${BASE_URL_API} on port ${PORT}`)
 	runSeeders()
+	vectoriseSiteData()
 })
