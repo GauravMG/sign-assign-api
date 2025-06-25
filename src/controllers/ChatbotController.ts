@@ -79,10 +79,15 @@ class ChatbotController {
 	public async chat(req: Request, res: Response, next: NextFunction) {
 		try {
 			const response = new ApiResponse(res)
+
 			const {chatsessionid, chatuserid}: Headers = req.headers
+
 			const {input} = req.body
 
-			const [botResponse] = await prisma.$transaction(async (transaction) => {
+			let isAIType: boolean = false
+			let chatSessionData: any = null
+
+			let [botResponse] = await prisma.$transaction(async (transaction) => {
 				// --- Chat Session Setup ---
 				let [chatSession] = await this.commonModelChatSession.list(
 					transaction,
@@ -108,6 +113,7 @@ class ChatbotController {
 					}
 				])
 
+				chatSessionData = chatSession
 				const stateKey = chatSession.chatSessionId
 				let state = userStates.get(stateKey) || {step: "init"}
 
@@ -168,11 +174,7 @@ class ChatbotController {
 							state.step = "order_check"
 							botResponse = {message: "Please enter your order ID."}
 						} else {
-							// Use OpenAI for unrecognized intent
-							const aiReply = await getOpenAIResponse(input)
-							botResponse = {
-								message: aiReply
-							}
+							isAIType = true
 							state = {step: "init"}
 						}
 						break
@@ -359,16 +361,39 @@ class ChatbotController {
 				userStates.set(stateKey, state)
 
 				// --- Save Bot Message ---
-				await this.commonModelChatMessage.bulkCreate(transaction, [
-					{
-						chatSessionId: chatSession.chatSessionId,
-						messageSender: "bot",
-						message: botResponse.message
-					}
-				])
+				if (!isAIType) {
+					await this.commonModelChatMessage.bulkCreate(transaction, [
+						{
+							chatSessionId: chatSession.chatSessionId,
+							messageSender: "bot",
+							message: botResponse.message
+						}
+					])
 
-				return [botResponse]
+					return [botResponse]
+				}
+
+				return []
 			})
+
+			if (isAIType) {
+				// Use OpenAI for unrecognized intent
+				const aiReply = await getOpenAIResponse(input)
+				botResponse = {
+					message: aiReply
+				}
+
+				await prisma.$transaction(async (transaction) => {
+					// --- Save Bot Message ---
+					await this.commonModelChatMessage.bulkCreate(transaction, [
+						{
+							chatSessionId: chatSessionData.chatSessionId,
+							messageSender: "bot",
+							message: botResponse.message
+						}
+					])
+				})
+			}
 
 			return response.successResponse({
 				message: "Chat message",
