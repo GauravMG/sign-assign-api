@@ -119,7 +119,6 @@ class ChatbotController {
 
 			let isAIType: boolean = false
 			let chatSessionData: any = null
-			let stateStep: string | null = null
 			const parsedInput = tryParseJSON(input)
 
 			let [botResponse] = await prisma.$transaction(async (transaction) => {
@@ -144,235 +143,295 @@ class ChatbotController {
 					{
 						chatSessionId: chatSession.chatSessionId,
 						messageSender: "user",
-						message: typeof input === "object" ? JSON.stringify(input) : input
+						message:
+							typeof input === "object"
+								? JSON.stringify(input)
+								: input.toString()
 					}
 				])
 
 				chatSessionData = chatSession
 				const stateKey = chatSession.chatSessionId
 				let state = userStates.get(stateKey) || {step: "init"}
-				stateStep = state.step
 
 				let botResponse: any = {}
 
-				switch (state.step) {
-					case "init":
-						if (
-							typeof parsedInput === "object" &&
-							parsedInput.type === "grievance"
-						) {
-							state = {step: "init"}
+				const generateBotMessage = async (state) => {
+					let isAIType: boolean = false
+					let botResponse: any = {}
+					let isRecall: boolean = false
 
-							await this.commonModelSupportTicket.bulkCreate(
-								transaction,
-								[
+					switch (state.step) {
+						case "init":
+							if (
+								typeof parsedInput === "object" &&
+								parsedInput.type === "grievance"
+							) {
+								state = {step: "init"}
+
+								await this.commonModelSupportTicket.bulkCreate(
+									transaction,
+									[
+										{
+											userName: parsedInput.name,
+											userEmail: parsedInput.email,
+											userMobile: parsedInput.mobile,
+											subject: parsedInput.subject,
+											description: parsedInput.message
+										}
+									],
+									chatuserid
+								)
+
+								botResponse = {
+									message:
+										"Thank you! Your grievance has been submitted. We'll get back to you shortly."
+								}
+								break
+							}
+							if (
+								typeof parsedInput === "object" &&
+								parsedInput.type === "track_my_order"
+							) {
+								isAIType = true
+								break
+							}
+							if (input === "look_products") {
+								const checkProducts = await this.commonModelProduct.list(
+									transaction,
 									{
-										userName: parsedInput.name,
-										userEmail: parsedInput.email,
-										userMobile: parsedInput.mobile,
-										subject: parsedInput.subject,
-										description: parsedInput.message
+										filter: {
+											status: true
+										},
+										range: {
+											all: true
+										}
 									}
-								],
-								chatuserid
-							)
-
-							botResponse = {
-								message:
-									"Thank you! Your grievance has been submitted. We'll get back to you shortly."
+								)
+								const additionalProductCategoryFilter = {
+									productCategoryId: checkProducts.map(
+										(product) => product.productCategoryId
+									)
+								}
+								const productCategories =
+									await this.commonModelProductCategory.list(transaction, {
+										filter: {status: true, ...additionalProductCategoryFilter},
+										range: {all: true},
+										sort: [{orderBy: "name", orderDir: "asc"}]
+									})
+								state.step = "product_category"
+								botResponse = {
+									message: "What category are you looking for?",
+									options: productCategories.map((pc) => ({
+										label: pc.name,
+										value: pc.productCategoryId
+									}))
+								}
+							} else {
+								isAIType = true
+								state = {step: "init"}
 							}
 							break
-						}
-						if (
-							typeof parsedInput === "object" &&
-							parsedInput.type === "track_my_order"
-						) {
-							isAIType = true
-							break
-						}
-						if (input === "look_products") {
-							const productCategories =
-								await this.commonModelProductCategory.list(transaction, {
-									filter: {status: true},
+
+						case "product_category":
+							state.category = input
+							const checkProducts = await this.commonModelProduct.list(
+								transaction,
+								{
+									filter: {
+										status: true
+									},
+									range: {
+										all: true
+									}
+								}
+							)
+							const additionalProductSubCategoryFilter = {
+								productSubCategoryId: checkProducts.map(
+									(product) => product.productSubCategoryId
+								)
+							}
+							const subCategories =
+								await this.commonModelProductSubCategory.list(transaction, {
+									filter: {
+										status: true,
+										productCategoryId: Number(input),
+										...additionalProductSubCategoryFilter
+									},
 									range: {all: true},
 									sort: [{orderBy: "name", orderDir: "asc"}]
 								})
-							state.step = "product_category"
+							state.step = "product_sub_category"
 							botResponse = {
-								message: "What category are you looking for?",
-								options: productCategories.map((pc) => ({
-									label: pc.name,
-									value: pc.name
+								message: "What sub-category are you looking for?",
+								options: subCategories.map((sc) => ({
+									label: sc.name,
+									value: sc.productSubCategoryId
 								}))
 							}
-						} else {
-							isAIType = true
-							state = {step: "init"}
-						}
-						break
+							break
 
-					case "product_category":
-						const [category] = await this.commonModelProductCategory.list(
-							transaction,
-							{
-								filter: {name: input}
-							}
-						)
-						const subCategories = await this.commonModelProductSubCategory.list(
-							transaction,
-							{
+						case "product_sub_category":
+							state.subCategory = input
+							state.currentAttributeIndex = state.currentAttributeIndex ?? 0
+							state.selectedAttributes = {}
+							state.attributesToAsk = []
+
+							const products = await this.commonModelProduct.list(transaction, {
 								filter: {
-									status: true,
-									productCategoryId: Number(category.productCategoryId)
+									productCategoryId: Number(state.category),
+									productSubCategoryId: Number(input)
 								},
-								range: {all: true},
-								sort: [{orderBy: "name", orderDir: "asc"}]
-							}
-						)
-						state.category = input
-						state.step = "product_sub_category"
-						botResponse = {
-							message: "What sub-category are you looking for?",
-							options: subCategories.map((sc) => ({
-								label: sc.name,
-								value: sc.name
-							}))
-						}
-						break
-
-					case "product_sub_category":
-						const [[catStep], [subCatStep]] = await Promise.all([
-							this.commonModelProductCategory.list(transaction, {
-								filter: {name: state.category}
-							}),
-							this.commonModelProductSubCategory.list(transaction, {
-								filter: {name: input}
-							})
-						])
-						const products = await this.commonModelProduct.list(transaction, {
-							filter: {
-								productCategoryId: Number(catStep.productCategoryId),
-								productSubCategoryId: Number(subCatStep.productSubCategoryId)
-							},
-							range: {all: true}
-						})
-						const productIds = products.map((p) => p.productId)
-						const productAttributes =
-							await this.commonModelProductAttribute.list(transaction, {
-								filter: {productId: productIds},
 								range: {all: true}
 							})
-						const attributeIds = productAttributes.map((pa) => pa.attributeId)
-						const attributes = await this.commonModelAttribute.list(
-							transaction,
-							{
-								filter: {attributeId: attributeIds},
-								range: {all: true}
+							const productIds = products.map((p) => p.productId)
+							const productAttributes =
+								await this.commonModelProductAttribute.list(transaction, {
+									filter: {productId: productIds},
+									range: {all: true}
+								})
+							console.log(`productAttributes ===`, productAttributes)
+							if (!productAttributes?.length) {
+								isRecall = true
+								state.step = "final_product_suggestions"
+
+								break
 							}
-						)
-						state.subCategory = input
-						state.currentAttributeIndex = 0
-						state.selectedAttributes = {}
-						state.attributesToAsk = attributes.map((attr) => ({
-							attributeId: attr.attributeId,
-							name: attr.name,
-							options: attr.options ? JSON.parse(attr.options) : []
-						}))
-						const currentAttr =
-							state.attributesToAsk[state.currentAttributeIndex]
-						state.step =
-							state.attributesToAsk.length > 0
-								? "filter_attribute_answer"
-								: "final_product_suggestions"
-						botResponse = {
-							message: `Please select a ${currentAttr.name}`,
-							options: currentAttr.options.map((opt) => ({
-								label: opt,
-								value: opt
+							const attributeIds = productAttributes.map((pa) => pa.attributeId)
+							const attributes = await this.commonModelAttribute.list(
+								transaction,
+								{
+									filter: {attributeId: attributeIds},
+									range: {all: true}
+								}
+							)
+							if (!attributes?.length) {
+								isRecall = true
+								state.step = "final_product_suggestions"
+
+								break
+							}
+							state.attributesToAsk = attributes.map((attr) => ({
+								attributeId: attr.attributeId,
+								name: attr.name,
+								options: attr.options ? JSON.parse(attr.options) : []
 							}))
-						}
-						break
-
-					case "filter_attribute_answer":
-						state.selectedAttributes[
-							state.attributesToAsk[state.currentAttributeIndex].attributeId
-						] = input
-						state.currentAttributeIndex += 1
-						if (
-							state.currentAttributeIndex <
-							state.attributesToAsk.length - 1
-						) {
-							const attr = state.attributesToAsk[state.currentAttributeIndex]
+							const currentAttr =
+								state.attributesToAsk[state.currentAttributeIndex]
+							state.step =
+								state.attributesToAsk.length > 0
+									? "filter_attribute_answer"
+									: "final_product_suggestions"
 							botResponse = {
-								message: `Please select a ${attr.name}`,
-								options: attr.options.map((opt) => ({label: opt, value: opt}))
+								message: `Please select a ${currentAttr.name}`,
+								options: currentAttr.options.map((opt) => ({
+									label: opt,
+									value: opt
+								}))
 							}
-							state.step = "filter_attribute_answer"
-						} else {
-							const attr = state.attributesToAsk[state.currentAttributeIndex]
-							botResponse = {
-								message: `Please select a ${attr.name}`,
-								options: attr.options.map((opt) => ({label: opt, value: opt}))
-							}
-							state.step = "final_product_suggestions"
-						}
-						break
+							break
 
-					case "final_product_suggestions":
-						state.selectedAttributes[
-							state.attributesToAsk[state.currentAttributeIndex - 1].attributeId
-						] = input
-						const selectedAttributesPayload = Object.entries(
-							state.selectedAttributes
-						).map(([attributeId, value]) => ({
-							attributeId: Number(attributeId),
-							value
-						}))
-						const [[cat], [subCat], productAttrs] = await Promise.all([
-							this.commonModelProductCategory.list(transaction, {
-								filter: {name: state.category}
-							}),
-							this.commonModelProductSubCategory.list(transaction, {
-								filter: {name: state.subCategory}
-							}),
-							this.commonModelProductAttribute.list(transaction, {
-								customFilters: [
+						case "filter_attribute_answer":
+							state.selectedAttributes[
+								state.attributesToAsk[state.currentAttributeIndex].attributeId
+							] = input
+							state.currentAttributeIndex += 1
+							if (state.currentAttributeIndex < state.attributesToAsk.length) {
+								const attr = state.attributesToAsk[state.currentAttributeIndex]
+								botResponse = {
+									message: `Please select a ${attr.name}`,
+									options: attr.options.map((opt) => ({label: opt, value: opt}))
+								}
+								state.step = "filter_attribute_answer"
+							} else {
+								isRecall = true
+								state.step = "final_product_suggestions"
+							}
+							break
+
+						case "final_product_suggestions":
+							let productAttrs: any[] = []
+							if (
+								state.selectedAttributes &&
+								Object.keys(state.selectedAttributes).length
+							) {
+								state.selectedAttributes[
+									state.attributesToAsk[
+										state.currentAttributeIndex - 1
+									].attributeId
+								] = input
+
+								const selectedAttributesPayload = Object.entries(
+									state.selectedAttributes
+								).map(([attributeId, value]) => ({
+									attributeId: Number(attributeId),
+									value
+								}))
+
+								productAttrs = await this.commonModelProductAttribute.list(
+									transaction,
 									{
-										OR: selectedAttributesPayload
+										customFilters: [
+											{
+												OR: selectedAttributesPayload
+											}
+										],
+										range: {all: true}
 									}
-								],
-								range: {all: true}
-							})
-						])
-						const matchingProductIds = productAttrs.map((pa) => pa.productId)
-						const finalProducts = matchingProductIds.length
-							? await this.commonModelProduct.list(transaction, {
+								)
+							}
+							const matchingProductIds = productAttrs.map((pa) => pa.productId)
+							const finalProducts = await this.commonModelProduct.list(
+								transaction,
+								{
 									filter: {
-										productCategoryId: Number(cat.productCategoryId),
-										productSubCategoryId: Number(subCat.productSubCategoryId),
-										productId: matchingProductIds
+										productCategoryId: Number(state.category),
+										productSubCategoryId: Number(state.subCategory),
+										productId: matchingProductIds?.length
+											? matchingProductIds
+											: undefined
 									},
 									range: {page: 1, pageSize: 3}
-								})
-							: []
+								}
+							)
+							if (!finalProducts?.length) {
+								state.step = "init"
+								botResponse = {
+									message:
+										"No matching products found. Please try searching for something else..."
+								}
+								break
+							}
 
-						state.step = "init"
-						botResponse = {
-							message: "Here are some product suggestions:",
-							products: finalProducts.map((p) => ({
-								name: p.name,
-								link: `/product/${getLinkFromName(p.name)}`
-							}))
-						}
-						break
+							state.step = "init"
+							botResponse = {
+								message: "Here are some product suggestions:",
+								products: finalProducts.map((p) => ({
+									name: p.name,
+									link: `/product/${getLinkFromName(p.name)}?pid=${p.productId}`
+								}))
+							}
+							break
 
-					default:
-						state = {step: "init"}
-						botResponse = {
-							message: "Let's start again. Choose an option:",
-							options: initialMessageOptions
-						}
+						default:
+							state = {step: "init"}
+							botResponse = {
+								message: "Let's start again. Choose an option:",
+								options: initialMessageOptions
+							}
+					}
+
+					return {state, botResponse, isAIType, isRecall}
 				}
+
+				let isRecall: boolean = false
+				do {
+					const generatedBotMessage = await generateBotMessage(state)
+					state = generatedBotMessage.state
+					botResponse = generatedBotMessage.botResponse
+					isAIType = generatedBotMessage.isAIType
+					isRecall = generatedBotMessage.isRecall
+				} while (isRecall)
 
 				userStates.set(stateKey, state)
 
@@ -481,357 +540,6 @@ class ChatbotController {
 			next(error)
 		}
 	}
-
-	// public async chatB1(req: Request, res: Response, next: NextFunction) {
-	// 	try {
-	// 		const response = new ApiResponse(res)
-
-	// 		const {chatsessionid, chatuserid}: Headers = req.headers
-
-	// 		const {input} = req.body
-
-	// 		const [botResponse] = await prisma.$transaction(
-	// 			async (transaction: PrismaClientTransaction) => {
-	// 				// Create or fetch session
-	// 				let [chatSession] = await this.commonModelChatSession.list(
-	// 					transaction,
-	// 					{
-	// 						filter: {
-	// 							sessionId: chatsessionid
-	// 						},
-	// 						// customFilters: [
-	// 						// 	{
-	// 						// 		OR: [{userId: chatuserid}, {sessionId: chatsessionid}]
-	// 						// 	}
-	// 						// ],
-	// 						range: {
-	// 							page: 1,
-	// 							pageSize: 1
-	// 						}
-	// 					}
-	// 				)
-	// 				if (!chatSession) {
-	// 					const [newChatSession] =
-	// 						await this.commonModelChatSession.bulkCreate(transaction, [
-	// 							{
-	// 								sessionId: chatsessionid,
-	// 								userId: chatuserid
-	// 							}
-	// 						])
-
-	// 					chatSession = newChatSession
-	// 				}
-
-	// 				// Save USER message
-	// 				await this.commonModelChatMessage.bulkCreate(transaction, [
-	// 					{
-	// 						chatSessionId: chatSession.chatSessionId,
-	// 						messageSender: "user",
-	// 						message: input
-	// 					}
-	// 				])
-
-	// 				const stateKey = chatSession.chatSessionId
-	// 				let state = userStates.get(stateKey) || {step: "init"}
-
-	// 				let botResponse: any = {}
-	// 				switch (state.step) {
-	// 					case "init":
-	// 						if (input === "look_products") {
-	// 							const productCategories =
-	// 								await this.commonModelProductCategory.list(transaction, {
-	// 									filter: {
-	// 										status: true
-	// 									},
-	// 									range: {all: true},
-	// 									sort: [
-	// 										{
-	// 											orderBy: "name",
-	// 											orderDir: "asc"
-	// 										}
-	// 									]
-	// 								})
-	// 							state.step = "product_category"
-	// 							botResponse = {
-	// 								message: "What category are you looking for?",
-	// 								options: productCategories.map((productCategory) => ({
-	// 									label: productCategory.name,
-	// 									value: productCategory.name
-	// 								}))
-	// 							}
-	// 						} else if (input === "check_order") {
-	// 							state.step = "order_check"
-	// 							botResponse = {message: "Please enter your order ID."}
-	// 						}
-	// 						break
-
-	// 					case "product_category":
-	// 						const [productCategoryStepProductCategory] =
-	// 							await this.commonModelProductCategory.list(transaction, {
-	// 								filter: {
-	// 									name: input
-	// 								}
-	// 							})
-	// 						const productSubCategories =
-	// 							await this.commonModelProductSubCategory.list(transaction, {
-	// 								filter: {
-	// 									status: true,
-	// 									productCategoryId: Number(
-	// 										productCategoryStepProductCategory.productCategoryId
-	// 									)
-	// 								},
-	// 								range: {all: true},
-	// 								sort: [
-	// 									{
-	// 										orderBy: "name",
-	// 										orderDir: "asc"
-	// 									}
-	// 								]
-	// 							})
-	// 						state.category = input
-	// 						state.step = "product_sub_category"
-	// 						botResponse = {
-	// 							message: "What sub-category are you looking for?",
-	// 							options: productSubCategories.map((productSubCategory) => ({
-	// 								label: productSubCategory.name,
-	// 								value: productSubCategory.name
-	// 							}))
-	// 						}
-	// 						break
-
-	// 					case "product_sub_category":
-	// 						const [
-	// 							[productCategoryStepProductSubCategory],
-	// 							[productSubCategoryStepProductSubCategory]
-	// 						] = await Promise.all([
-	// 							this.commonModelProductCategory.list(transaction, {
-	// 								filter: {
-	// 									name: state.category
-	// 								}
-	// 							}),
-
-	// 							this.commonModelProductSubCategory.list(transaction, {
-	// 								filter: {
-	// 									name: input
-	// 								}
-	// 							})
-	// 						])
-	// 						const productsStepProductSubCategory =
-	// 							await this.commonModelProduct.list(transaction, {
-	// 								filter: {
-	// 									productCategoryId: Number(
-	// 										productCategoryStepProductSubCategory.productCategoryId
-	// 									),
-	// 									productSubCategoryId: Number(
-	// 										productSubCategoryStepProductSubCategory.productSubCategoryId
-	// 									)
-	// 								},
-	// 								range: {all: true}
-	// 							})
-	// 						const productIds: number[] = productsStepProductSubCategory.map(
-	// 							(product) => product.productId
-	// 						)
-	// 						const productAttributes =
-	// 							await this.commonModelProductAttribute.list(transaction, {
-	// 								filter: {
-	// 									productId: productIds
-	// 								},
-	// 								range: {all: true}
-	// 							})
-	// 						const attributeIds: number[] = productAttributes.map(
-	// 							(productAttribute) => productAttribute.attributeId
-	// 						)
-	// 						const attributes = await this.commonModelAttribute.list(
-	// 							transaction,
-	// 							{
-	// 								filter: {
-	// 									attributeId: attributeIds
-	// 								},
-	// 								range: {all: true}
-	// 							}
-	// 						)
-	// 						state.subCategory = input
-	// 						state.currentAttributeIndex = 0
-	// 						state.selectedAttributes = {}
-	// 						state.attributesToAsk = attributes.map((attr) => ({
-	// 							attributeId: attr.attributeId,
-	// 							name: attr.name,
-	// 							options: attr.options ? JSON.parse(attr.options) : null
-	// 						}))
-	// 						if (
-	// 							state.currentAttributeIndex <
-	// 							state.attributesToAsk.length - 1
-	// 						) {
-	// 							state.step = "filter_attribute_answer"
-	// 						} else {
-	// 							state.step = "final_product_suggestions"
-	// 						}
-	// 						const attrStepProductSubCategory =
-	// 							state.attributesToAsk[state.currentAttributeIndex]
-	// 						botResponse = {
-	// 							message: `Please select a ${attrStepProductSubCategory.name}`,
-	// 							options: attrStepProductSubCategory.options.map((opt) => ({
-	// 								label: opt,
-	// 								value: opt
-	// 							}))
-	// 						}
-	// 						break
-
-	// 					case "filter_attribute_answer":
-	// 						state.currentAttributeIndex += 1
-
-	// 						const currentAttr =
-	// 							state.attributesToAsk[state.currentAttributeIndex]
-	// 						state.selectedAttributes[currentAttr.attributeId] = input
-
-	// 						if (
-	// 							state.currentAttributeIndex <
-	// 							state.attributesToAsk.length - 1
-	// 						) {
-	// 							state.step = "filter_attribute_answer"
-	// 						} else {
-	// 							state.step = "final_product_suggestions"
-	// 						}
-	// 						state.selectedAttributes = {
-	// 							...state.selectedAttributes,
-	// 							[state.attributesToAsk[state.currentAttributeIndex - 1]
-	// 								.attributeId]: input
-	// 						}
-	// 						const attrStepFilterAttributeAnswer =
-	// 							state.attributesToAsk[state.currentAttributeIndex]
-	// 						botResponse = {
-	// 							message: `Please select a ${attrStepFilterAttributeAnswer.name}`,
-	// 							options: attrStepFilterAttributeAnswer.options.map((opt) => ({
-	// 								label: opt,
-	// 								value: opt
-	// 							}))
-	// 						}
-	// 						break
-
-	// 					case "final_product_suggestions":
-	// 						state.currentAttributeIndex += 1
-	// 						state.selectedAttributes = {
-	// 							...state.selectedAttributes,
-	// 							[state.attributesToAsk[state.currentAttributeIndex - 1]
-	// 								.attributeId]: input
-	// 						}
-	// 						const selectedAttributesPayload = Object.keys(
-	// 							state.selectedAttributes
-	// 						).map((selectedAttribute) => ({
-	// 							attributeId: Number(selectedAttribute),
-	// 							value: state.selectedAttributes[selectedAttribute]
-	// 						}))
-	// 						const [
-	// 							[productCategoryStepFinalProductSuggestions],
-	// 							[productSubCategoryStepFinalProductSuggestions],
-	// 							productAttributesStepFinalProductSuggestions
-	// 						] = await Promise.all([
-	// 							this.commonModelProductCategory.list(transaction, {
-	// 								filter: {
-	// 									name: state.category
-	// 								}
-	// 							}),
-
-	// 							this.commonModelProductSubCategory.list(transaction, {
-	// 								filter: {
-	// 									name: state.subCategory
-	// 								}
-	// 							}),
-
-	// 							this.commonModelProductAttribute.list(transaction, {
-	// 								customFilters: [
-	// 									{
-	// 										OR: [
-	// 											...selectedAttributesPayload.map(
-	// 												({attributeId, value}) => ({
-	// 													attributeId,
-	// 													value
-	// 												})
-	// 											)
-	// 										]
-	// 									}
-	// 								],
-	// 								range: {all: true}
-	// 							})
-	// 						])
-	// 						const products =
-	// 							productAttributesStepFinalProductSuggestions?.length
-	// 								? await this.commonModelProduct.list(transaction, {
-	// 										filter: {
-	// 											productCategoryId: Number(
-	// 												productCategoryStepFinalProductSuggestions.productCategoryId
-	// 											),
-	// 											productSubCategoryId: Number(
-	// 												productSubCategoryStepFinalProductSuggestions.productSubCategoryId
-	// 											),
-	// 											productId:
-	// 												productAttributesStepFinalProductSuggestions.map(
-	// 													(productAttributesStepFinalProductSuggestion) =>
-	// 														productAttributesStepFinalProductSuggestion.productId
-	// 												)
-	// 										},
-	// 										range: {
-	// 											page: 1,
-	// 											pageSize: 3
-	// 										}
-	// 									})
-	// 								: []
-	// 						state.subCategory = input
-	// 						state.step = "suggestion"
-	// 						botResponse = {
-	// 							message: "Here are some product suggestions:",
-	// 							products: products.map((product) => ({
-	// 								name: product.name,
-	// 								link: `/product/${getLinkFromName(product.name)}`
-	// 							}))
-	// 						}
-	// 						break
-
-	// 					case "order_check":
-	// 						botResponse = {
-	// 							message: `Order ID ${input} is in transit! Anything else I can help with?`,
-	// 							options: [
-	// 								{label: "Look for Products", value: "look_products"},
-	// 								{label: "Check my Order", value: "check_order"}
-	// 							]
-	// 						}
-	// 						state = {step: "init"} // Reset
-	// 						break
-
-	// 					default:
-	// 						state = {step: "init"}
-	// 						botResponse = {
-	// 							message: "Let's start again. Choose an option:",
-	// 							options: [
-	// 								{label: "Look for Products", value: "look_products"}
-	// 								// {label: "Check my Order", value: "check_order"}
-	// 							]
-	// 						}
-	// 				}
-
-	// 				userStates.set(stateKey, state)
-
-	// 				// Save BOT message
-	// 				await this.commonModelChatMessage.bulkCreate(transaction, [
-	// 					{
-	// 						chatSessionId: chatSession.chatSessionId,
-	// 						messageSender: "bot",
-	// 						message: botResponse.message
-	// 					}
-	// 				])
-
-	// 				return [botResponse]
-	// 			}
-	// 		)
-
-	// 		return response.successResponse({
-	// 			message: `Chat message`,
-	// 			data: botResponse
-	// 		})
-	// 	} catch (error) {
-	// 		next(error)
-	// 	}
-	// }
 }
 
 export default new ChatbotController()
