@@ -93,6 +93,7 @@ class ProductCategoryController {
 				async (transaction: PrismaClientTransaction) => {
 					let additionalProductCategoryFilter: any = {}
 					let additionalProductSubCategoryFilter: any = {}
+					let additionalProductCategorySort: any = null
 					if (isWebUser(roleId)) {
 						const products = await this.commonModelProduct.list(transaction, {
 							filter: {
@@ -115,6 +116,12 @@ class ProductCategoryController {
 								(product) => product.productSubCategoryId
 							)
 						}
+						additionalProductCategorySort = [
+							{
+								orderBy: "sequenceNumber",
+								orderDir: "asc"
+							}
+						]
 					}
 
 					let [productCategories, total] = await Promise.all([
@@ -125,7 +132,13 @@ class ProductCategoryController {
 								...additionalProductCategoryFilter
 							},
 							range,
-							sort
+							sort: sort?.length
+								? additionalProductCategorySort?.length
+									? additionalProductCategorySort.concat(sort)
+									: sort
+								: additionalProductCategorySort?.length
+									? additionalProductCategorySort
+									: null
 						}),
 
 						this.commonModelProductCategory.list(transaction, {

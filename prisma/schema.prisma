@@ -610,6 +610,7 @@ model ProductCategory {
   image             String
   shortDescription  String
   description       String
+  sequenceNumber    Int?
   status            Boolean   @default(true)
   createdAt         DateTime  @default(now())
   updatedAt         DateTime?
@@ -634,6 +635,7 @@ model ProductSubCategory {
   image                String
   shortDescription     String
   description          String
+  sequenceNumber       Int?
   status               Boolean          @default(true)
   createdAt            DateTime         @default(now())
   updatedAt            DateTime?
