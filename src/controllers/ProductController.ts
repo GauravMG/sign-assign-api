@@ -239,8 +239,8 @@ class ProductController {
 							productSubCategories,
 							productMedias,
 							productAttributes,
-							productBulkDiscounts,
-							productRushHourRates
+							productBulkDiscounts
+							// productRushHourRates
 						] = await Promise.all([
 							this.commonModelProductCategory.list(transaction, {
 								filter: {
@@ -290,17 +290,17 @@ class ProductController {
 								range: {
 									all: true
 								}
-							}),
-
-							this.commonModelProductRushHourRate.list(transaction, {
-								filter: {
-									...mandatoryFilters,
-									productId: productIds
-								},
-								range: {
-									all: true
-								}
 							})
+
+							// this.commonModelProductRushHourRate.list(transaction, {
+							// 	filter: {
+							// 		...mandatoryFilters,
+							// 		productId: productIds
+							// 	},
+							// 	range: {
+							// 		all: true
+							// 	}
+							// })
 						])
 
 						const attributeIds: number[] = productAttributes.map(
@@ -370,12 +370,12 @@ class ProductController {
 							])
 						)
 
-						const productRushHourRateMap: any = new Map(
-							productRushHourRates.map((productRushHourRate) => [
-								productRushHourRate.productId,
-								productRushHourRate
-							])
-						)
+						// const productRushHourRateMap: any = new Map(
+						// 	productRushHourRates.map((productRushHourRate) => [
+						// 		productRushHourRate.productId,
+						// 		productRushHourRate
+						// 	])
+						// )
 
 						products = products.map((product) => {
 							let productBulkDiscount =
@@ -387,14 +387,14 @@ class ProductController {
 								productBulkDiscount = JSON.parse(productBulkDiscount)
 							}
 
-							let productRushHourRate =
-								productRushHourRateMap.get(product.productId)?.dataJson || []
-							if (!productRushHourRate) {
-								productRushHourRate = []
-							}
-							if (typeof productRushHourRate === "string") {
-								productRushHourRate = JSON.parse(productRushHourRate)
-							}
+							// let productRushHourRate =
+							// 	productRushHourRateMap.get(product.productId)?.dataJson || []
+							// if (!productRushHourRate) {
+							// 	productRushHourRate = []
+							// }
+							// if (typeof productRushHourRate === "string") {
+							// 	productRushHourRate = JSON.parse(productRushHourRate)
+							// }
 
 							return {
 								...product,
@@ -411,11 +411,18 @@ class ProductController {
 									if (a.maxQty !== b.maxQty) return a.maxQty - b.maxQty
 									return a.discount - b.discount
 								}),
-								productRushHourRates: productRushHourRate.sort((a, b) => {
-									if (a.minQty !== b.minQty) return a.minQty - b.minQty
-									if (a.maxQty !== b.maxQty) return a.maxQty - b.maxQty
-									return a.amount - b.amount
-								})
+								// productRushHourRates: productRushHourRate.sort((a, b) => {
+								// 	if (a.minQty !== b.minQty) return a.minQty - b.minQty
+								// 	if (a.maxQty !== b.maxQty) return a.maxQty - b.maxQty
+								// 	return a.amount - b.amount
+								// })
+								productRushHourRates: [
+									{
+										amount: 50,
+										maxQty: 999999,
+										minQty: 1
+									}
+								]
 							}
 						})
 					}
