@@ -158,7 +158,7 @@ class ProductCategoryController {
 								filter: {
 									...mandatoryFilters,
 									...filterProductSubCategory,
-									...additionalProductCategoryFilter
+									...additionalProductSubCategoryFilter
 								},
 								range: {
 									all: true
