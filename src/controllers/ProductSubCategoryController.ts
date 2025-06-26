@@ -10,14 +10,21 @@ import {isWebUser} from "../types/auth"
 
 class ProductSubCategoryController {
 	private commonModelProductSubCategory
+	private commonModelProduct
 
 	private idColumnProductSubCategory: string = "productSubCategoryId"
+	private idColumnProduct: string = "productId"
 
 	constructor() {
 		this.commonModelProductSubCategory = new CommonModel(
 			"ProductSubCategory",
 			this.idColumnProductSubCategory,
 			["name", "description"]
+		)
+		this.commonModelProduct = new CommonModel(
+			"Product",
+			this.idColumnProduct,
+			[]
 		)
 
 		this.create = this.create.bind(this)
@@ -75,11 +82,31 @@ class ProductSubCategoryController {
 
 			const [productSubCategories, total] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
-					return await Promise.all([
+					let additionalProductSubCategoryFilter: any = {}
+					if (isWebUser(roleId)) {
+						const products = await this.commonModelProduct.list(transaction, {
+							filter: {
+								...mandatoryFilters
+							},
+							range: {
+								all: true
+							}
+						})
+
+						additionalProductSubCategoryFilter = {
+							...additionalProductSubCategoryFilter,
+							productSubCategoryId: products.map(
+								(product) => product.productSubCategoryId
+							)
+						}
+					}
+
+					const [productSubCategories, total] = await Promise.all([
 						this.commonModelProductSubCategory.list(transaction, {
 							filter: {
 								...mandatoryFilters,
-								...filter
+								...filter,
+								...additionalProductSubCategoryFilter
 							},
 							range,
 							sort
@@ -88,11 +115,14 @@ class ProductSubCategoryController {
 						this.commonModelProductSubCategory.list(transaction, {
 							filter: {
 								...mandatoryFilters,
-								...filter
+								...filter,
+								...additionalProductSubCategoryFilter
 							},
 							isCountOnly: true
 						})
 					])
+
+					return [productSubCategories, total]
 				}
 			)
 

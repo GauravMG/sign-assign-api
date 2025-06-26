@@ -11,9 +11,11 @@ import {isWebUser} from "../types/auth"
 class ProductCategoryController {
 	private commonModelProductCategory
 	private commonModelProductSubCategory
+	private commonModelProduct
 
 	private idColumnProductCategory: string = "productCategoryId"
 	private idColumnProductSubCategory: string = "productSubCategoryId"
+	private idColumnProduct: string = "productId"
 
 	constructor() {
 		this.commonModelProductCategory = new CommonModel(
@@ -25,6 +27,11 @@ class ProductCategoryController {
 			"ProductSubCategory",
 			this.idColumnProductSubCategory,
 			["name", "description"]
+		)
+		this.commonModelProduct = new CommonModel(
+			"Product",
+			this.idColumnProduct,
+			[]
 		)
 
 		this.create = this.create.bind(this)
@@ -84,11 +91,38 @@ class ProductCategoryController {
 
 			const [productCategories, total] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
+					let additionalProductCategoryFilter: any = {}
+					let additionalProductSubCategoryFilter: any = {}
+					if (isWebUser(roleId)) {
+						const products = await this.commonModelProduct.list(transaction, {
+							filter: {
+								...mandatoryFilters
+							},
+							range: {
+								all: true
+							}
+						})
+
+						additionalProductCategoryFilter = {
+							...additionalProductCategoryFilter,
+							productCategoryId: products.map(
+								(product) => product.productCategoryId
+							)
+						}
+						additionalProductSubCategoryFilter = {
+							...additionalProductSubCategoryFilter,
+							productSubCategoryId: products.map(
+								(product) => product.productSubCategoryId
+							)
+						}
+					}
+
 					let [productCategories, total] = await Promise.all([
 						this.commonModelProductCategory.list(transaction, {
 							filter: {
 								...mandatoryFilters,
-								...filter
+								...filter,
+								...additionalProductCategoryFilter
 							},
 							range,
 							sort
@@ -97,7 +131,8 @@ class ProductCategoryController {
 						this.commonModelProductCategory.list(transaction, {
 							filter: {
 								...mandatoryFilters,
-								...filter
+								...filter,
+								...additionalProductCategoryFilter
 							},
 							isCountOnly: true
 						})
@@ -122,7 +157,8 @@ class ProductCategoryController {
 							await this.commonModelProductSubCategory.list(transaction, {
 								filter: {
 									...mandatoryFilters,
-									...filterProductSubCategory
+									...filterProductSubCategory,
+									...additionalProductCategoryFilter
 								},
 								range: {
 									all: true
