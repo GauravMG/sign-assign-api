@@ -68,7 +68,7 @@
 		"method": "POST"
 	},
 	{
-		"apiPath": "/v1/upload/single-psd",
+		"apiPath": "/v1/upload/artwork",
 		"method": "POST"
 	}
 ]
