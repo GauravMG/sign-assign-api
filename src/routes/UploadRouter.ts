@@ -16,5 +16,6 @@ export class UploadRouter {
 				UploadController.uploadMultiple
 			)
 			.post("/single-psd", upload.single("file"), UploadController.uploadPSD)
+			.post("/artwork", upload.single("file"), UploadController.uploadArtwork)
 	}
 }

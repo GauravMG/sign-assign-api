@@ -6,9 +6,9 @@ const collectionName = "website_data"
 const chromaDBService: ChromaDBService = new ChromaDBService()
 
 const webLinks: string[] = [
-	// "http://3.109.198.252/about-us",
-	// "http://3.109.198.252/contact-us",
-	// "http://3.109.198.252/services",
+	"http://3.109.198.252/about-us",
+	"http://3.109.198.252/contact-us",
+	"http://3.109.198.252/services",
 	"http://3.109.198.252/privacy-policy",
 	"http://3.109.198.252/terms-of-use"
 ]

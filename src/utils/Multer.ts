@@ -32,7 +32,6 @@ const fileFilter = (
 		"image/jpeg",
 		"image/png",
 		"image/gif",
-		"image/vnd.adobe.photoshop", // .psd
 
 		// Videos
 		"video/mp4",
@@ -40,6 +39,8 @@ const fileFilter = (
 		"video/ogg",
 
 		// Design / Template files
+		"image/vnd.adobe.photoshop", // .psd
+		"image/x-eps", // .eps
 		"application/postscript", // .ai, .eps
 		"application/pdf", // .pdf
 		"application/x-coreldraw", // .cdr
@@ -51,9 +52,12 @@ const fileFilter = (
 		"application/octet-stream" // fallback for unknown binary files like .sketch, .fig
 	]
 
+	console.log(`file.mimetype ===`, file.mimetype)
 	if (allowedTypes.includes(file.mimetype)) {
+		console.log(`file type accepted`)
 		cb(null, true) // Accept the file
 	} else {
+		console.log(`file type rejected`)
 		cb(new Error("Unsupported file type") as unknown as null, false) // Reject the file
 	}
 }

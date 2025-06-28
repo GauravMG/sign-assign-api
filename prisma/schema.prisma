@@ -261,15 +261,18 @@ model User {
   userDiscountUpdatedBy UserDiscount[] @relation("UserDiscountUpdatedBy")
   userDiscountDeletedBy UserDiscount[] @relation("UserDiscountDeletedBy")
 
-  orderCreatedBy        Order[]        @relation("OrderCreatedBy")
-  orderUpdatedBy        Order[]        @relation("OrderUpdatedBy")
-  orderDeletedBy        Order[]        @relation("OrderDeletedBy")
-  orderProductCreatedBy OrderProduct[] @relation("OrderProductCreatedBy")
-  orderProductUpdatedBy OrderProduct[] @relation("OrderProductUpdatedBy")
-  orderProductDeletedBy OrderProduct[] @relation("OrderProductDeletedBy")
-  transactionCreatedBy  Transaction[]  @relation("TransactionCreatedBy")
-  transactionUpdatedBy  Transaction[]  @relation("TransactionUpdatedBy")
-  transactionDeletedBy  Transaction[]  @relation("TransactionDeletedBy")
+  orderCreatedBy              Order[]              @relation("OrderCreatedBy")
+  orderUpdatedBy              Order[]              @relation("OrderUpdatedBy")
+  orderDeletedBy              Order[]              @relation("OrderDeletedBy")
+  orderProductCreatedBy       OrderProduct[]       @relation("OrderProductCreatedBy")
+  orderProductUpdatedBy       OrderProduct[]       @relation("OrderProductUpdatedBy")
+  orderProductDeletedBy       OrderProduct[]       @relation("OrderProductDeletedBy")
+  orderProductDesignCreatedBy OrderProductDesign[] @relation("OrderProductDesignCreatedBy")
+  orderProductDesignUpdatedBy OrderProductDesign[] @relation("OrderProductDesignUpdatedBy")
+  orderProductDesignDeletedBy OrderProductDesign[] @relation("OrderProductDesignDeletedBy")
+  transactionCreatedBy        Transaction[]        @relation("TransactionCreatedBy")
+  transactionUpdatedBy        Transaction[]        @relation("TransactionUpdatedBy")
+  transactionDeletedBy        Transaction[]        @relation("TransactionDeletedBy")
 
   orderStaffMappingCreatedBy OrderStaffMapping[] @relation("OrderStaffMappingCreatedBy")
   orderStaffMappingUpdatedBy OrderStaffMapping[] @relation("OrderStaffMappingUpdatedBy")
@@ -671,6 +674,7 @@ model Product {
   features             String?
   description          String?
   specification        String?
+  isEditorEnabled      Boolean            @default(false)
   status               Boolean            @default(true)
   createdAt            DateTime           @default(now())
   updatedAt            DateTime?
@@ -918,6 +922,26 @@ model OrderProduct {
   createdBy      User?     @relation("OrderProductCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
   updatedBy      User?     @relation("OrderProductUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
   deletedBy      User?     @relation("OrderProductDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+
+  orderProductDesigns OrderProductDesign[]
+}
+
+model OrderProductDesign {
+  orderProductDesignId Int          @id @default(autoincrement())
+  orderProductId       Int
+  orderProduct         OrderProduct @relation(fields: [orderProductId], references: [orderProductId], onDelete: Cascade)
+  dataJson             Json
+  status               Boolean      @default(true)
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime?
+  deletedAt            DateTime?
+  createdBy            User?        @relation("OrderProductDesignCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy            User?        @relation("OrderProductDesignUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy            User?        @relation("OrderProductDesignDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
 
   createdById Int?
   updatedById Int?
