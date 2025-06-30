@@ -55,6 +55,7 @@ const fileFilter = (
 		"image/svg+xml"
 	]
 
+	console.log(`allowedTypes ===`, allowedTypes)
 	console.log(`file.mimetype ===`, file.mimetype)
 	if (allowedTypes.includes(file.mimetype)) {
 		console.log(`file type accepted`)
