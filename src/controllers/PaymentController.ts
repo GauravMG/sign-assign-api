@@ -141,13 +141,23 @@ class PaymentController {
 					const payloadOrderProduct = cart.map((el) => ({
 						orderId: order.orderId,
 						productId: el.productId,
-						dataJson: el && typeof el !== "string" ? JSON.stringify(el) : el
+						dataJson: el && typeof el !== "string" ? JSON.stringify(el) : el,
+						templateId: el.templateId ? Number(el.templateId) : null,
+						design: el.design
+							? typeof el.design !== "string"
+								? JSON.stringify(el.design)
+								: el.design
+							: null
 					}))
-					let orderProducts = await this.commonModelOrderProduct.bulkCreate(
-						transaction,
-						payloadOrderProduct,
-						userId
-					)
+					let orderProducts: any[] = []
+					for (let prod of payloadOrderProduct) {
+						const [prodRes] = await this.commonModelOrderProduct.bulkCreate(
+							transaction,
+							[prod],
+							userId
+						)
+						orderProducts.push(prodRes)
+					}
 
 					let [orderTransaction] = await this.commonModelTransaction.bulkCreate(
 						transaction,
