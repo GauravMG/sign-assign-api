@@ -70,5 +70,9 @@
 	{
 		"apiPath": "/v1/upload/artwork",
 		"method": "POST"
+	},
+	{
+		"apiPath": "/v1/upload/convert-to-svg",
+		"method": "POST"
 	}
 ]

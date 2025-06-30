@@ -17,5 +17,10 @@ export class UploadRouter {
 			)
 			.post("/single-psd", upload.single("file"), UploadController.uploadPSD)
 			.post("/artwork", upload.single("file"), UploadController.uploadArtwork)
+			.post(
+				"/convert-to-svg",
+				// upload.single("file"),
+				UploadController.convertToSVG
+			)
 	}
 }

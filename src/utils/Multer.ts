@@ -49,7 +49,10 @@ const fileFilter = (
 		"image/x-coreldraw", // .cdr alternative
 		"application/x-photoshop", // another for .psd
 		"application/photoshop", // rare
-		"application/octet-stream" // fallback for unknown binary files like .sketch, .fig
+		"application/octet-stream", // fallback for unknown binary files like .sketch, .fig
+
+		// SVG
+		"image/svg+xml"
 	]
 
 	console.log(`file.mimetype ===`, file.mimetype)
