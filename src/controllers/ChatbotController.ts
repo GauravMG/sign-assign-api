@@ -163,6 +163,10 @@ class ChatbotController {
 
 					switch (state.step) {
 						case "init":
+							state.currentAttributeIndex = 0
+							state.selectedAttributes = {}
+							state.attributesToAsk = []
+
 							if (
 								typeof parsedInput === "object" &&
 								parsedInput.type === "grievance"
@@ -290,7 +294,6 @@ class ChatbotController {
 									filter: {productId: productIds},
 									range: {all: true}
 								})
-							console.log(`productAttributes ===`, productAttributes)
 							if (!productAttributes?.length) {
 								isRecall = true
 								state.step = "final_product_suggestions"
@@ -401,7 +404,8 @@ class ChatbotController {
 								state.step = "init"
 								botResponse = {
 									message:
-										"No matching products found. Please try searching for something else..."
+										"I’m sorry, but we couldn’t find anything based on your search. If you’d like help finding something similar, feel free to call us at +1 972-418-5253 or email orders@signassign.com — we’re happy to assist!",
+									products: []
 								}
 								break
 							}
