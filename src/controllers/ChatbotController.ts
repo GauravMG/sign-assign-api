@@ -277,125 +277,131 @@ class ChatbotController {
 
 						case "product_sub_category":
 							state.subCategory = input
-							state.currentAttributeIndex = state.currentAttributeIndex ?? 0
-							state.selectedAttributes = {}
-							state.attributesToAsk = []
 
-							const products = await this.commonModelProduct.list(transaction, {
-								filter: {
-									productCategoryId: Number(state.category),
-									productSubCategoryId: Number(input)
-								},
-								range: {all: true}
-							})
-							const productIds = products.map((p) => p.productId)
-							const productAttributes =
-								await this.commonModelProductAttribute.list(transaction, {
-									filter: {productId: productIds},
-									range: {all: true}
-								})
-							if (!productAttributes?.length) {
-								isRecall = true
-								state.step = "final_product_suggestions"
+							isRecall = true
+							state.step = "final_product_suggestions"
 
-								break
-							}
-							const attributeIds = productAttributes.map((pa) => pa.attributeId)
-							const attributes = await this.commonModelAttribute.list(
-								transaction,
-								{
-									filter: {attributeId: attributeIds},
-									range: {
-										page: 1,
-										pageSize: 1
-									}
-								}
-							)
-							if (!attributes?.length) {
-								isRecall = true
-								state.step = "final_product_suggestions"
-
-								break
-							}
-							state.attributesToAsk = attributes.map((attr) => ({
-								attributeId: attr.attributeId,
-								name: attr.name,
-								options: attr.options ? JSON.parse(attr.options) : []
-							}))
-							const currentAttr =
-								state.attributesToAsk[state.currentAttributeIndex]
-							state.step =
-								state.attributesToAsk.length > 0
-									? "filter_attribute_answer"
-									: "final_product_suggestions"
-							botResponse = {
-								message: `Please select a ${currentAttr.name}`,
-								options: currentAttr.options.map((opt) => ({
-									label: opt,
-									value: opt
-								}))
-							}
 							break
 
-						case "filter_attribute_answer":
-							state.selectedAttributes[
-								state.attributesToAsk[state.currentAttributeIndex].attributeId
-							] = input
-							state.currentAttributeIndex += 1
-							if (state.currentAttributeIndex < state.attributesToAsk.length) {
-								const attr = state.attributesToAsk[state.currentAttributeIndex]
-								botResponse = {
-									message: `Please select a ${attr.name}`,
-									options: attr.options.map((opt) => ({label: opt, value: opt}))
-								}
-								state.step = "filter_attribute_answer"
-							} else {
-								isRecall = true
-								state.step = "final_product_suggestions"
-							}
-							break
+						// state.currentAttributeIndex = state.currentAttributeIndex ?? 0
+						// state.selectedAttributes = {}
+						// state.attributesToAsk = []
+
+						// const products = await this.commonModelProduct.list(transaction, {
+						// 	filter: {
+						// 		productCategoryId: Number(state.category),
+						// 		productSubCategoryId: Number(input)
+						// 	},
+						// 	range: {all: true}
+						// })
+						// const productIds = products.map((p) => p.productId)
+						// const productAttributes =
+						// 	await this.commonModelProductAttribute.list(transaction, {
+						// 		filter: {productId: productIds},
+						// 		range: {all: true}
+						// 	})
+						// if (!productAttributes?.length) {
+						// 	isRecall = true
+						// 	state.step = "final_product_suggestions"
+
+						// 	break
+						// }
+						// const attributeIds = productAttributes.map((pa) => pa.attributeId)
+						// const attributes = await this.commonModelAttribute.list(
+						// 	transaction,
+						// 	{
+						// 		filter: {attributeId: attributeIds},
+						// 		range: {
+						// 			page: 1,
+						// 			pageSize: 1
+						// 		}
+						// 	}
+						// )
+						// if (!attributes?.length) {
+						// 	isRecall = true
+						// 	state.step = "final_product_suggestions"
+
+						// 	break
+						// }
+						// state.attributesToAsk = attributes.map((attr) => ({
+						// 	attributeId: attr.attributeId,
+						// 	name: attr.name,
+						// 	options: attr.options ? JSON.parse(attr.options) : []
+						// }))
+						// const currentAttr =
+						// 	state.attributesToAsk[state.currentAttributeIndex]
+						// state.step =
+						// 	state.attributesToAsk.length > 0
+						// 		? "filter_attribute_answer"
+						// 		: "final_product_suggestions"
+						// botResponse = {
+						// 	message: `Please select a ${currentAttr.name}`,
+						// 	options: currentAttr.options.map((opt) => ({
+						// 		label: opt,
+						// 		value: opt
+						// 	}))
+						// }
+						// break
+
+						// case "filter_attribute_answer":
+						// 	state.selectedAttributes[
+						// 		state.attributesToAsk[state.currentAttributeIndex].attributeId
+						// 	] = input
+						// 	state.currentAttributeIndex += 1
+						// 	if (state.currentAttributeIndex < state.attributesToAsk.length) {
+						// 		const attr = state.attributesToAsk[state.currentAttributeIndex]
+						// 		botResponse = {
+						// 			message: `Please select a ${attr.name}`,
+						// 			options: attr.options.map((opt) => ({label: opt, value: opt}))
+						// 		}
+						// 		state.step = "filter_attribute_answer"
+						// 	} else {
+						// 		isRecall = true
+						// 		state.step = "final_product_suggestions"
+						// 	}
+						// 	break
 
 						case "final_product_suggestions":
-							let productAttrs: any[] = []
-							if (
-								state.selectedAttributes &&
-								Object.keys(state.selectedAttributes).length
-							) {
-								state.selectedAttributes[
-									state.attributesToAsk[
-										state.currentAttributeIndex - 1
-									].attributeId
-								] = input
+							// let productAttrs: any[] = []
+							// if (
+							// 	state.selectedAttributes &&
+							// 	Object.keys(state.selectedAttributes).length
+							// ) {
+							// 	state.selectedAttributes[
+							// 		state.attributesToAsk[
+							// 			state.currentAttributeIndex - 1
+							// 		].attributeId
+							// 	] = input
 
-								const selectedAttributesPayload = Object.entries(
-									state.selectedAttributes
-								).map(([attributeId, value]) => ({
-									attributeId: Number(attributeId),
-									value
-								}))
+							// 	const selectedAttributesPayload = Object.entries(
+							// 		state.selectedAttributes
+							// 	).map(([attributeId, value]) => ({
+							// 		attributeId: Number(attributeId),
+							// 		value
+							// 	}))
 
-								productAttrs = await this.commonModelProductAttribute.list(
-									transaction,
-									{
-										customFilters: [
-											{
-												OR: selectedAttributesPayload
-											}
-										],
-										range: {all: true}
-									}
-								)
-							}
-							const matchingProductIds = productAttrs.map((pa) => pa.productId)
+							// 	productAttrs = await this.commonModelProductAttribute.list(
+							// 		transaction,
+							// 		{
+							// 			customFilters: [
+							// 				{
+							// 					OR: selectedAttributesPayload
+							// 				}
+							// 			],
+							// 			range: {all: true}
+							// 		}
+							// 	)
+							// }
+							// const matchingProductIds = productAttrs.map((pa) => pa.productId)
 							const finalProducts = await this.commonModelProduct.list(
 								transaction,
 								{
 									filter: {
 										productCategoryId: Number(state.category),
-										productSubCategoryId: Number(state.subCategory),
-										productId: matchingProductIds?.length
-											? matchingProductIds
-											: undefined
+										productSubCategoryId: Number(state.subCategory)
+										// productId: matchingProductIds?.length
+										// 	? matchingProductIds
+										// 	: undefined
 									},
 									range: {page: 1, pageSize: 3}
 								}
