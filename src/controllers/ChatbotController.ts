@@ -21,10 +21,10 @@ const initialMessageOptions: {
 	label: string
 	value: string
 }[] = [
-	{label: "Look for Products", value: "look_products"},
+	{label: "Lookup Products", value: "look_products"},
 	{label: "Track My Order", value: "track_my_order"},
 	{label: "Ask me anything", value: "ask_anything"},
-	{label: "Grievance", value: "grievance"}
+	{label: "Support", value: "grievance"}
 ]
 
 function tryParseJSON(input: any): any {
@@ -302,7 +302,10 @@ class ChatbotController {
 								transaction,
 								{
 									filter: {attributeId: attributeIds},
-									range: {all: true}
+									range: {
+										page: 1,
+										pageSize: 1
+									}
 								}
 							)
 							if (!attributes?.length) {
