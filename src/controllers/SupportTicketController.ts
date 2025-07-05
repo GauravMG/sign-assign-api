@@ -100,9 +100,9 @@ class SupportTicketController {
 						})
 					])
 
-					const createdByIds: number[] = supportTickets.map(
-						({createdById}) => createdById
-					)
+					const createdByIds: number[] = supportTickets
+						.filter((ticket) => ticket.createdById)
+						.map(({createdById}) => createdById)
 					const supportTicketIds: number[] = supportTickets.map(
 						(supportTicket) => supportTicket.supportTicketId
 					)
@@ -140,14 +140,15 @@ class SupportTicketController {
 					}
 
 					supportTickets = supportTickets.map((supportTicket) => {
-						let createdByUser: any = userToUserIdMap.get(
-							supportTicket.createdById
-						)
+						let createdByUser: any =
+							userToUserIdMap.get(supportTicket.createdById) ?? null
 
-						createdByUser = {
-							...createdByUser,
-							fullName: createFullName(createdByUser)
-						}
+						createdByUser = createdByUser
+							? {
+									...createdByUser,
+									fullName: createFullName(createdByUser)
+								}
+							: null
 
 						return {
 							...supportTicket,
