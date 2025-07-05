@@ -74,5 +74,9 @@
 	{
 		"apiPath": "/v1/upload/convert-to-svg",
 		"method": "POST"
+	},
+	{
+		"apiPath": "/v1/rush-hour-rate/list",
+		"method": "POST"
 	}
 ]
