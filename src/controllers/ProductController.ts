@@ -264,7 +264,17 @@ class ProductController {
 								},
 								range: {
 									all: true
-								}
+								},
+								sort: [
+									{
+										orderBy: "productId",
+										orderDir: "asc"
+									},
+									{
+										orderBy: "sequenceNumber",
+										orderDir: "asc"
+									}
+								]
 							}),
 
 							this.commonModelProductAttribute.list(transaction, {
