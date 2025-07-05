@@ -11,15 +11,18 @@ import {isWebUser} from "../types/auth"
 class CouponController {
 	private commonModelCoupon
 	private commonModelUser
+	private commonModelOrder
 
 	private idColumnCoupon: string = "couponId"
 	private idColumnUser: string = "userId"
+	private idColumnOrder: string = "orderId"
 
 	constructor() {
 		this.commonModelCoupon = new CommonModel("Coupon", this.idColumnCoupon, [
 			"couponCode"
 		])
 		this.commonModelUser = new CommonModel("User", this.idColumnUser, [])
+		this.commonModelOrder = new CommonModel("Order", this.idColumnOrder, [])
 
 		this.create = this.create.bind(this)
 		this.list = this.list.bind(this)
@@ -96,22 +99,82 @@ class CouponController {
 						})
 					])
 
-					let userIds: number[] = coupons
-						.map((coupon) => coupon.userId)
-						.filter(Boolean)
+					let userIds: number[] = []
+					let couponIds: number[] = []
 
-					const users = await this.commonModelUser.list(transaction, {
-						filter: {
-							userId: userIds
+					coupons.map((coupon) => {
+						if (coupon.userId) {
+							userIds.push(Number(coupon.userId))
 						}
+						couponIds.push(coupon.couponId)
 					})
+
+					const orConditions = couponIds.map((id) => ({
+						amountDetails: {
+							path: ["couponData", "couponId"],
+							equals: id
+						}
+					}))
+
+					const [users, orders] = await Promise.all([
+						userIds.length
+							? this.commonModelUser.list(transaction, {
+									filter: {
+										userId: userIds
+									}
+								})
+							: [],
+
+						this.commonModelOrder.list(transaction, {
+							customFilters: [
+								{
+									amountDetails: {
+										path: ["couponData"],
+										not: null
+									}
+								},
+								{
+									OR: orConditions
+								}
+							]
+						})
+					])
 
 					const userMap = new Map(users.map((user) => [user.userId, user]))
 
-					coupons = coupons.map((coupon) => ({
-						...coupon,
-						user: coupon.userId ? userMap.get(coupon.userId) : null
-					}))
+					const ordersByCouponId = new Map()
+
+					// Assume orders is your array of order objects
+					orders.forEach((order) => {
+						const couponId = order?.amountDetails?.couponData?.couponId
+
+						if (couponId !== undefined && couponId !== null) {
+							if (!ordersByCouponId.has(couponId)) {
+								ordersByCouponId.set(couponId, [])
+							}
+							ordersByCouponId.get(couponId).push(order)
+						}
+					})
+
+					coupons = coupons.map((coupon) => {
+						const ordersForCoupon = ordersByCouponId.get(coupon.couponId) || []
+						const totalOrderCount: number = ordersForCoupon.length
+
+						let isAvailable: boolean = true
+
+						if (
+							coupon.couponQuantityType === "limited" &&
+							Number(coupon.couponQuantity) <= totalOrderCount
+						) {
+							isAvailable = false
+						}
+
+						return {
+							...coupon,
+							isAvailable,
+							user: coupon.userId ? userMap.get(coupon.userId) : null
+						}
+					})
 
 					return [coupons, total]
 				}
