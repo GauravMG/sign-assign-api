@@ -22,6 +22,7 @@ import {
 	ProductRushHourRateRouter,
 	ProductSubCategoryRouter,
 	RoleRouter,
+	RushHourRateRouter,
 	SupportTicketMediaRouter,
 	SupportTicketRouter,
 	TemplateRouter,
@@ -64,6 +65,7 @@ router.use("/v1/order", new OrderRouter().router)
 router.use("/v1/order-staff-mapping", new OrderStaffMappingRouter().router)
 router.use("/v1/order-staff-task", new OrderStaffTaskRouter().router)
 router.use("/v1/coupon", new CouponRouter().router)
+router.use("/v1/rush-hour-rate", new RushHourRateRouter().router)
 
 // template routes
 router.use("/v1/template", new TemplateRouter().router)

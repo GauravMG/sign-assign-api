@@ -94,6 +94,11 @@ enum CouponQuantityType {
   unlimited
 }
 
+enum ChargeType {
+  flat
+  percentage
+}
+
 model Role {
   roleId         Int       @id @default(autoincrement())
   name           String    @db.VarChar(100)
@@ -291,6 +296,10 @@ model User {
   couponCreatedBy Coupon[] @relation("CouponCreatedBy")
   couponUpdatedBy Coupon[] @relation("CouponUpdatedBy")
   couponDeletedBy Coupon[] @relation("CouponDeletedBy")
+
+  rushHourRateCreatedBy RushHourRate[] @relation("RushHourRateCreatedBy")
+  rushHourRateUpdatedBy RushHourRate[] @relation("RushHourRateUpdatedBy")
+  rushHourRateDeletedBy RushHourRate[] @relation("RushHourRateDeletedBy")
 }
 
 model Verification {
@@ -1166,4 +1175,23 @@ model Coupon {
   createdById Int?
   updatedById Int?
   deletedById Int?
+}
+
+model RushHourRate {
+  rushHourRateId Int        @id @default(autoincrement())
+  minPrice       Float
+  maxPrice       Float?
+  chargeType     ChargeType
+  amount         Float
+  status         Boolean    @default(true)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime?
+  deletedAt      DateTime?
+  createdById    Int?
+  updatedById    Int?
+  deletedById    Int?
+
+  createdBy User? @relation("RushHourRateCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy User? @relation("RushHourRateUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy User? @relation("RushHourRateDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
 }
