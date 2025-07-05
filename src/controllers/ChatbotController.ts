@@ -393,43 +393,115 @@ class ChatbotController {
 							// 	)
 							// }
 							// const matchingProductIds = productAttrs.map((pa) => pa.productId)
+							// const finalProducts = await this.commonModelProduct.list(
+							// 	transaction,
+							// 	{
+							// 		filter: {
+							// 			productCategoryId: Number(state.category),
+							// 			productSubCategoryId: Number(state.subCategory)
+							// 			// productId: matchingProductIds?.length
+							// 			// 	? matchingProductIds
+							// 			// 	: undefined
+							// 		},
+							// 		range: {page: 1, pageSize: 3}
+							// 	}
+							// )
+							// if (!finalProducts?.length) {
+							// 	state.step = "init"
+							// 	botResponse = {
+							// 		message:
+							// 			"I’m sorry, but we couldn’t find anything based on your search. If you’d like help finding something similar, feel free to call us at +1 972-418-5253 or email orders@signassign.com — we’re happy to assist!",
+							// 		products: []
+							// 	}
+							// 	break
+							// }
+
+							// state.step = "init"
+							// botResponse = {
+							// 	message: "Here are some product suggestions:",
+							// 	products: finalProducts.map((p) => ({
+							// 		name: p.name,
+							// 		link: `/product/${getLinkFromName(p.name)}?pid=${p.productId}`
+							// 	}))
+							// }
+							// break
+
 							const finalProducts = await this.commonModelProduct.list(
 								transaction,
 								{
 									filter: {
 										productCategoryId: Number(state.category),
 										productSubCategoryId: Number(state.subCategory)
-										// productId: matchingProductIds?.length
-										// 	? matchingProductIds
-										// 	: undefined
 									},
 									range: {page: 1, pageSize: 3}
 								}
 							)
+
 							if (!finalProducts?.length) {
-								state.step = "init"
+								// No products found → show message and schedule the next question
+								state.step = "await_anything_else"
+
 								botResponse = {
 									message:
-										"I’m sorry, but we couldn’t find anything based on your search. If you’d like help finding something similar, feel free to call us at +1 972-418-5253 or email orders@signassign.com — we’re happy to assist!",
-									products: []
+										"I’m sorry, but we couldn’t find anything based on your search.",
+									products: [],
+									delayNext: {
+										message: "Is there anything else I can help you with?",
+										options: [
+											{label: "Yes", value: "yes_anything_else"},
+											{label: "No", value: "no_anything_else"}
+										]
+									}
 								}
+
 								break
 							}
 
-							state.step = "init"
+							state.step = "await_anything_else"
+
 							botResponse = {
 								message: "Here are some product suggestions:",
 								products: finalProducts.map((p) => ({
 									name: p.name,
 									link: `/product/${getLinkFromName(p.name)}?pid=${p.productId}`
-								}))
+								})),
+								delayNext: {
+									message: "Is there anything else I can help you with?",
+									options: [
+										{label: "Yes", value: "yes_anything_else"},
+										{label: "No", value: "no_anything_else"}
+									]
+								}
+							}
+
+							break
+
+						case "await_anything_else":
+							if (input === "yes_anything_else") {
+								state.step = "init"
+								botResponse = {
+									message: "Great! What would you like to do next?",
+									options: initialMessageOptions
+								}
+							} else if (input === "no_anything_else") {
+								state.step = "init"
+								botResponse = {
+									message: "Glad to help!",
+									endSession: true // custom key to instruct frontend to close/minimize
+								}
+							} else {
+								state.step = "init"
+								botResponse = {
+									message: "Let's start again. Choose an option:",
+									options: initialMessageOptions
+								}
 							}
 							break
 
 						default:
-							state = {step: "init"}
+							state.step = "init"
 							botResponse = {
-								message: "Let's start again. Choose an option:",
+								message: "Hi there! What would you like to do today?",
 								options: initialMessageOptions
 							}
 					}
