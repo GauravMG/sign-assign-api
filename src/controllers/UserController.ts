@@ -16,11 +16,13 @@ import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, Headers} from "../types/common"
 
 class UserController {
 	private commonModelUser
+	private commonModelRole
 	private commonModelBusinessUserMapping
 	private commonModelUserAddress
 	private commonModelUserDiscount
 
 	private idColumnUser: string = "userId"
+	private idColumnRole: string = "roleId"
 	private idColumnBusinessUserMapping: string = "businessUserMappingId"
 	private idColumnUserAddress: string = "userAddressId"
 	private idColumnUserDiscount: string = "userDiscountId"
@@ -32,6 +34,7 @@ class UserController {
 			"email",
 			"mobile"
 		])
+		this.commonModelRole = new CommonModel("Role", this.idColumnRole, [])
 		this.commonModelBusinessUserMapping = new CommonModel(
 			"BusinessUserMapping",
 			this.idColumnBusinessUserMapping,
@@ -212,8 +215,9 @@ class UserController {
 					])
 
 					const userIds: number[] = users.map(({userId}) => Number(userId))
+					const roleIds: number[] = users.map(({roleId}) => Number(roleId))
 
-					const [userAddresses, userDiscounts] = await Promise.all([
+					const [userAddresses, userDiscounts, roles] = await Promise.all([
 						this.commonModelUserAddress.list(transaction, {
 							filter: {
 								userId: userIds
@@ -226,6 +230,15 @@ class UserController {
 						this.commonModelUserDiscount.list(transaction, {
 							filter: {
 								userId: userIds
+							},
+							range: {
+								all: true
+							}
+						}),
+
+						this.commonModelRole.list(transaction, {
+							filter: {
+								roleId: roleIds
 							},
 							range: {
 								all: true
@@ -246,9 +259,12 @@ class UserController {
 						])
 					)
 
+					const roleMap = new Map(roles.map((role) => [role.roleId, role]))
+
 					users = users.map((user) => ({
 						...user,
 						fullName: createFullName(user),
+						role: roleMap.get(user.roleId),
 						userAddresses: userAddressMap[user.userId] || [],
 						userDiscountPercentage:
 							userDiscountMap.get(user.userId)?.discountPercentage || null

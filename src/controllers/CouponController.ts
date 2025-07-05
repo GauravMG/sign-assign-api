@@ -10,13 +10,16 @@ import {isWebUser} from "../types/auth"
 
 class CouponController {
 	private commonModelCoupon
+	private commonModelUser
 
 	private idColumnCoupon: string = "couponId"
+	private idColumnUser: string = "userId"
 
 	constructor() {
 		this.commonModelCoupon = new CommonModel("Coupon", this.idColumnCoupon, [
 			"couponCode"
 		])
+		this.commonModelUser = new CommonModel("User", this.idColumnUser, [])
 
 		this.create = this.create.bind(this)
 		this.list = this.list.bind(this)
@@ -92,6 +95,23 @@ class CouponController {
 							isCountOnly: true
 						})
 					])
+
+					let userIds: number[] = coupons
+						.map((coupon) => coupon.userId)
+						.filter(Boolean)
+
+					const users = await this.commonModelUser.list(transaction, {
+						filter: {
+							userId: userIds
+						}
+					})
+
+					const userMap = new Map(users.map((user) => [user.userId, user]))
+
+					coupons = coupons.map((coupon) => ({
+						...coupon,
+						user: coupon.userId ? userMap.get(coupon.userId) : null
+					}))
 
 					return [coupons, total]
 				}
