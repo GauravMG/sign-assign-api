@@ -78,5 +78,9 @@
 	{
 		"apiPath": "/v1/rush-hour-rate/list",
 		"method": "POST"
+	},
+	{
+		"apiPath": "/v1/user/create",
+		"method": "POST"
 	}
 ]

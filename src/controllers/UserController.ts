@@ -13,6 +13,7 @@ import {BadRequestException} from "../lib/exceptions"
 import CommonModel from "../models/CommonModel"
 import {Role} from "../types/auth"
 import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, Headers} from "../types/common"
+import {createJWTToken} from "../utils/Jwt"
 
 class UserController {
 	private commonModelUser
@@ -20,12 +21,14 @@ class UserController {
 	private commonModelBusinessUserMapping
 	private commonModelUserAddress
 	private commonModelUserDiscount
+	private commonModelLoginHistory
 
 	private idColumnUser: string = "userId"
 	private idColumnRole: string = "roleId"
 	private idColumnBusinessUserMapping: string = "businessUserMappingId"
 	private idColumnUserAddress: string = "userAddressId"
 	private idColumnUserDiscount: string = "userDiscountId"
+	private idColumnLoginHistory: string = "loginHistoryId"
 
 	constructor() {
 		this.commonModelUser = new CommonModel("User", this.idColumnUser, [
@@ -48,6 +51,11 @@ class UserController {
 		this.commonModelUserDiscount = new CommonModel(
 			"UserDiscount",
 			this.idColumnUserDiscount,
+			[]
+		)
+		this.commonModelLoginHistory = new CommonModel(
+			"LoginHistory",
+			this.idColumnLoginHistory,
 			[]
 		)
 
@@ -83,7 +91,7 @@ class UserController {
 				}
 			})
 
-			const [users] = await prisma.$transaction(
+			const [users, jwtToken] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					// check if users exist
 					const existingUsers = await this.commonModelUser.list(transaction, {
@@ -151,13 +159,35 @@ class UserController {
 						}
 					}
 
-					return [users]
+					let jwtToken: string | null = null
+					if (users.length === 1) {
+						// generate jwt token
+						jwtToken = createJWTToken({
+							userId: users[0].userId
+						})
+
+						// create login history
+						await this.commonModelLoginHistory.bulkCreate(
+							transaction,
+							[
+								{
+									userId: users[0].userId,
+									jwtToken,
+									deviceType: "web"
+								}
+							],
+							users[0].userId
+						)
+					}
+
+					return [users, jwtToken]
 				}
 			)
 
 			return response.successResponse({
 				message: `User(s) created successfully`,
-				data: users
+				data: users,
+				jwtToken
 			})
 		} catch (error) {
 			next(error)
