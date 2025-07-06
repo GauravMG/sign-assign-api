@@ -155,6 +155,7 @@ model User {
   orders               Order[]
   orderStaffMappings   OrderStaffMapping[]
   coupons              Coupon[]
+  invoices             Invoice[]
 
   // Inverse relations
   usersCreatedBy               User[]                @relation("UserCreatedBy")
@@ -278,6 +279,9 @@ model User {
   transactionCreatedBy        Transaction[]        @relation("TransactionCreatedBy")
   transactionUpdatedBy        Transaction[]        @relation("TransactionUpdatedBy")
   transactionDeletedBy        Transaction[]        @relation("TransactionDeletedBy")
+  invoiceCreatedBy            Invoice[]            @relation("InvoiceCreatedBy")
+  invoiceUpdatedBy            Invoice[]            @relation("InvoiceUpdatedBy")
+  invoiceDeletedBy            Invoice[]            @relation("InvoiceDeletedBy")
 
   orderStaffMappingCreatedBy OrderStaffMapping[] @relation("OrderStaffMappingCreatedBy")
   orderStaffMappingUpdatedBy OrderStaffMapping[] @relation("OrderStaffMappingUpdatedBy")
@@ -915,6 +919,7 @@ model Order {
   orderProducts      OrderProduct[]
   transactions       Transaction[]
   orderStaffMappings OrderStaffMapping[]
+  invoices           Invoice[]
 }
 
 model OrderProduct {
@@ -977,6 +982,30 @@ model Transaction {
   createdById Int?
   updatedById Int?
   deletedById Int?
+}
+
+model Invoice {
+  invoiceId     Int       @id @default(autoincrement())
+  orderId       Int
+  userId        Int
+  invoiceNumber String
+  amount        Float
+  invoiceDate   DateTime  @default(now())
+  invoiceData   Json?
+  status        Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime?
+  deletedAt     DateTime?
+  createdById   Int?
+  updatedById   Int?
+  deletedById   Int?
+
+  order Order @relation(fields: [orderId], references: [orderId], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  createdBy User? @relation("InvoiceCreatedBy", fields: [createdById], references: [userId])
+  updatedBy User? @relation("InvoiceUpdatedBy", fields: [updatedById], references: [userId])
+  deletedBy User? @relation("InvoiceDeletedBy", fields: [deletedById], references: [userId])
 }
 
 model OrderStaffMapping {

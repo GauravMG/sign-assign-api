@@ -29,6 +29,7 @@ export * from "./OrderStaffMappingRouter"
 export * from "./OrderStaffTaskRouter"
 export * from "./CouponRouter"
 export * from "./RushHourRateRouter"
+export * from "./InvoiceRouter"
 
 // template routes
 export * from "./TemplateRouter"

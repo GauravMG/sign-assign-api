@@ -28,11 +28,13 @@ class PaymentController {
 	private commonModelOrder
 	private commonModelOrderProduct
 	private commonModelTransaction
+	private commonModelInvoice
 
 	private idColumnUser: string = "userId"
 	private idColumnOrder: string = "orderId"
 	private idColumnOrderProduct: string = "orderProductId"
 	private idColumnTransaction: string = "transactionId"
+	private idColumnInvoice: string = "invoiceId"
 
 	constructor() {
 		this.commonModelUser = new CommonModel("User", this.idColumnUser, [])
@@ -45,6 +47,11 @@ class PaymentController {
 		this.commonModelTransaction = new CommonModel(
 			"Transaction",
 			this.idColumnTransaction,
+			[]
+		)
+		this.commonModelInvoice = new CommonModel(
+			"Invoice",
+			this.idColumnInvoice,
 			[]
 		)
 
@@ -114,7 +121,7 @@ class PaymentController {
 				}
 			}
 
-			let [order] = await prisma.$transaction(
+			let [order, payloadOrderProduct] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					let [order] = await this.commonModelOrder.bulkCreate(
 						transaction,
@@ -178,7 +185,8 @@ class PaymentController {
 							...order,
 							orderProducts,
 							transaction: orderTransaction
-						}
+						},
+						payloadOrderProduct
 					]
 				}
 			)
@@ -227,6 +235,51 @@ class PaymentController {
 						order.orderId,
 						userId
 					)
+
+					if (paymentChargeResponse.data.captured) {
+						const [lastInvoice] = await this.commonModelInvoice.list(
+							transaction,
+							{
+								range: {
+									page: 1,
+									pageSize: 1
+								},
+								sort: [
+									{
+										orderBy: "invoiceId",
+										orderDir: "desc"
+									}
+								]
+							}
+						)
+
+						const invoiceNumber: string = `INV-${new Date().getFullYear()}-${String((lastInvoice?.invoiceId ?? 0) + 1).padStart(6, "0")}`
+
+						await this.commonModelInvoice.bulkCreate(
+							transaction,
+							[
+								{
+									orderId: order.orderId,
+									userId,
+									invoiceNumber,
+									amount: order.amount,
+									invoiceData: JSON.stringify({
+										amountDetails:
+											typeof order.amountDetails === "string"
+												? JSON.parse(order.amountDetails)
+												: order.amountDetails,
+										shippingAddressDetails:
+											typeof order.shippingAddressDetails === "string"
+												? JSON.parse(order.shippingAddressDetails)
+												: order.shippingAddressDetails,
+										payloadOrderProduct,
+										orderTransaction
+									})
+								}
+							],
+							userId
+						)
+					}
 
 					const [updatedOrder] = await this.commonModelOrder.list(transaction, {
 						filter: {
