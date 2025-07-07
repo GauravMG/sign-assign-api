@@ -10,5 +10,7 @@ export class OrderRouter {
 		this.router
 			.post("/list", OrderController.list)
 			.post("/update", OrderController.update)
+			.post("/user-token-by-order", OrderController.getUserTokenByOrderId)
+			.post("/update-by-admin", OrderController.updateByAdmin)
 	}
 }
