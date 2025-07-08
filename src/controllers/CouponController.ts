@@ -74,9 +74,12 @@ class CouponController {
 				}
 			}
 
-			const {filter, range, sort, linkedEntities} = await listAPIPayload(
-				req.body
-			)
+			let {filter, range, sort, linkedEntities} = await listAPIPayload(req.body)
+			let filterUserId: number | null = null
+			if (filter?.userId) {
+				filterUserId = filter.userId
+				delete filter.userId
+			}
 
 			const [coupons, total] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
