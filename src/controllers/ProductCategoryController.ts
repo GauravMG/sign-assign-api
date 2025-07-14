@@ -94,7 +94,7 @@ class ProductCategoryController {
 					let additionalProductCategoryFilter: any = {}
 					let additionalProductSubCategoryFilter: any = {}
 					let additionalProductCategorySort: any = null
-					if (isWebUser(roleId)) {
+					if (isWebUser(roleId) && !filter?.productCategoryId) {
 						const products = await this.commonModelProduct.list(transaction, {
 							filter: {
 								...mandatoryFilters

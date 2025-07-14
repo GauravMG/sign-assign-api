@@ -29,14 +29,15 @@ export const validateJWTToken = async (
 		const reqUrl: string = req.url
 		const reqMethod: string = req.method
 
+		let token: string = req.headers.authorization as string
+
 		const publicApi: UrlSchema | undefined = publicRoutes.find(
 			(el) => el.apiPath === reqUrl && el.method === reqMethod
 		)
-		if (publicApi) {
+		if (publicApi && !token) {
 			return next()
 		}
 
-		let token: string = req.headers.authorization as string
 		if (!token) {
 			throw new UnauthorizedException("Missing authorization header")
 		}

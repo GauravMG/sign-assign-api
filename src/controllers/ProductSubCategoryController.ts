@@ -83,7 +83,7 @@ class ProductSubCategoryController {
 			const [productSubCategories, total] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					let additionalProductSubCategoryFilter: any = {}
-					if (isWebUser(roleId)) {
+					if (isWebUser(roleId) && !filter?.productSubCategoryId) {
 						const products = await this.commonModelProduct.list(transaction, {
 							filter: {
 								...mandatoryFilters
