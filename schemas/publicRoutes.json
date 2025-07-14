@@ -82,5 +82,9 @@
 	{
 		"apiPath": "/v1/user/create",
 		"method": "POST"
+	},
+	{
+		"apiPath": "/v1/related-product/list",
+		"method": "POST"
 	}
 ]

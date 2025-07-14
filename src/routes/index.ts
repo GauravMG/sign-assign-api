@@ -30,6 +30,7 @@ export * from "./OrderStaffTaskRouter"
 export * from "./CouponRouter"
 export * from "./RushHourRateRouter"
 export * from "./InvoiceRouter"
+export * from "./RelatedProductRouter"
 
 // template routes
 export * from "./TemplateRouter"

@@ -17,6 +17,7 @@ class ProductController {
 	private commonModelAttribute
 	private commonModelProductBulkDiscount
 	private commonModelProductRushHourRate
+	private commonModelRelatedProduct
 
 	private idColumnProduct: string = "productId"
 	private idColumnProductCategory: string = "productCategoryId"
@@ -26,6 +27,7 @@ class ProductController {
 	private idColumnAttribute: string = "attributeId"
 	private idColumnProductBulkDiscount: string = "productBulkDiscountId"
 	private idColumnProductRushHourRate: string = "productRushHourRateId"
+	private idColumnRelatedProduct: string = "relatedProductId"
 
 	constructor() {
 		this.commonModelProduct = new CommonModel("Product", this.idColumnProduct, [
@@ -64,6 +66,11 @@ class ProductController {
 		this.commonModelProductRushHourRate = new CommonModel(
 			"ProductRushHourRate",
 			this.idColumnProductRushHourRate,
+			[]
+		)
+		this.commonModelRelatedProduct = new CommonModel(
+			"RelatedProduct",
+			this.idColumnRelatedProduct,
 			[]
 		)
 
@@ -235,7 +242,8 @@ class ProductController {
 							productMedias,
 							productAttributes,
 							productBulkDiscounts,
-							productRushHourRates
+							productRushHourRates,
+							relatedProducts
 						] = await Promise.all([
 							this.commonModelProductCategory.list(transaction, {
 								filter: {
@@ -298,6 +306,16 @@ class ProductController {
 							}),
 
 							this.commonModelProductRushHourRate.list(transaction, {
+								filter: {
+									...mandatoryFilters,
+									productId: productIds
+								},
+								range: {
+									all: true
+								}
+							}),
+
+							this.commonModelRelatedProduct.list(transaction, {
 								filter: {
 									...mandatoryFilters,
 									productId: productIds
@@ -382,6 +400,49 @@ class ProductController {
 							])
 						)
 
+						let relatedProductIds: number[] = []
+						relatedProducts.forEach((relatedProduct) => {
+							if (relatedProduct.referenceType === "product") {
+								relatedProductIds.push(Number(relatedProduct.referenceId))
+							}
+						})
+
+						const [selectedProducts] = await Promise.all([
+							this.commonModelProduct.list(transaction, {
+								filter: {
+									productId: relatedProductIds
+								},
+								range: {all: true}
+							})
+						])
+
+						const selectedProductMap: any = new Map(
+							selectedProducts.map((selectedProduct) => [
+								selectedProduct.productId,
+								selectedProduct
+							])
+						)
+
+						const relatedProductMap = new Map<number, any[]>()
+						for (let relatedProduct of relatedProducts) {
+							if (relatedProduct.referenceType === "product") {
+								relatedProduct = {
+									...relatedProduct,
+									referenceData: selectedProductMap.get(
+										relatedProduct.referenceId
+									)
+								}
+							}
+
+							const relatedProductGroup =
+								relatedProductMap.get(relatedProduct.productId) || []
+							relatedProductGroup.push(relatedProduct)
+							relatedProductMap.set(
+								relatedProduct.productId,
+								relatedProductGroup
+							)
+						}
+
 						products = products.map((product) => {
 							let productBulkDiscount =
 								productBulkDiscountMap.get(product.productId)?.dataJson || []
@@ -428,7 +489,8 @@ class ProductController {
 												maxQty: 999999,
 												minQty: 1
 											}
-										]
+										],
+								relatedProducts: relatedProductMap.get(product.productId) || []
 							}
 						})
 					}

@@ -205,6 +205,10 @@ model User {
   productAttributeUpdatedBy ProductAttribute[] @relation("ProductAttributeUpdatedBy")
   productAttributeDeletedBy ProductAttribute[] @relation("ProductAttributeDeletedBy")
 
+  relatedProductCreatedBy RelatedProduct[] @relation("RelatedProductCreatedBy")
+  relatedProductUpdatedBy RelatedProduct[] @relation("RelatedProductUpdatedBy")
+  relatedProductDeletedBy RelatedProduct[] @relation("RelatedProductDeletedBy")
+
   productFAQCreatedBy           ProductFAQ[]           @relation("ProductFAQCreatedBy")
   productFAQUpdatedBy           ProductFAQ[]           @relation("ProductFAQUpdatedBy")
   productFAQDeletedBy           ProductFAQ[]           @relation("ProductFAQDeletedBy")
@@ -708,6 +712,26 @@ model Product {
   variants             Variant[]
   orderProducts        OrderProduct[]
   productRushHourRates ProductRushHourRate[]
+  relatedProducts      RelatedProduct[]
+}
+
+model RelatedProduct {
+  relatedProductId Int                  @id @default(autoincrement())
+  productId        Int
+  product          Product              @relation(fields: [productId], references: [productId], onDelete: Cascade)
+  referenceType    TemplateTagReference
+  referenceId      Int
+  status           Boolean              @default(true)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime?
+  deletedAt        DateTime?
+  createdBy        User?                @relation("RelatedProductCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy        User?                @relation("RelatedProductUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy        User?                @relation("RelatedProductDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
 }
 
 model ProductMedia {
