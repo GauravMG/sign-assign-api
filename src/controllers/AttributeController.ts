@@ -36,6 +36,24 @@ class AttributeController {
 
 			const [attributes] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
+					// check if attribute(s) exists
+					const existingAttributes = await this.commonModelAttribute.list(
+						transaction,
+						{
+							filter: {
+								name: payload.map((el) => el.name.trim())
+							},
+							range: {
+								all: true
+							}
+						}
+					)
+					if (existingAttributes.length) {
+						throw new BadRequestException(
+							`The attribute you are trying to add already exists in the system. If you wish to add a new value please edit the respective attribute and modify it's values.`
+						)
+					}
+
 					// create
 					const attributes = await this.commonModelAttribute.bulkCreate(
 						transaction,
