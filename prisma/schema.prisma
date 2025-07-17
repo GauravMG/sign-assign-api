@@ -683,7 +683,8 @@ model Product {
   productSubCategory   ProductSubCategory @relation(fields: [productSubCategoryId], references: [productSubCategoryId], onDelete: Cascade)
   name                 String
   price                String?
-  offerPrice           String?
+  offerPriceType       DiscountType?
+  offerPrice           Float?
   stockQuantity        String?
   sku                  String?
   shortDescription     String?

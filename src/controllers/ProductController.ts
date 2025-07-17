@@ -31,7 +31,8 @@ class ProductController {
 
 	constructor() {
 		this.commonModelProduct = new CommonModel("Product", this.idColumnProduct, [
-			"name"
+			"name",
+			"sku"
 		])
 		this.commonModelProductCategory = new CommonModel(
 			"ProductCategory",
