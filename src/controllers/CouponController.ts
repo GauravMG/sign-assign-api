@@ -83,7 +83,6 @@ class CouponController {
 
 			const [coupons, total] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
-					console.log(`filter ===`, filter)
 					let [coupons, total] = await Promise.all([
 						this.commonModelCoupon.list(transaction, {
 							filter: {
@@ -102,7 +101,6 @@ class CouponController {
 							isCountOnly: true
 						})
 					])
-					console.log(`coupons ===`, coupons)
 
 					let userIds: number[] = []
 					let couponIds: number[] = []
@@ -172,6 +170,14 @@ class CouponController {
 							Number(coupon.couponQuantity) <= totalOrderCount
 						) {
 							isAvailable = false
+						}
+
+						// Add expiry validation if isWebUser
+						if (isWebUser(roleId)) {
+							const now = new Date()
+							if (coupon.expiryDate && new Date(coupon.expiryDate) < now) {
+								isAvailable = false
+							}
 						}
 
 						return {
