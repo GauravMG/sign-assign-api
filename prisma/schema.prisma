@@ -30,6 +30,7 @@ enum MediaType {
 enum TicketStatus {
   open
   pending
+  interview
   closed
 }
 
