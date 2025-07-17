@@ -408,19 +408,58 @@ class ProductController {
 							}
 						})
 
-						const [selectedProducts] = await Promise.all([
-							this.commonModelProduct.list(transaction, {
-								filter: {
-									productId: relatedProductIds
-								},
-								range: {all: true}
-							})
-						])
+						const [selectedProducts, selectedProductMedias] = await Promise.all(
+							[
+								this.commonModelProduct.list(transaction, {
+									filter: {
+										...mandatoryFilters,
+										productId: relatedProductIds
+									},
+									range: {all: true}
+								}),
+
+								this.commonModelProductMedia.list(transaction, {
+									filter: {
+										...mandatoryFilters,
+										productId: relatedProductIds
+									},
+									range: {
+										all: true
+									},
+									sort: [
+										{
+											orderBy: "productId",
+											orderDir: "asc"
+										},
+										{
+											orderBy: "sequenceNumber",
+											orderDir: "asc"
+										}
+									]
+								})
+							]
+						)
+
+						const selectedProductMediaMap = new Map<number, any[]>()
+						for (const selectedProductMedia of selectedProductMedias) {
+							const selectedProductMediaGroup =
+								selectedProductMediaMap.get(selectedProductMedia.productId) ||
+								[]
+							selectedProductMediaGroup.push(selectedProductMedia)
+							selectedProductMediaMap.set(
+								selectedProductMedia.productId,
+								selectedProductMediaGroup
+							)
+						}
 
 						const selectedProductMap: any = new Map(
 							selectedProducts.map((selectedProduct) => [
 								selectedProduct.productId,
-								selectedProduct
+								{
+									...selectedProduct,
+									productMedias:
+										selectedProductMediaMap.get(selectedProduct.productId) || []
+								}
 							])
 						)
 
