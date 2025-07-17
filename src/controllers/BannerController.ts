@@ -6,6 +6,7 @@ import {PrismaClientTransaction, prisma} from "../lib/PrismaLib"
 import {BadRequestException} from "../lib/exceptions"
 import CommonModel from "../models/CommonModel"
 import {DEFAULT_PAGE, DEFAULT_PAGE_SIZE, Headers} from "../types/common"
+import {isWebUser} from "../types/auth"
 
 class BannerController {
 	private commonModelBanner
@@ -80,19 +81,33 @@ class BannerController {
 
 			const {roleId}: Headers = req.headers
 
+			let mandatoryFilters: any = {}
+			if (isWebUser(roleId)) {
+				mandatoryFilters = {
+					...mandatoryFilters,
+					status: true
+				}
+			}
+
 			const {filter, range, sort} = await listAPIPayload(req.body)
 
 			const [banners, total] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
 					return await Promise.all([
 						this.commonModelBanner.list(transaction, {
-							filter,
+							filter: {
+								...mandatoryFilters,
+								...filter
+							},
 							range,
 							sort
 						}),
 
 						this.commonModelBanner.list(transaction, {
-							filter,
+							filter: {
+								...mandatoryFilters,
+								...filter
+							},
 							isCountOnly: true
 						})
 					])
