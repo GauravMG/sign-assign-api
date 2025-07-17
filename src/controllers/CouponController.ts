@@ -10,16 +10,47 @@ import {isWebUser} from "../types/auth"
 
 class CouponController {
 	private commonModelCoupon
+	private commonModelCouponTag
+	private commonModelProductCategory
+	private commonModelProductSubCategory
+	private commonModelProduct
 	private commonModelUser
 	private commonModelOrder
 
 	private idColumnCoupon: string = "couponId"
+	private idColumnCouponTag: string = "couponTagId"
+	private idColumnProductCategory: string = "productCategoryId"
+	private idColumnProductSubCategory: string = "productSubCategoryId"
+	private idColumnProduct: string = "productId"
 	private idColumnUser: string = "userId"
 	private idColumnOrder: string = "orderId"
 
 	constructor() {
 		this.commonModelCoupon = new CommonModel("Coupon", this.idColumnCoupon, [
 			"couponCode"
+		])
+		this.commonModelCouponTag = new CommonModel(
+			"CouponTag",
+			this.idColumnCouponTag,
+			[]
+		)
+		this.commonModelProductCategory = new CommonModel(
+			"ProductCategory",
+			this.idColumnProductCategory,
+			["name", "description"]
+		)
+		this.commonModelProductSubCategory = new CommonModel(
+			"ProductSubCategory",
+			this.idColumnProductSubCategory,
+			["name", "description"]
+		)
+		this.commonModelProduct = new CommonModel("Product", this.idColumnProduct, [
+			"name",
+			"sku",
+			"shortDescription",
+			"description",
+			"specification",
+			"features"
 		])
 		this.commonModelUser = new CommonModel("User", this.idColumnUser, [])
 		this.commonModelOrder = new CommonModel("Order", this.idColumnOrder, [])
@@ -83,6 +114,67 @@ class CouponController {
 
 			const [coupons, total] = await prisma.$transaction(
 				async (transaction: PrismaClientTransaction) => {
+					if (filter?.productId) {
+						const [product] = await this.commonModelProduct.list(transaction, {
+							filter: {
+								productId: Number(filter.productId)
+							},
+							range: {
+								page: 1,
+								pageSize: 1
+							}
+						})
+
+						if (product) {
+							const customFiltersCouponTag = [
+								{
+									OR: [
+										{
+											referenceType: "product_category",
+											referenceId: product.productCategoryId
+										},
+										{
+											referenceType: "product_sub_category",
+											referenceId: product.productSubCategoryId
+										},
+										{
+											referenceType: "product",
+											referenceId: product.productId
+										}
+									]
+								}
+							]
+
+							const couponTags = await this.commonModelCouponTag.list(
+								transaction,
+								{
+									customFilters: customFiltersCouponTag,
+									range: {all: true}
+								}
+							)
+
+							if (couponTags?.length) {
+								if (!filter.couponId) {
+									filter.couponId = []
+								}
+
+								if (!Array.isArray(filter.couponId)) {
+									filter.couponId = [filter.couponId]
+								}
+
+								// ✅ Merge and deduplicate using Set properly
+								const mergedCouponIds = [
+									...filter.couponId,
+									...couponTags.map((el) => Number(el.couponId))
+								]
+								filter.couponId = Array.from(new Set(mergedCouponIds))
+							}
+						}
+
+						// ✅ Remove productId from filter after processing
+						delete filter.productId
+					}
+
 					let [coupons, total] = await Promise.all([
 						this.commonModelCoupon.list(transaction, {
 							filter: {
@@ -119,7 +211,7 @@ class CouponController {
 						}
 					}))
 
-					const [users, orders] = await Promise.all([
+					const [users, orders, couponTags] = await Promise.all([
 						userIds.length
 							? this.commonModelUser.list(transaction, {
 									filter: {
@@ -140,6 +232,16 @@ class CouponController {
 									OR: orConditions
 								}
 							]
+						}),
+
+						this.commonModelCouponTag.list(transaction, {
+							filter: {
+								...mandatoryFilters,
+								couponId: couponIds
+							},
+							range: {
+								all: true
+							}
 						})
 					])
 
@@ -158,6 +260,99 @@ class CouponController {
 							ordersByCouponId.get(couponId).push(order)
 						}
 					})
+
+					let productCategoryIds: number[] = []
+					let productSubCategoryIds: number[] = []
+					let productIds: number[] = []
+					couponTags.forEach((couponTag) => {
+						if (couponTag.referenceType === "product_category") {
+							productCategoryIds.push(Number(couponTag.referenceId))
+						}
+						if (couponTag.referenceType === "product_sub_category") {
+							productSubCategoryIds.push(Number(couponTag.referenceId))
+						}
+						if (couponTag.referenceType === "product") {
+							productIds.push(Number(couponTag.referenceId))
+						}
+					})
+
+					const [
+						selectedProductCategories,
+						selectedProductSubCategories,
+						selectedProducts
+					] = await Promise.all([
+						this.commonModelProductCategory.list(transaction, {
+							filter: {
+								productCategoryId: productCategoryIds
+							},
+							range: {all: true}
+						}),
+
+						this.commonModelProductSubCategory.list(transaction, {
+							filter: {
+								productSubCategoryId: productSubCategoryIds
+							},
+							range: {all: true}
+						}),
+
+						this.commonModelProduct.list(transaction, {
+							filter: {
+								productId: productIds
+							},
+							range: {all: true}
+						})
+					])
+
+					const selectedProductCategoryMap: any = new Map(
+						selectedProductCategories.map((selectedProductCategory) => [
+							selectedProductCategory.productCategoryId,
+							selectedProductCategory
+						])
+					)
+
+					const selectedProductSubCategoryMap: any = new Map(
+						selectedProductSubCategories.map((selectedProductSubCategory) => [
+							selectedProductSubCategory.productSubCategoryId,
+							selectedProductSubCategory
+						])
+					)
+
+					const selectedProductMap: any = new Map(
+						selectedProducts.map((selectedProduct) => [
+							selectedProduct.productId,
+							selectedProduct
+						])
+					)
+
+					const couponTagMap = new Map<number, any[]>()
+					for (let couponTag of couponTags) {
+						if (couponTag.referenceType === "product_category") {
+							couponTag = {
+								...couponTag,
+								referenceData: selectedProductCategoryMap.get(
+									couponTag.referenceId
+								)
+							}
+						}
+						if (couponTag.referenceType === "product_sub_category") {
+							couponTag = {
+								...couponTag,
+								referenceData: selectedProductSubCategoryMap.get(
+									couponTag.referenceId
+								)
+							}
+						}
+						if (couponTag.referenceType === "product") {
+							couponTag = {
+								...couponTag,
+								referenceData: selectedProductMap.get(couponTag.referenceId)
+							}
+						}
+
+						const couponTagGroup = couponTagMap.get(couponTag.couponId) || []
+						couponTagGroup.push(couponTag)
+						couponTagMap.set(couponTag.couponId, couponTagGroup)
+					}
 
 					coupons = coupons.map((coupon) => {
 						const ordersForCoupon = ordersByCouponId.get(coupon.couponId) || []
@@ -183,7 +378,8 @@ class CouponController {
 						return {
 							...coupon,
 							isAvailable,
-							user: coupon.userId ? userMap.get(coupon.userId) : null
+							user: coupon.userId ? userMap.get(coupon.userId) : null,
+							couponTags: couponTagMap.get(coupon.couponId) || []
 						}
 					})
 

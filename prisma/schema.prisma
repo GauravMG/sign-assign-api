@@ -301,9 +301,12 @@ model User {
   templateTagUpdatedBy TemplateTag[] @relation("TemplateTagUpdatedBy")
   templateTagDeletedBy TemplateTag[] @relation("TemplateTagDeletedBy")
 
-  couponCreatedBy Coupon[] @relation("CouponCreatedBy")
-  couponUpdatedBy Coupon[] @relation("CouponUpdatedBy")
-  couponDeletedBy Coupon[] @relation("CouponDeletedBy")
+  couponCreatedBy    Coupon[]    @relation("CouponCreatedBy")
+  couponUpdatedBy    Coupon[]    @relation("CouponUpdatedBy")
+  couponDeletedBy    Coupon[]    @relation("CouponDeletedBy")
+  couponTagCreatedBy CouponTag[] @relation("CouponTagCreatedBy")
+  couponTagUpdatedBy CouponTag[] @relation("CouponTagUpdatedBy")
+  couponTagDeletedBy CouponTag[] @relation("CouponTagDeletedBy")
 
   rushHourRateCreatedBy RushHourRate[] @relation("RushHourRateCreatedBy")
   rushHourRateUpdatedBy RushHourRate[] @relation("RushHourRateUpdatedBy")
@@ -1228,6 +1231,27 @@ model Coupon {
   createdBy          User?              @relation("CouponCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
   updatedBy          User?              @relation("CouponUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
   deletedBy          User?              @relation("CouponDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
+
+  createdById Int?
+  updatedById Int?
+  deletedById Int?
+
+  couponTags CouponTag[]
+}
+
+model CouponTag {
+  couponTagId   Int                  @id @default(autoincrement())
+  couponId      Int
+  coupon        Coupon               @relation(fields: [couponId], references: [couponId], onDelete: Cascade)
+  referenceType TemplateTagReference
+  referenceId   Int
+  status        Boolean              @default(true)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime?
+  deletedAt     DateTime?
+  createdBy     User?                @relation("CouponTagCreatedBy", fields: [createdById], references: [userId], onDelete: Cascade)
+  updatedBy     User?                @relation("CouponTagUpdatedBy", fields: [updatedById], references: [userId], onDelete: Cascade)
+  deletedBy     User?                @relation("CouponTagDeletedBy", fields: [deletedById], references: [userId], onDelete: Cascade)
 
   createdById Int?
   updatedById Int?
